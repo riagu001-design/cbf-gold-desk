@@ -1,0 +1,5 @@
+plain  46 trades, 54% wins, $+44.00, PF 1.31, worst drop $44.30
+   1st half 23 trades, 43% wins, $-2.90, PF 0.97, worst drop $44.30 | 2nd half 23 trades, 65% wins, $+46.90, PF 1.93, worst drop $14.00
+   setup A 42 trades, 57% wins, $+57.00, PF 1.48, worst drop $36.35
+   setup B 3 trades, 33% wins, $-5.75, PF 0.58, worst drop $13.70
+   setup C 1 trades, 0% wins, $-7.25, PF 0.00, worst drop $7.25
