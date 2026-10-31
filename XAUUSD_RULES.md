@@ -1,4 +1,4 @@
-# XAUUSD trading rules (Claude's, 30 Oct 2026, v2 after backtest)
+# XAUUSD trading rules (Claude's, v3, 31 Oct 2026: candle trigger added)
 
 Trial rules for chat answers only; the automatic scans stay off until about 20 live trades show they work.
 Backtest (xyz:GOLD 15m, 8 Sep-30 Oct 2026, $0.35 cost, 0.01 lot): 46 trades, 54% wins, +$44, PF 1.31,
@@ -18,6 +18,9 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
 - 15m EMA20 above EMA50 for a buy (below for a sell).
 - The candle dips into the EMA20-EMA50 zone (or touches a key level within 0.25 x ATR) and closes back
   in the trend direction: beyond the EMA20, a bullish candle closing in its top third (bearish, bottom third for a sell).
+- Also valid (Homma candle trigger, added 31 Oct): the dip candle is a bullish engulfing (body swallows the previous
+  bearish body) or a pin bar (wick at least 2x the body and half the range, close in the top 40%), closing beyond the EMA20.
+  Mirror for sells. Backtest: +$77.85, PF 1.53, 49 trades, both halves positive (vs +$44, PF 1.31 without).
 - Enter at market on that close.
 - Key levels: prior-day high/low, Asian high/low, 1H swing highs/lows, round $25 numbers.
 - Break-and-retest and liquidity-sweep setups were dropped: 1-3 and 0-1 trades in 52 days, both losing.

@@ -1,0 +1,12 @@
+none        46 trades, 54% wins, $+44.00, PF 1.31, worst drop $44.30
+            1st half 23 trades, 43% wins, $-2.90, PF 0.97, worst drop $44.30 | 2nd half 23 trades, 65% wins, $+46.90, PF 1.93, worst drop $14.00
+engulf      21 trades, 62% wins, $+32.60, PF 1.59, worst drop $21.55
+            1st half 10 trades, 60% wins, $+16.00, PF 1.56, worst drop $21.55 | 2nd half 11 trades, 64% wins, $+16.60, PF 1.63, worst drop $9.50
+pin         22 trades, 41% wins, $-14.05, PF 0.81, worst drop $38.75
+            1st half 11 trades, 27% wins, $-23.95, PF 0.47, worst drop $36.35 | 2nd half 11 trades, 55% wins, $+9.90, PF 1.33, worst drop $16.90
+any         30 trades, 53% wins, $+20.35, PF 1.23, worst drop $27.85
+            1st half 15 trades, 47% wins, $-1.85, PF 0.96, worst drop $27.70 | 2nd half 15 trades, 60% wins, $+22.20, PF 1.61, worst drop $14.65
+three       12 trades, 50% wins, $-1.15, PF 0.97, worst drop $21.55
+            1st half 6 trades, 33% wins, $-11.20, PF 0.59, worst drop $21.55 | 2nd half 6 trades, 67% wins, $+10.05, PF 1.73, worst drop $7.45
+or_pattern  49 trades, 55% wins, $+77.85, PF 1.53, worst drop $36.05
+            1st half 24 trades, 50% wins, $+33.95, PF 1.40, worst drop $36.05 | 2nd half 25 trades, 60% wins, $+43.90, PF 1.71, worst drop $14.00
