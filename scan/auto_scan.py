@@ -63,6 +63,36 @@ def swings(b):
     return hi, lo
 
 
+NEWS = f'{DESK}/news_today.json'
+TG_ENV = '/root/.claude/channels/telegram/.env'
+TG_CHAT = '1192966973'
+
+
+def news_block(now):
+    """Return (blocked, note). news_today.json = {"date": "YYYY-MM-DD", "events": [["HH:MM", "name"], ...]} in London time."""
+    try:
+        n = json.load(open(NEWS))
+    except (OSError, ValueError):
+        return False, 'News calendar not checked'
+    if n.get('date') != now.strftime('%Y-%m-%d'):
+        return False, 'News calendar not checked'
+    for hm, name in n.get('events', []):
+        h, m = map(int, hm.split(':'))
+        if abs((now.hour * 60 + now.minute) - (h * 60 + m)) <= 15:
+            return True, f'{name} at {hm}'
+    return False, None
+
+
+def send_telegram(text):
+    """Send directly to the trader's Telegram. Returns 'ok <id>' or 'FAILED <why>'. Never prints the token."""
+    try:
+        token = [l.split('=', 1)[1].strip() for l in open(TG_ENV) if l.startswith('TELEGRAM_BOT_TOKEN=')][0]
+        r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage', data={'chat_id': TG_CHAT, 'text': text}, timeout=15).json()
+        return f"ok {r['result']['message_id']}" if r.get('ok') else f"FAILED {r.get('description')}"
+    except Exception as e:  # blocked host, no token file, timeout
+        return f'FAILED {type(e).__name__}'
+
+
 def ldn(ms):
     return dt.datetime.fromtimestamp(ms / 1000, dt.timezone.utc).astimezone(L)
 
@@ -233,12 +263,19 @@ def main():
            f'Why: {reason}. 4H {"with" if bias4 == bias else "against, target capped at 1.5R"}.\n'
            f'Exit by {min(now + dt.timedelta(hours=8), now.replace(hour=21, minute=0)).strftime("%H:%M")} London if neither is hit. '
            f'Prices are the desk feed; if MT5 differs, keep the same distances from your MT5 entry.')
-    open(MSG, 'w').write(msg)
+    blocked, note = news_block(now)
+    if blocked:
+        return done(f'setup skipped: high-impact news ({note})')
+    if note:
+        msg += f'\n{note}'
+    sent = send_telegram(msg)
+    if not sent.startswith('ok'):
+        open(MSG, 'w').write(msg)  # loop.sh exits and wakes the session, which sends it another way
     rows.append(dict(given_at_london=given, side=side, entry=entry, stop=stop, target=tp, reason=reason, result=''))
     write_log(rows)
     state['open'] = dict(given=given, side=side, entry=entry, stop=stop, target=tp, bar_close_ms=bar['T'] + 1)
     json.dump(state, open(STATE, 'w'), indent=1)
-    print(f'{tag} London, gold {mark}: SETUP {side} {entry} SL {stop} TP {tp} ({trig})' + (f'; {trade_note}' if trade_note else ''))
+    print(f'{tag} London, gold {mark}: SETUP {side} {entry} SL {stop} TP {tp} ({trig}); Telegram {sent}' + (f'; {trade_note}' if trade_note else ''))
 
 
 if __name__ == '__main__':

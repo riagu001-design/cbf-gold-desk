@@ -1,6 +1,6 @@
-# Sending a setup (used by the watchdog scans and when loop.sh exits with "SETUP FIRED")
+# Sending a setup when auto_scan.py could not send it itself (used by the watchdog scans and when loop.sh exits with "SETUP FIRED")
 1. `mv /home/user/gold-desk/scan_msg.txt /home/user/gold-desk/scan_msg.sending` - if the mv fails, another run is already sending: stop.
-2. News check: load mcp__FMP__calendar with ToolSearch; high-impact USD release (CPI, NFP, PCE, FOMC, GDP, Fed chair, jobless claims, ISM, retail sales) within 15 min either side of now?
+2. News check (skip if the message already says it was checked; auto_scan.py checks news_today.json): load mcp__FMP__calendar with ToolSearch; high-impact USD release (CPI, NFP, PCE, FOMC, GDP, Fed chair, jobless claims, ISM, retail sales) within 15 min either side of now?
    - Yes: do not send. Delete scan_msg.sending, set that trade's result in /home/user/gold-desk/live_log.csv to "SKIPPED news", set "open" to null in /home/user/gold-desk/scan_state.json.
    - Calendar unreadable: send anyway with an extra last line "News calendar not checked".
 3. Send scan_msg.sending's exact text as ONE Telegram message: mcp__claude-code-remote__create_session in env_01N2nUJa5bbsKyUvG6B2uDSH whose prompt writes the text to /tmp/msg.txt with a quoted heredoc (<<'EOF') and runs
