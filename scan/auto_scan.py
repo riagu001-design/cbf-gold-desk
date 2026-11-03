@@ -124,7 +124,17 @@ def main():
     if os.path.exists(MSG):
         os.remove(MSG)
     m15, h1, h4, d1 = candles('15m', 5), candles('1h', 15), candles('4h', 40), candles('1d', 6)
-    meta = requests.post(API, json={'type': 'metaAndAssetCtxs', 'dex': 'xyz'}, timeout=20).json()
+    meta = None
+    for attempt in range(3):  # the API sometimes returns null; retry
+        try:
+            meta = requests.post(API, json={'type': 'metaAndAssetCtxs', 'dex': 'xyz'}, timeout=20).json()
+        except (requests.RequestException, ValueError):
+            meta = None
+        if meta:
+            break
+        time.sleep(3)
+    if not meta:
+        raise SystemExit('price feed returned no mark price; scan skipped')
     mark = [float(x['markPx']) for u, x in zip(meta[0]['universe'], meta[1]) if u['name'] == 'xyz:GOLD'][0]
     now = dt.datetime.now(L)
     tag = now.strftime('%H:%M')
