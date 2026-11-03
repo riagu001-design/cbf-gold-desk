@@ -1,6 +1,6 @@
 # XAUUSD trading rules (Claude's, v3, 31 Oct 2026: candle trigger added)
 
-Trial rules for chat answers only; the automatic scans stay off until about 20 live trades show they work.
+Automatic scan ON since 3 Nov (trader said yes): scan/auto_scan.py runs at :01 :16 :31 :46 London, 07:00-10:30 and 13:00-16:30, and sends Telegram only when a setup fires.
 Backtest (xyz:GOLD 15m, 8 Sep-30 Oct 2026, $0.35 cost, 0.01 lot): 46 trades, 54% wins, +$44, PF 1.31,
 worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneven halves. Code: gold-desk/bt2/.
 
