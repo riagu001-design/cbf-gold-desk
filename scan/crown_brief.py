@@ -100,10 +100,11 @@ def main():
         last = open(f'{G}/scan_loop.log').read().strip().splitlines()[-1]
     except (OSError, IndexError):
         pass
-    running = subprocess.run(['bash', '/home/user/cbf-gold-desk/scan/checker_ok.sh'], capture_output=True, text=True).stdout.strip() == 'RUNNING'
     mins = now.hour * 60 + now.minute
     in_session = now.weekday() < 5 and (420 <= mins <= 630 or 780 <= mins <= 990)
-    facts.append(f'Scanner: 5 minute checker {"running" if running else "not running"}; sessions 07:00 to 10:30 and 13:00 to 16:30 London, weekdays. Last scan: {last or "none yet today"}.')
+    running = subprocess.run(['bash', '/home/user/cbf-gold-desk/scan/checker_ok.sh'], capture_output=True, text=True).stdout.strip() == 'RUNNING'
+    status = 'running' if running else ('not running (it is restarted within 15 minutes)' if in_session else 'off until the next session')
+    facts.append(f'Scanner: 5 minute checker {status}; sessions 07:00 to 10:30 and 13:00 to 16:30 London, weekdays. Last scan: {last or "none yet today"}.')
     if in_session:
         spoken.append('The scanner is ' + ('watching every five minute candle.' if running else 'restarting; the watchdog brings it back within fifteen minutes.'))
         if last and 'no setup (' in last:
