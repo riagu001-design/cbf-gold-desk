@@ -27,8 +27,17 @@ MAX_STOP, DAY_LOSS = 10.0, -20.0
 
 
 def candles(iv, days):
-    r = requests.post(API, json={'type': 'candleSnapshot', 'req': {'coin': 'xyz:GOLD', 'interval': iv,
-                      'startTime': int((time.time() - days * 86400) * 1000)}}, timeout=20).json()
+    for attempt in range(3):  # the API sometimes returns null; retry
+        try:
+            r = requests.post(API, json={'type': 'candleSnapshot', 'req': {'coin': 'xyz:GOLD', 'interval': iv,
+                              'startTime': int((time.time() - days * 86400) * 1000)}}, timeout=20).json()
+        except (requests.RequestException, ValueError):
+            r = None
+        if r:
+            break
+        time.sleep(3)
+    if not r:
+        raise SystemExit(f'price feed returned no {iv} candles; scan skipped')
     now = time.time() * 1000
     return [dict(t=b['t'], T=b['T'], o=float(b['o']), h=float(b['h']), l=float(b['l']), c=float(b['c'])) for b in r if b['T'] < now]
 
