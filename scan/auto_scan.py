@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Automatic XAUUSD scan for XAUUSD_RULES.md v3 (market orders only).
+"""Automatic XAUUSD scan for XAUUSD_RULES.md v3.1 (market orders only, 5m entry trigger).
 
-Run just after each 15m candle closes. Prints one summary line. When a setup fires it writes
+Run just after each 5m candle closes (scan/loop.sh). Prints one summary line. When a setup fires it writes
 /home/user/gold-desk/scan_msg.txt (the Telegram text) and logs the trade in live_log.csv.
 It also follows the open logged trade on 15m candles (stop, target, 8h / 21:00 time exit) so it
 can enforce one trade at a time and the daily limits (2 losses or -$20).
@@ -82,14 +82,14 @@ def write_log(rows):
         w.writerows(rows)
 
 
-def resolve_open(rows, state, m15):
-    """Follow the open auto trade on closed 15m candles; fill its result."""
+def resolve_open(rows, state, bars):
+    """Follow the open auto trade on closed 5m candles; fill its result."""
     ot = state.get('open')
     if not ot:
         return None
     buy, sg = ot['side'] == 'BUY', 1 if ot['side'] == 'BUY' else -1
     res = None
-    for x in m15:
+    for x in bars:
         if x['t'] < ot['bar_close_ms']:
             continue
         hit_sl = x['l'] <= ot['stop'] if buy else x['h'] >= ot['stop']
@@ -122,8 +122,9 @@ def main():
     state = json.load(open(STATE)) if os.path.exists(STATE) else {}
     rows = read_log()
     if os.path.exists(MSG):
-        os.remove(MSG)
-    m15, h1, h4, d1 = candles('15m', 5), candles('1h', 15), candles('4h', 40), candles('1d', 6)
+        print('a setup message is still waiting to be sent; scan skipped')
+        return
+    m5, m15, h1, h4, d1 = candles('5m', 2), candles('15m', 5), candles('1h', 15), candles('4h', 40), candles('1d', 6)
     meta = None
     for attempt in range(3):  # the API sometimes returns null; retry
         try:
@@ -138,7 +139,7 @@ def main():
     mark = [float(x['markPx']) for u, x in zip(meta[0]['universe'], meta[1]) if u['name'] == 'xyz:GOLD'][0]
     now = dt.datetime.now(L)
     tag = now.strftime('%H:%M')
-    trade_note = resolve_open(rows, state, m15)
+    trade_note = resolve_open(rows, state, m5)
     write_log(rows)
 
     def done(why):
@@ -155,12 +156,14 @@ def main():
     if d['losses'] >= 2 or d['pl'] <= DAY_LOSS:
         return done(f"daily limit hit ({d['losses']} losses, {d['pl']:+.2f})")
 
-    bar, pv = m15[-1], m15[-2]
+    # v3.1 (3 Nov, trader's yes): 1H trend and 15m EMA zone decide direction and place; the 5m candle is the trigger
+    bar, pv = m5[-1], m5[-2]
+    A5 = atr(m5)
     if not force and state.get('last_bar') == bar['t']:
         return done('candle already checked')
     state['last_bar'] = bar['t']
-    if not force and (time.time() * 1000 - bar['T']) > 6 * 60e3:
-        return done('signal candle closed over 6 min ago')
+    if not force and (time.time() * 1000 - bar['T']) > 4 * 60e3:
+        return done('signal candle closed over 4 min ago')
 
     hi, lo = swings(h1)
     e50h, c1 = ema([b['c'] for b in h1], 50)[-1], h1[-1]['c']
@@ -198,12 +201,12 @@ def main():
     entry = mark
     if abs(entry - e20) > 1.5 * A:
         return done(f'stretched {abs(entry - e20):.1f} from EMA20 (max {1.5 * A:.1f})')
-    if rng > 2 * A:
-        return done(f'signal candle too big ({rng:.1f} > {2 * A:.1f})')
-    ext = min(b['l'] for b in m15[-3:]) if buy else max(b['h'] for b in m15[-3:])
+    if rng > 2 * A5:
+        return done(f'signal candle too big ({rng:.1f} > {2 * A5:.1f})')
+    ext = min(b['l'] for b in m5[-3:]) if buy else max(b['h'] for b in m5[-3:])
     stop = ext - sg * 1.5
-    if sg * (entry - stop) < 0.5 * A:
-        stop = entry - sg * 0.5 * A
+    if sg * (entry - stop) < 0.5 * A5:
+        stop = entry - sg * 0.5 * A5
     R = abs(entry - stop)
     if sg * (entry - stop) <= 0:
         return done('price already through the stop level')
@@ -221,7 +224,7 @@ def main():
     entry, stop, tp, skip = (round(v, 1) for v in (entry, stop, tp, skip))
     reward = abs(tp - entry)
     given = now.strftime('%Y-%m-%d %H:%M')
-    reason = f'1H {bias.replace("DN", "DOWN")}, 15m pullback to EMA zone, {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
+    reason = f'1H {bias.replace("DN", "DOWN")}, 15m pullback to EMA zone, 5m {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
     msg = (f'GOLD {side} NOW (market order)\n'
            f'Entry: {entry} (market, live price {now.strftime("%H:%M")} London)\n'
            f'Stop loss: {stop} (${R:.2f} risk at 0.01 lot)\n'

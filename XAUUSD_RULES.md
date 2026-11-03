@@ -1,6 +1,6 @@
-# XAUUSD trading rules (Claude's, v3, 31 Oct 2026: candle trigger added)
+# XAUUSD trading rules (Claude's, v3.1, 3 Nov 2026: 5m entry trigger)
 
-Automatic scan ON since 3 Nov (trader said yes): scan/auto_scan.py runs at :01 :16 :31 :46 London, 07:00-10:30 and 13:00-16:30, and sends Telegram only when a setup fires.
+Automatic scan ON (trader said yes, 3 Nov): scan/loop.sh checks every 5m candle 07:00-10:30 and 13:00-16:30 London and sends Telegram only when a setup fires; the :01/:16/:31/:46 scheduled scans keep it running.
 Backtest (xyz:GOLD 15m, 8 Sep-30 Oct 2026, $0.35 cost, 0.01 lot): 46 trades, 54% wins, +$44, PF 1.31,
 worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneven halves. Code: gold-desk/bt2/.
 
@@ -22,6 +22,11 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
   bearish body) or a pin bar (wick at least 2x the body and half the range, close in the top 40%), closing beyond the EMA20.
   Mirror for sells. Backtest: +$77.85, PF 1.53, 49 trades, both halves positive (vs +$44, PF 1.31 without).
 - Enter at market on that close.
+- v3.1 (3 Nov, trader's yes): the trigger candle is the 5m candle. The 1H trend and the 15m EMA20/EMA50 zone still decide
+  direction and place; the closed 5m candle must dip into the zone and give the strong close / engulfing / pin bar.
+  Stop: beyond the last 3 x 5m candles +$1.50, at least 0.5 x 5m ATR; signal candle no bigger than 2 x 5m ATR.
+  Backtest 13 Oct-3 Nov (sessions): 28 trades, 54% wins, +$47, PF 1.81, avg risk $4.40, vs 15m trigger 10 trades +$23.
+  Raising the $10 stop cap instead made it worse ($15 cap: -$15, PF 0.79). Only 3 weeks of 5m data: unproven.
 - Key levels: prior-day high/low, Asian high/low, 1H swing highs/lows, round $25 numbers.
 - Break-and-retest and liquidity-sweep setups were dropped: 1-3 and 0-1 trades in 52 days, both losing.
 
