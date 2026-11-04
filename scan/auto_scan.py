@@ -22,6 +22,8 @@ DESK = '/home/user/gold-desk'
 LOG = f'{DESK}/live_log.csv'
 STATE = f'{DESK}/scan_state.json'
 MSG = f'{DESK}/scan_msg.txt'
+RES = f'{DESK}/scan_result.txt'  # trade results the checker could not send itself (sent by the session, see SEND.md)
+BALANCE_START = 194.74  # balance after the 30 Oct weekly report
 FIELDS = ['given_at_london', 'side', 'entry', 'stop', 'target', 'reason', 'result']
 MAX_STOP, DAY_LOSS = 10.0, -20.0
 
@@ -126,16 +128,16 @@ def resolve_open(rows, state, bars):
         hit_tp = x['h'] >= ot['target'] if buy else x['l'] <= ot['target']
         xt = ldn(x['T'] + 1)
         if hit_sl:
-            res = ('SL', sg * (ot['stop'] - ot['entry']))
+            res = ('SL', sg * (ot['stop'] - ot['entry']), ot['stop'])
         elif hit_tp:
-            res = ('TP', sg * (ot['target'] - ot['entry']))
+            res = ('TP', sg * (ot['target'] - ot['entry']), ot['target'])
         elif x['T'] + 1 - ot['bar_close_ms'] >= 8 * 3600e3 or (xt.hour >= 21):
-            res = ('TIME', sg * (x['c'] - ot['entry']))
+            res = ('TIME', sg * (x['c'] - ot['entry']), x['c'])
         if res:
             break
     if not res:
         return f"open {ot['side']} {ot['entry']} SL {ot['stop']} TP {ot['target']}"
-    kind, pl = res
+    kind, pl, exit_px = res
     for r in rows:
         if r['given_at_london'] == ot['given'] and not r['result']:
             r['result'] = f'{kind} {pl:+.2f}'
@@ -144,7 +146,34 @@ def resolve_open(rows, state, bars):
     d = state.setdefault('days', {}).setdefault(day, {'pl': 0.0, 'losses': 0})
     d['pl'] = round(d['pl'] + pl, 2)
     d['losses'] += 1 if pl < 0 else 0
+    send_result(rows, ot, kind, pl, exit_px, xt, d)
     return f"closed {ot['side']} {kind} {pl:+.2f}"
+
+
+def send_result(rows, ot, kind, pl, exit_px, xt, day):
+    """Tell the trader on Telegram that the trade closed; if the direct send fails, queue it in RES for the session."""
+    head = {'TP': 'TARGET HIT', 'SL': 'STOP HIT', 'TIME': 'TIME EXIT (8 hours or 21:00)'}[kind]
+    risk = abs(ot['entry'] - ot['stop']) or 1
+    total = 0.0
+    for r in rows:
+        try:
+            total += float(r['result'].split()[-1]) if r['result'] and not r['result'].startswith('SKIPPED') else 0
+        except ValueError:
+            pass
+    msg = (f'GOLD TRADE CLOSED: {head}\n'
+           f'{ot["side"]} from {ot["entry"]} (sent {ot["given"][11:16]} London)\n'
+           f'Exit {exit_px:.1f} at {xt.strftime("%H:%M")} London\n'
+           f'Result {pl:+.2f} dollars at 0.01 lot ({pl / risk:+.1f}R)\n'
+           f'Today: {day["pl"]:+.2f} dollars, {day["losses"]} loss{"es" if day["losses"] != 1 else ""}. '
+           f'Account about {BALANCE_START + total:.2f} dollars.'
+           + ('' if kind != 'TIME' else '\nClose it in MT5 now if it is still open.'))
+    if os.environ.get('SCAN_TEST') == '1':
+        print('RESULT MESSAGE (test, not sent):\n' + msg)
+        return
+    sent = send_telegram(msg)
+    if not sent.startswith('ok'):
+        with open(RES, 'a') as f:
+            f.write(msg + '\n\n')
 
 
 def main():

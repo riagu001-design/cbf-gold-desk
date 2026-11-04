@@ -9,3 +9,9 @@
 4. ok: delete scan_msg.sending. FAILED: mv it back to scan_msg.txt so the next watchdog retries.
 5. Make sure the checker runs: bash /home/user/cbf-gold-desk/scan/start_checker.sh. Re-arm the send watcher: Bash run_in_background (timeout 7200000): bash /home/user/cbf-gold-desk/scan/wait_msg.sh
 6. Tell the trader the setup text and the Telegram result (London times).
+
+# Sending a trade result (scan_result.txt: auto_scan.py writes it when a trade hits its stop, target or time exit and the direct send fails)
+1. `mv /home/user/gold-desk/scan_result.txt /home/user/gold-desk/scan_result.sending` - if the mv fails, another run is already sending: stop.
+2. No news check. Send its exact text as ONE Telegram message the same way as step 3 above (child session, quoted heredoc, curl, archive).
+3. ok: delete scan_result.sending. FAILED: append its text back to scan_result.txt so the next watchdog retries.
+4. Re-arm the send watcher as in step 5 above, and tell the trader the result (London times).
