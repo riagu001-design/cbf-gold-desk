@@ -64,6 +64,7 @@ def main():
     ctx = [x for u, x in zip(meta[0]['universe'], meta[1]) if u['name'] == 'xyz:GOLD'][0] if meta else {}
     mark = float(ctx.get('markPx', 0) or 0)
     prev = float(ctx.get('prevDayPx', 0) or 0)
+    m5 = candles('5m', 2)
     m15, h1, h4, d1 = candles('15m', 5), candles('1h', 15), candles('4h', 40), candles('1d', 6, closed=False)
 
     facts, spoken = [], []
@@ -86,13 +87,13 @@ def main():
         b4 = 'UP' if h4[-1]['c'] > ema([b['c'] for b in h4], 50)[-1] else 'DOWN'
         c15 = [b['c'] for b in m15]
         e20, e50 = ema(c15, 20)[-1], ema(c15, 50)[-1]
-        zone = f'{min(e20, e50):.1f} to {max(e20, e50):.1f}'
-        facts.append(f'Trend: 1 hour {bias} (close {c1:.1f} vs 1 hour EMA50 {e50h:.1f}); 4 hour {b4}. 15 minute EMA20 {e20:.1f}, EMA50 {e50:.1f}; the pullback zone is {zone}.')
+        e5 = ema([b['c'] for b in m5], 20)[-1] if len(m5) > 20 else c1
+        facts.append(f'Trend: 1 hour {bias} (close {c1:.1f} vs 1 hour EMA50 {e50h:.1f}); 4 hour {b4}. 15 minute EMA20 {e20:.1f}, EMA50 {e50:.1f}; 5 minute EMA20 (the dip level) {e5:.1f}.')
         if bias == 'FLAT':
             spoken.append('The one hour trend is flat, so the desk is standing aside: no buys or sells until it picks a direction.')
         else:
             side = 'buys' if bias == 'UP' else 'sells'
-            spoken.append(f'The one hour trend is {bias.lower()} and the four hour is {b4.lower()}, so the desk only looks for {side}, on a pullback into the 15 minute zone around {say(min(e20, e50))} to {say(max(e20, e50))}.')
+            spoken.append(f'The one hour trend is {bias.lower()} and the four hour is {b4.lower()}, so the desk only looks for {side}, on a dip to the 5 minute EMA20, now about {say(e5)}, which is {abs(mark - e5):.0f} dollars {"below" if mark >= e5 else "above"} the price.')
 
     # scan health and latest reason
     last = ''
