@@ -1,4 +1,4 @@
-# XAUUSD trading rules (Claude's, v3.1, 3 Nov 2026: 5m entry trigger)
+# XAUUSD trading rules (Claude's, v3.2, 4 Nov 2026: trend-day dip to the 5m EMA20)
 
 Automatic scan ON (trader said yes, 3 Nov): scan/loop.sh checks every 5m candle 07:00-10:30 and 13:00-16:30 London and sends Telegram only when a setup fires; the :01/:16/:31/:46 scheduled scans keep it running.
 Backtest (xyz:GOLD 15m, 8 Sep-30 Oct 2026, $0.35 cost, 0.01 lot): 46 trades, 54% wins, +$44, PF 1.31,
@@ -22,6 +22,14 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
   bearish body) or a pin bar (wick at least 2x the body and half the range, close in the top 40%), closing beyond the EMA20.
   Mirror for sells. Backtest: +$77.85, PF 1.53, 49 trades, both halves positive (vs +$44, PF 1.31 without).
 - Enter at market on that close.
+- v3.2 (4 Nov, trader's yes) REPLACES the zone entry: with the 1H trend and the 15m EMA20/EMA50 agreeing, the closed 5m candle
+  must dip to the 5m EMA20 (within 0.25 x 5m ATR), with the 5m EMA20 on the trend side of the 5m EMA50, and close as a strong
+  close / engulfing / pin bar beyond it. No chasing beyond 1.5 x 5m ATR from the 5m EMA20. Stop beyond the last 3 five minute
+  candles +$1.50 (min 0.5 x 5m ATR, max $10). Room and target use prior-day high/low and 1H swings; target 2R or the next level.
+  Backtest 13 Oct-4 Nov: 19 trades, 63% wins, +$88.75, PF 3.17, worst drop $8, both halves +$43/+$46, +$82 at double costs;
+  the zone entry made 24 trades +$59 PF 2.13; running both made 34 trades +$67 PF 1.78 (worse). Small sample: unproven.
+- Homma / Sakata five methods tested 4 Nov (San-zan, San-sen, San-ku, San-pei, San-po): about 8 trades in 3.5 weeks in total,
+  mostly losing without the trend filter; not used. The candle triggers above already carry Homma's single-candle signals.
 - v3.1 (3 Nov, trader's yes): the trigger candle is the 5m candle. The 1H trend and the 15m EMA20/EMA50 zone still decide
   direction and place; the closed 5m candle must dip into the zone and give the strong close / engulfing / pin bar.
   Stop: beyond the last 3 x 5m candles +$1.50, at least 0.5 x 5m ATR; signal candle no bigger than 2 x 5m ATR.

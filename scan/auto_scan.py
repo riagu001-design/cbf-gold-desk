@@ -211,26 +211,30 @@ def main():
     rng = bar['h'] - bar['l'] or 1e-9
     pos = (bar['c'] - bar['l']) / rng
     body, pbody = abs(bar['c'] - bar['o']), abs(pv['c'] - pv['o'])
-    zlo, zhi = min(e20, e50) - 0.25 * A, max(e20, e50) + 0.25 * A
-    pdh, pdl = d1[-2]['h'], d1[-2]['l']
-    base = round(mark / 25) * 25
-    lv = [pdh, pdl] + hi[-4:] + lo[-4:] + [base + k * 25 for k in (-2, -1, 0, 1, 2)]
-    ztouch = bar['l'] <= zhi if buy else bar['h'] >= zlo
-    ltouch = any((abs(bar['l'] - x) <= 0.25 * A and bar['c'] > x) if buy else (abs(bar['h'] - x) <= 0.25 * A and bar['c'] < x) for x in lv)
-    strong = (bar['c'] > e20 and bar['c'] > bar['o'] and pos >= 2 / 3) if buy else (bar['c'] < e20 and bar['c'] < bar['o'] and pos <= 1 / 3)
+    # v3.2 (4 Nov, trader's yes): trend-day dip. The 1H trend and the 15m EMAs set the side; the closed 5m candle must dip
+    # to the 5m EMA20 (+-0.25 x 5m ATR), with the 5m EMA20 on the trend side of its EMA50, and close as the trigger.
+    # Backtest 13 Oct-4 Nov (sessions): 19 trades, 63% wins, +$88.75, PF 3.17, both halves positive (backtest/bt_more.py 'dip').
+    c5 = [b['c'] for b in m5]
+    E5, E5b = ema(c5, 20)[-1], ema(c5, 50)[-1]
+    if not (E5 > E5b if buy else E5 < E5b):
+        return done(f'1H {bias} but the 5m EMA20 is not on the trend side of its EMA50')
+    pdh, pdl = d1[-1]['h'], d1[-1]['l']  # candles() drops the forming day, so [-1] is yesterday
+    lv = [pdh, pdl] + hi[-4:] + lo[-4:]
+    touch = bar['l'] <= E5 + 0.25 * A5 if buy else bar['h'] >= E5 - 0.25 * A5
+    strong = (bar['c'] > E5 and bar['c'] > bar['o'] and pos >= 2 / 3) if buy else (bar['c'] < E5 and bar['c'] < bar['o'] and pos <= 1 / 3)
     eng = (bar['c'] > bar['o'] and pv['c'] < pv['o'] and bar['c'] >= pv['o'] and bar['o'] <= pv['c'] and body > pbody) if buy else \
           (bar['c'] < bar['o'] and pv['c'] > pv['o'] and bar['c'] <= pv['c'] and bar['o'] >= pv['o'] and body > pbody)
     wick = (min(bar['o'], bar['c']) - bar['l']) if buy else (bar['h'] - max(bar['o'], bar['c']))
     pin = wick >= 2 * max(body, 1e-9) and wick >= 0.5 * rng and (pos >= 0.6 if buy else pos <= 0.4)
-    beyond = bar['c'] > e20 if buy else bar['c'] < e20
-    if not (ztouch or ltouch):
-        return done(f'1H {bias}, no pullback into the 15m EMA zone {zlo:.1f}-{zhi:.1f}')
+    beyond = bar['c'] > E5 if buy else bar['c'] < E5
+    if not touch:
+        return done(f'1H {bias}, no dip to the 5m EMA20 ({E5:.1f})')
     trig = 'strong close' if strong else 'engulfing' if beyond and eng else 'pin bar' if beyond and pin else None
     if not trig:
-        return done(f'1H {bias}, pullback but no trigger candle')
+        return done(f'1H {bias}, dip to the 5m EMA20 but no trigger candle')
     entry = mark
-    if abs(entry - e20) > 1.5 * A:
-        return done(f'stretched {abs(entry - e20):.1f} from EMA20 (max {1.5 * A:.1f})')
+    if abs(entry - E5) > 1.5 * A5:
+        return done(f'stretched {abs(entry - E5):.1f} from the 5m EMA20 (max {1.5 * A5:.1f})')
     if rng > 2 * A5:
         return done(f'signal candle too big ({rng:.1f} > {2 * A5:.1f})')
     ext = min(b['l'] for b in m5[-3:]) if buy else max(b['h'] for b in m5[-3:])
@@ -247,20 +251,20 @@ def main():
     roomR = abs(nxt - entry) / R if nxt else 9
     if roomR < 1:
         return done(f'only {roomR:.2f}R of room to {nxt:.1f}')
-    cap = 2 if bias4 == bias else 1.5
+    cap = 2  # v3.2: the dip backtest used 2R or the next level, with no 4H cap
     tp = entry + sg * R * min(cap, roomR)
     skip = entry + sg * 0.3 * R
     side = 'BUY' if buy else 'SELL'
     entry, stop, tp, skip = (round(v, 1) for v in (entry, stop, tp, skip))
     reward = abs(tp - entry)
     given = now.strftime('%Y-%m-%d %H:%M')
-    reason = f'1H {bias.replace("DN", "DOWN")}, 15m pullback to EMA zone, 5m {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
+    reason = f'1H {bias.replace("DN", "DOWN")}, 5m dip to the EMA20, {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
     msg = (f'GOLD {side} NOW (market order)\n'
            f'Entry: {entry} (market, live price {now.strftime("%H:%M")} London)\n'
            f'Stop loss: {stop} (${R:.2f} risk at 0.01 lot)\n'
            f'Take profit: {tp} (+${reward:.2f}, {reward / R:.1f}R)\n'
            f'Skip if price is already {"above" if buy else "below"} {skip}\n'
-           f'Why: {reason}. 4H {"with" if bias4 == bias else "against, target capped at 1.5R"}.\n'
+           f'Why: {reason}. 4H {"with" if bias4 == bias else "against"} the trade.\n'
            f'Exit by {min(now + dt.timedelta(hours=8), now.replace(hour=21, minute=0)).strftime("%H:%M")} London if neither is hit. '
            f'Prices are the desk feed; if MT5 differs, keep the same distances from your MT5 entry.')
     blocked, note = news_block(now)

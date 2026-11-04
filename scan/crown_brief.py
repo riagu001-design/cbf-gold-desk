@@ -159,7 +159,7 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Rules v3.1 (3 Nov): market orders only; trade only with the 1 hour trend; 15 minute pullback into the EMA20 to EMA50 zone; trigger on the 5 minute candle (strong close, engulfing or pin bar); no chasing beyond 1.5 x 15 minute ATR; stop beyond the last 3 five minute candles plus 1.50 dollars, at most 10 dollars at 0.01 lot; at least 1R of room; target 2R or the next level (1.5R if the 4 hour disagrees); exit after 8 hours or at 21:00; one trade at a time; stop for the day after 2 losses or minus 20 dollars. Setups go straight to Telegram as ENTER NOW.')
+    facts.append('Rules v3.2 (4 Nov): market orders only; trade only with the 1 hour trend, with the 15 minute EMAs agreeing; enter when a 5 minute candle dips to the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars, at most 10 dollars at 0.01 lot; at least 1R of room; target 2R or the next level; exit after 8 hours or at 21:00; one trade at a time; stop for the day after 2 losses or minus 20 dollars. Setups go straight to Telegram as ENTER NOW.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; MT5 has been about 3 to 4 dollars lower, so use the same distances from the MT5 entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 
