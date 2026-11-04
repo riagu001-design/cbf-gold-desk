@@ -93,7 +93,9 @@ def main():
             spoken.append('The one hour trend is flat, so the desk is standing aside: no buys or sells until it picks a direction.')
         else:
             side = 'buys' if bias == 'UP' else 'sells'
-            spoken.append(f'The one hour trend is {bias.lower()} and the four hour is {b4.lower()}, so the desk only looks for {side}, on a dip to the 5 minute EMA20, now about {say(e5)}, which is {abs(mark - e5):.0f} dollars {"below" if mark >= e5 else "above"} the price.')
+            gap = abs(mark - e5)
+            where = 'right at the price' if gap < 1.5 else f'{gap:.0f} dollars {"below" if mark >= e5 else "above"} the price'
+            spoken.append(f'The one hour trend is {bias.lower()} and the four hour is {b4.lower()}, so the desk only looks for {side}, on a dip to the 5 minute EMA20, now about {say(e5)}, {where}.')
 
     # scan health and latest reason
     last = ''
