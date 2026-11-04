@@ -107,7 +107,7 @@ def main():
     facts.append(f'Scanner: 5 minute checker {status}; sessions 07:00 to 10:30 and 13:00 to 16:30 London, weekdays. Last scan: {last or "none yet today"}.')
     if in_session:
         spoken.append('The scanner is ' + ('watching every five minute candle.' if running else 'restarting; the watchdog brings it back within fifteen minutes.'))
-        if last and 'no setup (' in last:
+        if last and 'no setup (' in last and 'outside' not in last:
             spoken.append('Latest check: ' + last.split('no setup (', 1)[1].rstrip(')').split(');')[0] + '.')
     else:
         if now.weekday() < 5 and 630 < mins < 780:
