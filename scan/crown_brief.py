@@ -111,7 +111,7 @@ def main():
     if in_session:
         spoken.append('The scanner is ' + ('watching every five minute candle.' if running else 'restarting; the watchdog brings it back within fifteen minutes.'))
         if last and 'no setup (' in last and 'outside' not in last:
-            spoken.append('Latest check: ' + last.split('no setup (', 1)[1].rstrip(')').split(');')[0] + '.')
+            spoken.append('Latest check: ' + last.split('no setup (', 1)[1].split(');')[0].removesuffix(')') + '.')
     else:
         if now.weekday() < 5 and 630 < mins < 780:
             nxt = 'at 1 pm'
