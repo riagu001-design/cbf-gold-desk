@@ -32,10 +32,10 @@ def post(body):
     return None
 
 
-def candles(iv, days):
+def candles(iv, days, closed=True):
     r = post({'type': 'candleSnapshot', 'req': {'coin': 'xyz:GOLD', 'interval': iv, 'startTime': int((time.time() - days * 86400) * 1000)}}) or []
     now = time.time() * 1000
-    return [dict(t=b['t'], T=b['T'], o=float(b['o']), h=float(b['h']), l=float(b['l']), c=float(b['c'])) for b in r if b['T'] < now]
+    return [dict(t=b['t'], T=b['T'], o=float(b['o']), h=float(b['h']), l=float(b['l']), c=float(b['c'])) for b in r if b['T'] < now or not closed]
 
 
 def ema(x, n):
@@ -64,7 +64,7 @@ def main():
     ctx = [x for u, x in zip(meta[0]['universe'], meta[1]) if u['name'] == 'xyz:GOLD'][0] if meta else {}
     mark = float(ctx.get('markPx', 0) or 0)
     prev = float(ctx.get('prevDayPx', 0) or 0)
-    m15, h1, h4, d1 = candles('15m', 5), candles('1h', 15), candles('4h', 40), candles('1d', 6)
+    m15, h1, h4, d1 = candles('15m', 5), candles('1h', 15), candles('4h', 40), candles('1d', 6, closed=False)
 
     facts, spoken = [], []
     if mark and prev:
