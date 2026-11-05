@@ -160,7 +160,7 @@ def send_result(rows, ot, kind, pl, exit_px, xt, day):
             total += float(r['result'].split()[-1]) if r['result'] and not r['result'].startswith('SKIPPED') else 0
         except ValueError:
             pass
-    msg = (f'GOLD TRADE CLOSED: {head}\n'
+    msg = (f'{"✅" if kind == "TP" else "❌" if kind == "SL" else "⏱"} GOLD TRADE CLOSED: {head}\n'
            f'{ot["side"]} from {ot["entry"]} (sent {ot["given"][11:16]} London)\n'
            f'Exit {exit_px:.1f} at {xt.strftime("%H:%M")} London\n'
            f'Result {pl:+.2f} dollars at 0.01 lot ({pl / risk:+.1f}R)\n'
@@ -207,8 +207,8 @@ def main():
 
     mins = now.hour * 60 + now.minute
     force = os.environ.get('SCAN_TEST') == '1'  # test only: ignore hours and candle age
-    if not force and (now.weekday() >= 5 or not (420 <= mins <= 632 or 780 <= mins <= 992) or (now.weekday() == 4 and mins >= 19 * 60)):
-        return done('outside 07:00-10:30 / 13:00-16:30 London')
+    if not force and (now.weekday() >= 5 or not (420 <= mins <= 992) or (now.weekday() == 4 and mins >= 19 * 60)):
+        return done('outside 07:00-16:30 London')
     if state.get('open'):
         return done('a trade is already open')
     d = state.get('days', {}).get(now.strftime('%Y-%m-%d'), {'pl': 0, 'losses': 0})
@@ -245,11 +245,12 @@ def main():
     # Backtest 13 Oct-4 Nov (sessions): 19 trades, 63% wins, +$88.75, PF 3.17, both halves positive (backtest/bt_more.py 'dip').
     c5 = [b['c'] for b in m5]
     E5, E5b = ema(c5, 20)[-1], ema(c5, 50)[-1]
-    if not (E5 > E5b if buy else E5 < E5b):
-        return done(f'1H {bias} but the 5m EMA20 is not on the trend side of its EMA50')
+    # v3.3 (5 Nov, trader's yes to looser rules): the 5m EMA20/50 rule is dropped, the dip may come within 0.5 x 5m ATR,
+    # and the desk trades 07:00-16:30 straight. Backtest 13 Oct-5 Nov: 39 trades (2.2/day), 56% wins, +$123, PF 2.29,
+    # halves +40/+83, vs v3.2 22 trades +$66 PF 2.02 (/home/user/gold-desk/bt5/bt_loose.py 'A+B+D').
     pdh, pdl = d1[-1]['h'], d1[-1]['l']  # candles() drops the forming day, so [-1] is yesterday
     lv = [pdh, pdl] + hi[-4:] + lo[-4:]
-    touch = bar['l'] <= E5 + 0.25 * A5 if buy else bar['h'] >= E5 - 0.25 * A5
+    touch = bar['l'] <= E5 + 0.5 * A5 if buy else bar['h'] >= E5 - 0.5 * A5
     strong = (bar['c'] > E5 and bar['c'] > bar['o'] and pos >= 2 / 3) if buy else (bar['c'] < E5 and bar['c'] < bar['o'] and pos <= 1 / 3)
     eng = (bar['c'] > bar['o'] and pv['c'] < pv['o'] and bar['c'] >= pv['o'] and bar['o'] <= pv['c'] and body > pbody) if buy else \
           (bar['c'] < bar['o'] and pv['c'] > pv['o'] and bar['c'] <= pv['c'] and bar['o'] >= pv['o'] and body > pbody)
@@ -288,7 +289,7 @@ def main():
     reward = abs(tp - entry)
     given = now.strftime('%Y-%m-%d %H:%M')
     reason = f'1H {bias.replace("DN", "DOWN")}, 5m dip to the EMA20, {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
-    msg = (f'GOLD {side} NOW (market order)\n'
+    msg = (f'🚨🚨 GOLD {side} NOW (market order) 🚨🚨\n'
            f'Entry: {entry} (market, live price {now.strftime("%H:%M")} London)\n'
            f'Stop loss: {stop} (${R:.2f} risk at 0.01 lot)\n'
            f'Take profit: {tp} (+${reward:.2f}, {reward / R:.1f}R)\n'

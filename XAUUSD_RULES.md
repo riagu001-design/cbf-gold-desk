@@ -1,6 +1,14 @@
+## v3.3 (5 Nov 2026, trader asked for more setups and said yes)
+Same trend-day dip as v3.2 with three changes: (A) the 5m EMA20 no longer has to be on the trend side of the 5m EMA50;
+(B) the dip counts when the 5m candle comes within 0.5 x 5m ATR of the 5m EMA20 (was 0.25); (D) the desk trades 07:00-16:30
+London straight (lunch included). Everything else unchanged (1H trend + 15m EMAs, trigger candle, stop, 1R room, 2R target, limits, news blackout).
+Backtest 13 Oct-5 Nov (/home/user/gold-desk/bt5/bt_loose.py): v3.2 22 trades 1.2/day +$65.60 PF 2.02 dd $28.10;
+v3.3 39 trades 2.2/day 56% wins +$123.15 PF 2.29 dd $26.40, halves +40/+83. Backtest has no news filter. Small sample: review after 20 live trades.
+Setup messages now start with a siren emoji; results start with a tick, cross or clock.
+
 # XAUUSD trading rules (Claude's, v3.2, 4 Nov 2026: trend-day dip to the 5m EMA20)
 
-Automatic scan ON (trader said yes, 3 Nov): scan/loop.sh checks every 5m candle 07:00-10:30 and 13:00-16:30 London and sends Telegram only when a setup fires; the :01/:16/:31/:46 scheduled scans keep it running.
+Automatic scan ON (trader said yes, 3 Nov): scan/loop.sh checks every 5m candle 07:00-16:30 London (v3.3, 5 Nov) and sends Telegram only when a setup fires; the :01/:16/:31/:46 scheduled scans keep it running.
 Backtest (xyz:GOLD 15m, 8 Sep-30 Oct 2026, $0.35 cost, 0.01 lot): 46 trades, 54% wins, +$44, PF 1.31,
 worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneven halves. Code: gold-desk/bt2/.
 

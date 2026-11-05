@@ -104,24 +104,22 @@ def main():
     except (OSError, IndexError):
         pass
     mins = now.hour * 60 + now.minute
-    in_session = now.weekday() < 5 and (420 <= mins <= 630 or 780 <= mins <= 990)
+    in_session = now.weekday() < 5 and 420 <= mins <= 990
     running = subprocess.run(['bash', '/home/user/cbf-gold-desk/scan/checker_ok.sh'], capture_output=True, text=True).stdout.strip() == 'RUNNING'
     status = 'running' if running else ('not running (it is restarted within 15 minutes)' if in_session else 'off until the next session')
-    facts.append(f'Scanner: 5 minute checker {status}; sessions 07:00 to 10:30 and 13:00 to 16:30 London, weekdays. Last scan: {last or "none yet today"}.')
+    facts.append(f'Scanner: 5 minute checker {status}; trading hours 07:00 to 16:30 London straight, weekdays. Last scan: {last or "none yet today"}.')
     if in_session:
         spoken.append('The scanner is ' + ('watching every five minute candle.' if running else 'restarting; the watchdog brings it back within fifteen minutes.'))
         if last and 'no setup (' in last and 'outside' not in last:
             spoken.append('Latest check: ' + last.split('no setup (', 1)[1].split(');')[0].removesuffix(')') + '.')
     else:
-        if now.weekday() < 5 and 630 < mins < 780:
-            nxt = 'at 1 pm'
-        elif now.weekday() < 5 and mins < 420:
+        if now.weekday() < 5 and mins < 420:
             nxt = 'at 7 am'
         elif now.weekday() < 4:
             nxt = 'tomorrow at 7 am'
         else:
             nxt = 'on Monday at 7 am'
-        spoken.append(f'We are outside the trading sessions, so no new trades; scanning resumes {nxt} London time.')
+        spoken.append(f'We are outside trading hours, so no new trades; scanning resumes {nxt} London time.')
 
     # trades
     state = json.load(open(f'{G}/scan_state.json')) if os.path.exists(f'{G}/scan_state.json') else {}
@@ -162,7 +160,7 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Rules v3.2 (4 Nov): market orders only; trade only with the 1 hour trend, with the 15 minute EMAs agreeing; enter when a 5 minute candle dips to the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars, at most 10 dollars at 0.01 lot; at least 1R of room; target 2R or the next level; exit after 8 hours or at 21:00; one trade at a time; stop for the day after 2 losses or minus 20 dollars. Setups go straight to Telegram as ENTER NOW.')
+    facts.append('Rules v3.3 (5 Nov): market orders only; trade 07:00 to 16:30 London; trade only with the 1 hour trend, with the 15 minute EMAs agreeing; enter when a 5 minute candle dips to within half a 5 minute ATR of the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars, at most 10 dollars at 0.01 lot; at least 1R of room; target 2R or the next level; exit after 8 hours or at 21:00; one trade at a time; stop for the day after 2 losses or minus 20 dollars. Setups go straight to Telegram as ENTER NOW.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; MT5 has been about 3 to 4 dollars lower, so use the same distances from the MT5 entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 
