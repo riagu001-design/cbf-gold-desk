@@ -67,7 +67,9 @@ def main():
     state = json.load(open(a.STATE)) if os.path.exists(a.STATE) else {}
     ot = state.get('open')
     best = dict(kind='best', id='best', side=side, status='WATCH', entry=None, stop=None, target=None, result=None, at=iso(now),
-                strategy='Trend-day dip (v3.4, 15m trend)', note='', last='')
+                strategy='Trend-day dip (v3.4, 15m trend)', note='', last='',
+                # seeds so the dashboard can carry the EMAs and ATR forward live from newer closed candles
+                seed=dict(e5=E5, a5=A5, t5=m5[-1]['t'], c5=m5[-1]['c'], e20_15=e20, e50_15=e50, t15=m15[-1]['t'], bias1=bias, bias4=bias4))
     why = []
     if side:
         sg = 1 if side == 'BUY' else -1
