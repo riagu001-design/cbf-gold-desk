@@ -153,9 +153,9 @@ def main():
         facts.append('News: today\'s calendar not loaded yet (the first watchdog of the day loads it).')
     else:
         upcoming = [e for e in ev if int(e[0][:2]) * 60 + int(e[0][3:]) >= mins - 15]
-        facts.append('High-impact US news today: ' + ('; '.join(f'{t} {name}' for t, name in ev) if ev else 'none') + '. No entries 15 minutes either side.')
+        facts.append('High-impact US news today: ' + ('; '.join(f'{t} {name}' for t, name in ev) if ev else 'none') + '. Since 6 November there is no news block: setups in the 15 minutes either side are still sent, with a news warning (wide spreads, fast spikes).')
         if upcoming:
-            spoken.append(f'Next high-impact news: {upcoming[0][1]} at {upcoming[0][0]}, with no new entries fifteen minutes either side.')
+            spoken.append(f'Next high-impact news: {upcoming[0][1]} at {upcoming[0][0]}. There is no news block now, so a setup near it comes with a news warning.')
         else:
             spoken.append('There is no more high-impact US news today.')
 

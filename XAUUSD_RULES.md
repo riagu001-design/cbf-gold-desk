@@ -70,7 +70,7 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
 - No new trades 21:00-01:00 London, at weekends, or after 19:00 London on Fridays.
 
 ## 8. News
-- No new entries 15 min before to 15 min after high-impact USD news (CPI, NFP, PCE, FOMC, GDP, Fed chair).
+- No news block since 6 Nov (Woody's call). Setups within 15 min of high-impact USD news (CPI, NFP, PCE, FOMC, GDP, Fed chair) are still sent, with a ⚠️ NEWS WINDOW warning (wide spreads, fast spikes).
 
 ## 9. Risk limits
 - One open trade at a time, 0.01 lot.

@@ -326,8 +326,8 @@ def main():
     why = [f'15m trend {"up" if buy else "down"}', f'5m {"dip" if buy else "pullback"} to the EMA20', f'{homma} on the {ldn(bar["t"]).strftime("%H:%M")} candle']
     msg = setup_message(side, entry, stop, tp, skip, R, reward, now.strftime('%H:%M'), exit_by, why, bias4 == bias, bias1 == bias, bias1)
     blocked, note = news_block(now)
-    if blocked:
-        return done(f'setup skipped: high-impact news ({note})')
+    if blocked:  # 6 Nov, Woody: no news block any more; the setup is sent with a warning instead
+        note = f'⚠️ NEWS WINDOW: {note}. Expect wide spreads and fast spikes'
     if note:
         msg = msg.replace(LINE + '\nℹ️', f'📰 {note}\n' + LINE + '\nℹ️', 1)
     sent = send_telegram(msg)
