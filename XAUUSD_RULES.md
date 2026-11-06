@@ -1,3 +1,9 @@
+## v3.4 (6 Nov 2026, trader's call)
+The 15m EMA20 vs EMA50 alone sets buy or sell; the 1H trend no longer blocks a trade (it is shown in each setup: "✅ 1H trend agrees"
+or "⚠️ 1H trend is flat/against: direction from the 15m trend only"). Everything else as v3.3.
+Backtest 13 Oct-6 Nov (bt_loose.py h1): 1H hard block 40 trades +$116 PF 2.14; 1H soft (15m decides only when 1H flat) 44 trades +$130 PF 2.17;
+15m only (chosen) 47 trades 53% wins +$107 PF 1.80, worst drop $26. Trader was told the hard block tested slightly better.
+
 ## v3.3 (5 Nov 2026, trader asked for more setups and said yes)
 Same trend-day dip as v3.2 with three changes: (A) the 5m EMA20 no longer has to be on the trend side of the 5m EMA50;
 (B) the dip counts when the 5m candle comes within 0.5 x 5m ATR of the 5m EMA20 (was 0.25); (D) the desk trades 07:00-16:30

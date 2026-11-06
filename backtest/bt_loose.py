@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from bt_more import L, H, M, ema, atr, ctx, walk, body, bull, bear, stats
 
 
-def run(d, e5=True, e15=True, tol=0.25, trig='live', hrs='live', room=1.0, cost=0.35):
+def run(d, e5=True, e15=True, tol=0.25, trig='live', hrs='live', room=1.0, cost=0.35, h1='hard'):
     m5 = d['5m']; t5 = [b['t'] for b in m5]
     ab = atr(m5); e20b, e50b = ema([b['c'] for b in m5], 20), ema([b['c'] for b in m5], 50)
     at = ctx(d)
@@ -30,8 +30,15 @@ def run(d, e5=True, e15=True, tol=0.25, trig='live', hrs='live', room=1.0, cost=
         if hrs == 'long' and not (420 <= mins <= 990): continue
         if dl.get(day, 0) >= 2 or dpl.get(day, 0) <= -20: continue
         c = at(T)
-        if not c or c['bias'] == 'FLAT': continue
-        buy = c['bias'] == 'UP'; sg = 1 if buy else -1
+        if not c: continue
+        if h1 == 'hard':
+            if c['bias'] == 'FLAT': continue
+            buy = c['bias'] == 'UP'
+        elif h1 == 'flat_ok':  # 1H decides when it has a trend; when flat, the 15m EMAs decide
+            buy = c['bias'] == 'UP' if c['bias'] != 'FLAT' else c['e20'] > c['e50']
+        else:  # off: 15m EMAs alone decide, 1H ignored
+            buy = c['e20'] > c['e50']
+        sg = 1 if buy else -1
         if e15 and not (c['e20'] > c['e50'] if buy else c['e20'] < c['e50']): continue
         if e5 and not (e20b[i] > e50b[i] if buy else e20b[i] < e50b[i]): continue
         A = ab[i]; E = e20b[i]
@@ -78,6 +85,15 @@ if __name__ == '__main__':
     days = len({datetime.fromtimestamp(b['t'] / 1000, timezone.utc).astimezone(L).date() for b in d['5m']
                 if datetime.fromtimestamp(b['t'] / 1000, timezone.utc).astimezone(L).weekday() < 5})
     print(f'{days} trading days, 13 Oct to 5 Nov')
+    if len(sys.argv) > 2 and sys.argv[2] == 'h1':
+        L33 = dict(e5=False, tol=0.5, hrs='long')
+        for name, kw in [('1H hard block (live v3.3)', L33), ('1H soft: when flat, 15m EMAs decide', {**L33, 'h1': 'flat_ok'}), ('1H ignored: 15m EMAs only', {**L33, 'h1': 'off'})]:
+            t = run(d, **kw); fl = run(d, **{**kw}) if False else None
+            print(f'{name:40s} {len(t) / days:4.1f}/day  ' + stats(t))
+        base = {x['t'] for x in run(d, **L33)}
+        extra = [x for x in run(d, **{**L33, 'h1': 'flat_ok'}) if x['t'] not in base]
+        print('   extra trades the soft rule adds (taken while 1H flat):', stats(extra))
+        sys.exit()
     if len(sys.argv) > 2 and sys.argv[2] == 'homma':
         L33 = dict(e5=False, tol=0.5, hrs='long')
         for name, kw in [('LIVE v3.3 (strong close + engulfing + pin)', L33), ('Homma: engulfing + pin only', {**L33, 'trig': 'homma'}),

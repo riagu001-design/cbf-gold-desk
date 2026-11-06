@@ -63,16 +63,12 @@ def main():
         rows.append(dict(kind='level', id=f'L{p:.1f}', side='resistance' if p > mark else 'support', entry=round(p, 1), note=why,
                          status=None, stop=None, target=None, result=None, strategy=None, last=None, at=iso(now)))
 
-    side = 'BUY' if bias == 'UP' else 'SELL' if bias == 'DOWN' else None
+    side = 'BUY' if e20 > e50 else 'SELL'  # v3.4: the 15m EMAs alone set the side; the 1H trend is shown only
     state = json.load(open(a.STATE)) if os.path.exists(a.STATE) else {}
     ot = state.get('open')
     best = dict(kind='best', id='best', side=side, status='WATCH', entry=None, stop=None, target=None, result=None, at=iso(now),
-                strategy='Trend-day dip (v3.3)', note='', last='')
+                strategy='Trend-day dip (v3.4, 15m trend)', note='', last='')
     why = []
-    if bias == 'FLAT':
-        why.append('the 1H trend is flat, so the desk stands aside')
-    elif not (e20 > e50 if bias == 'UP' else e20 < e50):
-        why.append(f'1H {bias.lower()} but the 15m EMAs are not lined up yet (EMA20 {e20:.1f}, EMA50 {e50:.1f})')
     if side:
         sg = 1 if side == 'BUY' else -1
         ext = min(b['l'] for b in m5[-3:]) if side == 'BUY' else max(b['h'] for b in m5[-3:])
@@ -95,7 +91,7 @@ def main():
         if 0 <= (now - t).total_seconds() <= 600:
             best['status'] = 'VALID'
     reason = last.split('no setup (', 1)[1].rsplit(')', 1)[0] if 'no setup (' in last else ''
-    best['note'] = f'1H trend {bias.lower()} (close {c1:.1f} vs EMA50 {e50h:.1f}), 4H {bias4.lower()}; 15m EMA20 {e20:.1f} / EMA50 {e50:.1f}; 5m EMA20 dip level {E5:.1f}'
+    best['note'] = f'15m trend {"up" if side == "BUY" else "down"} (EMA20 {e20:.1f} vs EMA50 {e50:.1f}); 1H trend {bias.lower()} (close {c1:.1f} vs EMA50 {e50h:.1f}), 4H {bias4.lower()}; 15m EMA20 {e20:.1f} / EMA50 {e50:.1f}; 5m EMA20 dip level {E5:.1f}'
     best['last'] = '; '.join(why) or (f'waiting for a 5m candle to dip to {E5:.1f} and close strongly' + (f' (last check: {reason})' if reason else ''))
     rows.append(best)
 

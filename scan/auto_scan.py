@@ -153,7 +153,7 @@ def resolve_open(rows, state, bars):
 LINE = '━━━━━━━━━━━━━━━━'
 
 
-def setup_message(side, entry, stop, tp, skip, R, reward, at, exit_by, why, with4h):
+def setup_message(side, entry, stop, tp, skip, R, reward, at, exit_by, why, with4h, with1h=True, bias1='UP'):
     """The Telegram setup message: what to do, the three prices, when not to enter, and why."""
     buy = side == 'BUY'
     return '\n'.join([
@@ -168,6 +168,7 @@ def setup_message(side, entry, stop, tp, skip, R, reward, at, exit_by, why, with
         f'⛔ Do not enter if price is already {"above" if buy else "below"} {skip:.1f}',
         f'⏰ Close it at {exit_by} London if neither is hit',
         '📊 Why: ' + ' · '.join(why),
+        ('✅ 1H trend agrees' if with1h else f'⚠️ 1H trend is {"flat" if bias1 == "FLAT" else ("down" if buy else "up")}: direction from the 15m trend only'),
         ('✅ 4H trend agrees' if with4h else f'⚠️ 4H trend is {"down" if buy else "up"}: this trade is against it'),
         LINE,
         'ℹ️ Desk prices (Hyperliquid). If MT5 differs, keep the same distances from your MT5 entry.',
@@ -256,16 +257,16 @@ def main():
     hi, lo = swings(h1)
     e50h, c1 = ema([b['c'] for b in h1], 50)[-1], h1[-1]['c']
     st = 'UP' if hi[-1] > hi[-2] and lo[-1] > lo[-2] else 'DN' if hi[-1] < hi[-2] and lo[-1] < lo[-2] else 'MIX'
-    bias = 'UP' if c1 > e50h and st != 'DN' else 'DN' if c1 < e50h and st != 'UP' else 'FLAT'
-    if bias == 'FLAT':
-        return done('1H trend flat')
+    bias1 = 'UP' if c1 > e50h and st != 'DN' else 'DN' if c1 < e50h and st != 'UP' else 'FLAT'  # v3.4: shown, no longer a block
     bias4 = 'UP' if h4[-1]['c'] > ema([b['c'] for b in h4], 50)[-1] else 'DN'
     c15 = [b['c'] for b in m15]
     e20, e50, A = ema(c15, 20)[-1], ema(c15, 50)[-1], atr(m15)
-    buy = bias == 'UP'
+    # v3.4 (6 Nov, trader's call): the 15m EMA20 vs EMA50 alone sets the side; the 1H trend no longer blocks a trade.
+    if abs(e20 - e50) < 0.05:
+        return done('15m EMAs level, no direction')
+    buy = e20 > e50
+    bias = 'UP' if buy else 'DN'
     sg = 1 if buy else -1
-    if not (e20 > e50 if buy else e20 < e50):
-        return done(f'1H {bias} but 15m EMAs not aligned')
     rng = bar['h'] - bar['l'] or 1e-9
     pos = (bar['c'] - bar['l']) / rng
     body, pbody = abs(bar['c'] - bar['o']), abs(pv['c'] - pv['o'])
@@ -287,13 +288,13 @@ def main():
     pin = wick >= 2 * max(body, 1e-9) and wick >= 0.5 * rng and (pos >= 0.6 if buy else pos <= 0.4)
     beyond = bar['c'] > E5 if buy else bar['c'] < E5
     if not touch:
-        return done(f'1H {bias}, no dip to the 5m EMA20 ({E5:.1f})')
+        return done(f'15m {bias}, no dip to the 5m EMA20 ({E5:.1f})')
     # Same trades as before; the label names the Homma candle when there is one (trader, 6 Nov).
     trig = ('engulfing' if beyond and eng else 'pin bar' if beyond and pin else 'strong close' if strong else None)
     homma = {'engulfing': f'Homma: {"bullish" if buy else "bearish"} engulfing (tsutsumi)', 'pin bar': 'Homma: hammer (takuri)' if buy else 'Homma: shooting star (nagare boshi)',
              'strong close': f'strong {"bullish" if buy else "bearish"} close (not a Homma pattern)'}.get(trig)
     if not trig:
-        return done(f'1H {bias}, dip to the 5m EMA20 but no trigger candle')
+        return done(f'15m {bias}, dip to the 5m EMA20 but no trigger candle')
     entry = mark
     if abs(entry - E5) > 1.5 * A5:
         return done(f'stretched {abs(entry - E5):.1f} from the 5m EMA20 (max {1.5 * A5:.1f})')
@@ -320,10 +321,10 @@ def main():
     entry, stop, tp, skip = (round(v, 1) for v in (entry, stop, tp, skip))
     reward = abs(tp - entry)
     given = now.strftime('%Y-%m-%d %H:%M')
-    reason = f'1H {bias.replace("DN", "DOWN")}, 5m dip to the EMA20, {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
+    reason = f'15m {bias.replace("DN", "DOWN")} (1H {bias1.replace("DN", "DOWN").lower()}), 5m dip to the EMA20, {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
     exit_by = min(now + dt.timedelta(hours=8), now.replace(hour=21, minute=0)).strftime('%H:%M')
-    why = [f'1H trend {"up" if buy else "down"}', f'5m {"dip" if buy else "pullback"} to the EMA20', f'{homma} on the {ldn(bar["t"]).strftime("%H:%M")} candle']
-    msg = setup_message(side, entry, stop, tp, skip, R, reward, now.strftime('%H:%M'), exit_by, why, bias4 == bias)
+    why = [f'15m trend {"up" if buy else "down"}', f'5m {"dip" if buy else "pullback"} to the EMA20', f'{homma} on the {ldn(bar["t"]).strftime("%H:%M")} candle']
+    msg = setup_message(side, entry, stop, tp, skip, R, reward, now.strftime('%H:%M'), exit_by, why, bias4 == bias, bias1 == bias, bias1)
     blocked, note = news_block(now)
     if blocked:
         return done(f'setup skipped: high-impact news ({note})')
