@@ -11,3 +11,11 @@ Dashboard refresh (same run, after Crown; trader asked on 6 Nov for the dashboar
 6. Artifact publish with url https://claude.ai/artifact/3GSRaPMgJGLq3Vg7MJ733x, file_path that scratchpad desk.json, asset: true. Note the returned /_blob/<id> url.
 7. ArtifactData get datasets/desk on that url, then update datasets/desk (if_version = its version) with source.url = the new /_blob url (keep kind file, name desk.json, format json), updated {at: now UTC ISO, by: "Claude (gold desk)"}, edit {via: "claude", at: now}.
 8. Delete the previous desk.json asset (Artifact delete with url and path = the old blob id) only if it was uploaded by this desk.
+
+## Ian voice recording for the dashboard (about 750 ElevenLabs credits each)
+Only on the :01 watchdog run (hourly), or when a setup/result was just sent:
+9. creative_generate_speech with voice_id 70HFmYdPmz1aKiKW6Zx3 (Ian) and the desk_brief text from crown_vars.json; poll creative_get_flow_run_status until done.
+10. Download the mp3 (elevenlabsusercontent.com is allowed), `ffmpeg -y -i in.mp3 -c:a aac -b:a 96k crown_brief.mp4`.
+11. Upload the mp4 as an asset of the dashboard; write /home/user/gold-desk/crown/voice.json {"url","at","id"}; delete the previous recording's asset.
+12. Re-run steps 5-8 so the brief row carries the new url. The page plays it while under 2 hours old, else reads the text aloud.
+If credits run out, skip 9-12; the button falls back to the browser voice.

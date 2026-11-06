@@ -132,8 +132,12 @@ def main():
                          status='high impact', side=None, entry=None, stop=None, target=None, result=None, at=iso(now)))
     try:  # Crown's latest spoken briefing, for the dashboard's read-aloud button
         brief = json.load(open(f'{G}/crown/crown_vars.json'))
+        try:  # Crown's latest briefing recorded in Ian's voice (ElevenLabs), uploaded to the dashboard: url + when
+            v = json.load(open(f'{G}/crown/voice.json'))
+        except (OSError, ValueError):
+            v = {}
         rows.append(dict(kind='brief', id='brief', note=brief.get('desk_brief', ''), at=brief.get('at', iso(now)), side=None, entry=None, stop=None,
-                         target=None, result=None, status=None, strategy=None, last=None))
+                         target=None, result=None, status=v.get('at'), strategy='Ian', last=v.get('url')))
     except (OSError, ValueError):
         pass
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
