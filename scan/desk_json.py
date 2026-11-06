@@ -134,6 +134,12 @@ def main():
         at = dt.datetime.strptime(f'{today} {t}', '%Y-%m-%d %H:%M').replace(tzinfo=a.L)
         rows.append(dict(kind='event', id='E' + t.replace(':', ''), strategy=name, note=iso(at), last=iso(at - dt.timedelta(minutes=15)),
                          status='high impact', side=None, entry=None, stop=None, target=None, result=None, at=iso(now)))
+    try:  # Crown's latest spoken briefing, for the dashboard's read-aloud button
+        brief = json.load(open(f'{G}/crown/crown_vars.json'))
+        rows.append(dict(kind='brief', id='brief', note=brief.get('desk_brief', ''), at=brief.get('at', iso(now)), side=None, entry=None, stop=None,
+                         target=None, result=None, status=None, strategy=None, last=None))
+    except (OSError, ValueError):
+        pass
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(rows, open(OUT, 'w'), indent=0)
     print(f'{len(rows)} rows -> {OUT}; best {best["status"]} {best["side"]} {best["entry"]}; why: {best["last"]}')
