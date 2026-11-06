@@ -4,7 +4,7 @@
 Run just after each 5m candle closes (scan/loop.sh). Prints one summary line. When a setup fires it writes
 /home/user/gold-desk/scan_msg.txt (the Telegram text) and logs the trade in live_log.csv.
 It also follows the open logged trade on 15m candles (stop, target, 8h / 21:00 time exit) so it
-can enforce one trade at a time and the daily limits (5 losses or -$20).
+can enforce one trade at a time and the daily limits (2 losses or -$20).
 Data: Hyperliquid xyz:GOLD (desk feed). Never places orders.
 """
 import csv
@@ -237,12 +237,12 @@ def main():
 
     mins = now.hour * 60 + now.minute
     force = os.environ.get('SCAN_TEST') == '1'  # test only: ignore hours and candle age
-    if not force and (now.weekday() >= 5 or not (420 <= mins <= 992) or (now.weekday() == 4 and mins >= 19 * 60)):
-        return done('outside 07:00-16:30 London')
+    if not force and (now.weekday() >= 5 or not (420 <= mins <= 1202) or (now.weekday() == 4 and mins >= 19 * 60)):
+        return done('outside 07:00-20:00 London')  # v3.5: hours 07:00-20:00 (Fridays until 19:00)
     if state.get('open'):
         return done('a trade is already open')
     d = state.get('days', {}).get(now.strftime('%Y-%m-%d'), {'pl': 0, 'losses': 0})
-    if d["losses"] >= 5 or d['pl'] <= DAY_LOSS:
+    if d["losses"] >= 2 or d['pl'] <= DAY_LOSS:
         return done(f"daily limit hit ({d['losses']} losses, {d['pl']:+.2f})")
 
     # v3.1 (3 Nov, trader's yes): 1H trend and 15m EMA zone decide direction and place; the 5m candle is the trigger
@@ -265,6 +265,10 @@ def main():
     if abs(e20 - e50) < 0.05:
         return done('15m EMAs level, no direction')
     buy = e20 > e50
+    # v3.5 (6 Nov, trader's pick 'the best'): the 1H trend must agree with the 15m EMAs again; target 1.5R; 07:00-20:00;
+    # stop after 2 losses or -$20. Backtest 13 Oct-6 Nov: 64 trades (3.4/day), 61% wins, +$142, PF 2.07, worst drop $22.55.
+    if bias1 != ('UP' if buy else 'DN'):
+        return done(f'15m {"UP" if buy else "DN"} but 1H {bias1.lower()}: no trade')
     bias = 'UP' if buy else 'DN'
     sg = 1 if buy else -1
     rng = bar['h'] - bar['l'] or 1e-9
@@ -314,7 +318,7 @@ def main():
     roomR = abs(nxt - entry) / R if nxt else 9
     if roomR < 1:
         return done(f'only {roomR:.2f}R of room to {nxt:.1f}')
-    cap = 2  # v3.2: the dip backtest used 2R or the next level, with no 4H cap
+    cap = 1.5  # v3.5: 1.5R or the next level
     tp = entry + sg * R * min(cap, roomR)
     skip = entry + sg * 0.3 * R
     side = 'BUY' if buy else 'SELL'

@@ -43,10 +43,10 @@ def main():
         last = ''
     running = subprocess.run(['bash', '/home/user/cbf-gold-desk/scan/checker_ok.sh'], capture_output=True, text=True).stdout.strip() == 'RUNNING'
     mins = now.hour * 60 + now.minute
-    hours = now.weekday() < 5 and 420 <= mins <= 990
+    hours = now.weekday() < 5 and 420 <= mins <= 1200
     rows.append(dict(kind='status', id='checker', status='running' if running else 'stopped', note=last, at=iso(now),
                      side=None, entry=mark, stop=None, target=None, result=None,
-                     strategy='Rules v3.3 trend-day dip, 07:00-16:30 London weekdays', last='in hours' if hours else 'outside hours'))
+                     strategy='Rules v3.5 trend-day dip, 07:00-20:00 London weekdays', last='in hours' if hours else 'outside hours'))
 
     # trend and the dip level, as the checker sees them
     hi, lo = a.swings(h1)
@@ -63,11 +63,11 @@ def main():
         rows.append(dict(kind='level', id=f'L{p:.1f}', side='resistance' if p > mark else 'support', entry=round(p, 1), note=why,
                          status=None, stop=None, target=None, result=None, strategy=None, last=None, at=iso(now)))
 
-    side = 'BUY' if e20 > e50 else 'SELL'  # v3.4: the 15m EMAs alone set the side; the 1H trend is shown only
+    side = 'BUY' if e20 > e50 else 'SELL'  # v3.5: the 15m EMAs set the side and the 1H trend must agree
     state = json.load(open(a.STATE)) if os.path.exists(a.STATE) else {}
     ot = state.get('open')
     best = dict(kind='best', id='best', side=side, status='WATCH', entry=None, stop=None, target=None, result=None, at=iso(now),
-                strategy='Trend-day dip (v3.4, 15m trend)', note='', last='',
+                strategy='Trend-day dip (v3.5, 15m + 1H trend)', note='', last='',
                 # seeds so the dashboard can carry the EMAs and ATR forward live from newer closed candles
                 seed=dict(e5=E5, a5=A5, t5=m5[-1]['t'], c5=m5[-1]['c'], e20_15=e20, e50_15=e50, t15=m15[-1]['t'], bias1=bias, bias4=bias4))
     why = []
@@ -85,7 +85,9 @@ def main():
         if R > 10:
             why.append(f'a stop now would be ${R:.1f} away, over the $10 limit')
     if not hours:
-        why.append('outside trading hours (07:00-16:30 London, weekdays)')
+        why.append('outside trading hours (07:00-20:00 London, weekdays)')
+    if bias != ('UP' if side == 'BUY' else 'DOWN'):
+        why.append(f'the 1H trend is {bias.lower()}, so no {side.lower()}s until it agrees')
     if ot:
         why.append(f"a trade is open ({ot['side']} {ot['entry']}), one trade at a time")
     if last and 'SETUP' in last:

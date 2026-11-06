@@ -89,12 +89,15 @@ def main():
         e20, e50 = ema(c15, 20)[-1], ema(c15, 50)[-1]
         e5 = ema([b['c'] for b in m5], 20)[-1] if len(m5) > 20 else c1
         facts.append(f'Trend: 1 hour {bias} (close {c1:.1f} vs 1 hour EMA50 {e50h:.1f}); 4 hour {b4}. 15 minute EMA20 {e20:.1f}, EMA50 {e50:.1f}; 5 minute EMA20 (the dip level) {e5:.1f}.')
-        up15 = e20 > e50  # v3.4: the 15m EMAs alone set the side; the 1H trend is information only
+        up15 = e20 > e50  # v3.5: the 15m EMAs set the side; the 1H trend must agree
         side = 'buys' if up15 else 'sells'
         gap = abs(mark - e5)
         where = 'right at the price' if gap < 1.5 else f'{gap:.0f} dollars {"below" if mark >= e5 else "above"} the price'
         agree = 'agrees' if (bias == 'UP') == up15 and bias != 'FLAT' else ('is flat' if bias == 'FLAT' else 'disagrees')
-        spoken.append(f'The 15 minute trend is {"up" if up15 else "down"}, so the desk looks for {side}, {"on a dip" if up15 else "on a pullback up"} to the 5 minute EMA20, now about {say(e5)}, {where}. The one hour trend {agree}, and the four hour is {b4.lower()}.')
+        if agree == 'agrees':
+            spoken.append(f'The 15 minute and one hour trends are both {"up" if up15 else "down"}, so the desk looks for {side}, {"on a dip" if up15 else "on a pullback up"} to the 5 minute EMA20, now about {say(e5)}, {where}. The four hour is {b4.lower()}.')
+        else:
+            spoken.append(f'The 15 minute trend is {"up" if up15 else "down"} but the one hour trend {agree}, so the desk stands aside until they agree. The 5 minute EMA20 is about {say(e5)}, {where}, and the four hour is {b4.lower()}.')
 
     # scan health and latest reason
     last = ''
@@ -103,10 +106,10 @@ def main():
     except (OSError, IndexError):
         pass
     mins = now.hour * 60 + now.minute
-    in_session = now.weekday() < 5 and 420 <= mins <= 990
+    in_session = now.weekday() < 5 and 420 <= mins <= 1200
     running = subprocess.run(['bash', '/home/user/cbf-gold-desk/scan/checker_ok.sh'], capture_output=True, text=True).stdout.strip() == 'RUNNING'
     status = 'running' if running else ('not running (it is restarted within 15 minutes)' if in_session else 'off until the next session')
-    facts.append(f'Scanner: 5 minute checker {status}; trading hours 07:00 to 16:30 London straight, weekdays. Last scan: {last or "none yet today"}.')
+    facts.append(f'Scanner: 5 minute checker {status}; trading hours 07:00 to 20:00 London, weekdays. Last scan: {last or "none yet today"}.')
     if in_session:
         spoken.append('The scanner is ' + ('watching every five minute candle.' if running else 'restarting; the watchdog brings it back within fifteen minutes.'))
         if last and 'no setup (' in last and 'outside' not in last:
@@ -159,7 +162,7 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Rules v3.4 (6 Nov): market orders only; trade 07:00 to 16:30 London; the 15 minute EMA20 vs EMA50 alone sets buy or sell (the 1 hour trend is shown but no longer blocks); enter when a 5 minute candle dips to within half a 5 minute ATR of the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars, at most 10 dollars at 0.01 lot; at least 1R of room; target 2R or the next level; exit after 8 hours or at 21:00; one trade at a time; stop for the day after 5 losses or minus 20 dollars. Setups go straight to Telegram as ENTER NOW.')
+    facts.append('Rules v3.5 (from 9 Nov): market orders only; trade 07:00 to 20:00 London; buy or sell only when the 15 minute EMA20 vs EMA50 and the 1 hour trend agree; enter when a 5 minute candle dips to within half a 5 minute ATR of the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars, at most 10 dollars at 0.01 lot; at least 1R of room; target 1.5R or the next level; exit after 8 hours or at 21:00; one trade at a time; stop for the day after 2 losses or minus 20 dollars; no news block, setups near news carry a warning. Setups go straight to Telegram as ENTER NOW.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; MT5 has been about 3 to 4 dollars lower, so use the same distances from the MT5 entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 

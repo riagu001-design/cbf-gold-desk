@@ -1,3 +1,13 @@
+## v3.5 (from Mon 9 Nov 2026; trader chose "the best" on 6 Nov)
+- Direction: buy or sell only when the 15m EMA20 vs EMA50 AND the 1H trend agree (1H flat or against = no trade).
+- Entry unchanged: 5m candle within 0.5 x 5m ATR of the 5m EMA20, closing as strong close / engulfing / pin bar; no chasing > 1.5 x ATR.
+- Stop unchanged (last 3 candles +$1.50, max $10). Target 1.5R or the next level (was 2R). At least 1R of room.
+- Hours 07:00-20:00 London weekdays (was 16:30; Fridays until 19:00). Exit after 8h or at 21:00.
+- Daily stop: 2 losses or -$20 (back from 5). No news block (setups near news carry a warning).
+- Backtest 13 Oct-6 Nov (bt_loose.py, h1='hard', tgt 1.5, hours 07:00-20:00, 2-loss): 64 trades 3.4/day, 61% wins, +$142.45,
+  PF 2.07, worst drop $22.55; 4-6 Nov alone 9 trades 44% wins +$3.65. v3.4 on the same data: 56 trades 50% +$108.80.
+  Sells +, buys slightly - in this falling market. Review after 20 live trades on v3.5 with no rule changes.
+
 ## v3.4 (6 Nov 2026, trader's call)
 The 15m EMA20 vs EMA50 alone sets buy or sell; the 1H trend no longer blocks a trade (it is shown in each setup: "✅ 1H trend agrees"
 or "⚠️ 1H trend is flat/against: direction from the 15m trend only"). Everything else as v3.3.
@@ -74,7 +84,7 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
 
 ## 9. Risk limits
 - One open trade at a time, 0.01 lot.
-- Stop for the day after 5 losing trades or -$20 (5 losses from 6 Nov, Woody's call; was 2).
+- Stop for the day after 2 losing trades or -$20 (v3.5; was 5 on 6 Nov only).
 
 ## 10. Every trade message
 - Side, live entry, SL, TP, risk in $, a one-line reason, and a "skip if price is beyond X" level.
