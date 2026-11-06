@@ -288,7 +288,10 @@ def main():
     beyond = bar['c'] > E5 if buy else bar['c'] < E5
     if not touch:
         return done(f'1H {bias}, no dip to the 5m EMA20 ({E5:.1f})')
-    trig = 'strong close' if strong else 'engulfing' if beyond and eng else 'pin bar' if beyond and pin else None
+    # Same trades as before; the label names the Homma candle when there is one (trader, 6 Nov).
+    trig = ('engulfing' if beyond and eng else 'pin bar' if beyond and pin else 'strong close' if strong else None)
+    homma = {'engulfing': f'Homma: {"bullish" if buy else "bearish"} engulfing (tsutsumi)', 'pin bar': 'Homma: hammer (takuri)' if buy else 'Homma: shooting star (nagare boshi)',
+             'strong close': f'strong {"bullish" if buy else "bearish"} close (not a Homma pattern)'}.get(trig)
     if not trig:
         return done(f'1H {bias}, dip to the 5m EMA20 but no trigger candle')
     entry = mark
@@ -319,7 +322,7 @@ def main():
     given = now.strftime('%Y-%m-%d %H:%M')
     reason = f'1H {bias.replace("DN", "DOWN")}, 5m dip to the EMA20, {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
     exit_by = min(now + dt.timedelta(hours=8), now.replace(hour=21, minute=0)).strftime('%H:%M')
-    why = [f'1H trend {"up" if buy else "down"}', f'5m {"dip" if buy else "pullback"} to the EMA20', f'{trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle']
+    why = [f'1H trend {"up" if buy else "down"}', f'5m {"dip" if buy else "pullback"} to the EMA20', f'{homma} on the {ldn(bar["t"]).strftime("%H:%M")} candle']
     msg = setup_message(side, entry, stop, tp, skip, R, reward, now.strftime('%H:%M'), exit_by, why, bias4 == bias)
     blocked, note = news_block(now)
     if blocked:
