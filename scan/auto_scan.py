@@ -150,6 +150,31 @@ def resolve_open(rows, state, bars):
     return f"closed {ot['side']} {kind} {pl:+.2f}"
 
 
+LINE = '━━━━━━━━━━━━━━━━'
+
+
+def setup_message(side, entry, stop, tp, skip, R, reward, at, exit_by, why, with4h):
+    """The Telegram setup message: what to do, the three prices, when not to enter, and why."""
+    buy = side == 'BUY'
+    return '\n'.join([
+        f'🚨 GOLD (XAUUSD) · {side} NOW {"🟢" if buy else "🔴"}',
+        'Market order at the live price',
+        LINE,
+        f'📍 Entry: {entry:.1f}',
+        f'🛑 Stop loss: {stop:.1f} (−${R:.2f})',
+        f'🎯 Take profit: {tp:.1f} (+${reward:.2f})',
+        f'⚖️ Risk : reward 1 : {reward / R:.1f} · lot 0.01',
+        LINE,
+        f'⛔ Do not enter if price is already {"above" if buy else "below"} {skip:.1f}',
+        f'⏰ Close it at {exit_by} London if neither is hit',
+        '📊 Why: ' + ' · '.join(why),
+        ('✅ 4H trend agrees' if with4h else f'⚠️ 4H trend is {"down" if buy else "up"}: this trade is against it'),
+        LINE,
+        'ℹ️ Desk prices (Hyperliquid). If MT5 differs, keep the same distances from your MT5 entry.',
+        f'🕐 Signal {at} London',
+    ])
+
+
 def send_result(rows, ot, kind, pl, exit_px, xt, day):
     """Tell the trader on Telegram that the trade closed; if the direct send fails, queue it in RES for the session."""
     head = {'TP': 'TARGET HIT', 'SL': 'STOP HIT', 'TIME': 'TIME EXIT (8 hours or 21:00)'}[kind]
@@ -160,13 +185,17 @@ def send_result(rows, ot, kind, pl, exit_px, xt, day):
             total += float(r['result'].split()[-1]) if r['result'] and not r['result'].startswith('SKIPPED') else 0
         except ValueError:
             pass
-    msg = (f'{"✅" if kind == "TP" else "❌" if kind == "SL" else "⏱"} GOLD TRADE CLOSED: {head}\n'
-           f'{ot["side"]} from {ot["entry"]} (sent {ot["given"][11:16]} London)\n'
-           f'Exit {exit_px:.1f} at {xt.strftime("%H:%M")} London\n'
-           f'Result {pl:+.2f} dollars at 0.01 lot ({pl / risk:+.1f}R)\n'
-           f'Today: {day["pl"]:+.2f} dollars, {day["losses"]} loss{"es" if day["losses"] != 1 else ""}. '
-           f'Account about {BALANCE_START + total:.2f} dollars.'
-           + ('' if kind != 'TIME' else '\nClose it in MT5 now if it is still open.'))
+    icon, sicon = {'TP': '✅', 'SL': '❌', 'TIME': '⏱'}[kind], '🟢' if ot['side'] == 'BUY' else '🔴'
+    msg = '\n'.join([
+        f'{icon} GOLD TRADE CLOSED · {head}',
+        LINE,
+        f'{sicon} {ot["side"]} from {ot["entry"]} (sent {ot["given"][11:16]} London)',
+        f'🏁 Exit: {exit_px:.1f} at {xt.strftime("%H:%M")} London',
+        f'💰 Result: {"+" if pl >= 0 else "−"}${abs(pl):.2f} ({pl / risk:+.1f}R) at 0.01 lot',
+        LINE,
+        f'📅 Today: {"+" if day["pl"] >= 0 else "−"}${abs(day["pl"]):.2f} · {day["losses"]} loss{"es" if day["losses"] != 1 else ""}',
+        f'💼 Account: about ${BALANCE_START + total:.2f}',
+    ] + (['⚠️ Close it in MT5 now if it is still open.'] if kind == 'TIME' else []))
     if os.environ.get('SCAN_TEST') == '1':
         print('RESULT MESSAGE (test, not sent):\n' + msg)
         return
@@ -289,19 +318,14 @@ def main():
     reward = abs(tp - entry)
     given = now.strftime('%Y-%m-%d %H:%M')
     reason = f'1H {bias.replace("DN", "DOWN")}, 5m dip to the EMA20, {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
-    msg = (f'🚨🚨 GOLD {side} NOW (market order) 🚨🚨\n'
-           f'Entry: {entry} (market, live price {now.strftime("%H:%M")} London)\n'
-           f'Stop loss: {stop} (${R:.2f} risk at 0.01 lot)\n'
-           f'Take profit: {tp} (+${reward:.2f}, {reward / R:.1f}R)\n'
-           f'Skip if price is already {"above" if buy else "below"} {skip}\n'
-           f'Why: {reason}. 4H {"with" if bias4 == bias else "against"} the trade.\n'
-           f'Exit by {min(now + dt.timedelta(hours=8), now.replace(hour=21, minute=0)).strftime("%H:%M")} London if neither is hit. '
-           f'Prices are the desk feed; if MT5 differs, keep the same distances from your MT5 entry.')
+    exit_by = min(now + dt.timedelta(hours=8), now.replace(hour=21, minute=0)).strftime('%H:%M')
+    why = [f'1H trend {"up" if buy else "down"}', f'5m {"dip" if buy else "pullback"} to the EMA20', f'{trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle']
+    msg = setup_message(side, entry, stop, tp, skip, R, reward, now.strftime('%H:%M'), exit_by, why, bias4 == bias)
     blocked, note = news_block(now)
     if blocked:
         return done(f'setup skipped: high-impact news ({note})')
     if note:
-        msg += f'\n{note}'
+        msg = msg.replace(LINE + '\nℹ️', f'📰 {note}\n' + LINE + '\nℹ️', 1)
     sent = send_telegram(msg)
     if not sent.startswith('ok'):
         open(MSG, 'w').write(msg)  # loop.sh exits and wakes the session, which sends it another way
