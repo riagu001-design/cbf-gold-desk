@@ -44,6 +44,14 @@ def run(d, e5=True, e15=True, tol=0.25, trig='live', hrs='live', room=1.0, cost=
             wk = (min(b['o'], b['c']) - b['l']) if buy else (b['h'] - max(b['o'], b['c']))
             pin = wk >= 2 * max(body(b), 1e-9) and wk >= 0.5 * rng and (pos >= 0.6 if buy else pos <= 0.4)
             ok = strong or (bey and (eng or pin))
+        elif trig in ('homma', 'homma_star'):
+            eng = (bull(b) and bear(pv) and b['c'] >= pv['o'] and b['o'] <= pv['c'] and body(b) > body(pv)) if buy else (bear(b) and bull(pv) and b['c'] <= pv['c'] and b['o'] >= pv['o'] and body(b) > body(pv))
+            wk = (min(b['o'], b['c']) - b['l']) if buy else (b['h'] - max(b['o'], b['c']))
+            pin = wk >= 2 * max(body(b), 1e-9) and wk >= 0.5 * rng and (pos >= 0.6 if buy else pos <= 0.4)
+            x, y = m5[i - 2], pv  # morning / evening star: big candle against, small body, strong candle back past the midpoint
+            star = (bear(x) if buy else bull(x)) and body(x) >= 0.6 * A and body(y) <= 0.35 * body(x) and (bull(b) if buy else bear(b)) and \
+                ((b['c'] >= (x['o'] + x['c']) / 2) if buy else (b['c'] <= (x['o'] + x['c']) / 2))
+            ok = bey and (eng or pin or (trig == 'homma_star' and star))
         else:
             ok = bey and (bull(b) if buy else bear(b))
         if not ok or abs(b['c'] - E) > 1.5 * A or rng > 2 * A: continue
@@ -70,6 +78,15 @@ if __name__ == '__main__':
     days = len({datetime.fromtimestamp(b['t'] / 1000, timezone.utc).astimezone(L).date() for b in d['5m']
                 if datetime.fromtimestamp(b['t'] / 1000, timezone.utc).astimezone(L).weekday() < 5})
     print(f'{days} trading days, 13 Oct to 5 Nov')
+    if len(sys.argv) > 2 and sys.argv[2] == 'homma':
+        L33 = dict(e5=False, tol=0.5, hrs='long')
+        for name, kw in [('LIVE v3.3 (strong close + engulfing + pin)', L33), ('Homma: engulfing + pin only', {**L33, 'trig': 'homma'}),
+                         ('Homma: engulfing + pin + morning/evening star', {**L33, 'trig': 'homma_star'}),
+                         ('Homma + star, 5m EMA rule kept', {**L33, 'trig': 'homma_star', 'e5': True}),
+                         ('Homma + star, touch 0.25 ATR', {**L33, 'trig': 'homma_star', 'tol': 0.25})]:
+            t = run(d, **kw); print(f'{name:48s} {len(t) / days:4.1f}/day  ' + stats(t))
+            if 'star' in name and 'kept' not in name and '0.25' not in name: [print('   ', x) for x in t[-8:]]
+        sys.exit()
     V = [('LIVE v3.2', {}),
          ('A no 5m EMA20>50 rule', dict(e5=False)),
          ('B touch within 0.5 ATR', dict(tol=0.5)),
