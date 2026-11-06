@@ -74,7 +74,7 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
 
 ## 9. Risk limits
 - One open trade at a time, 0.01 lot.
-- Stop for the day after 2 losing trades or -$20.
+- Stop for the day after 5 losing trades or -$20 (5 losses from 6 Nov, Woody's call; was 2).
 
 ## 10. Every trade message
 - Side, live entry, SL, TP, risk in $, a one-line reason, and a "skip if price is beyond X" level.

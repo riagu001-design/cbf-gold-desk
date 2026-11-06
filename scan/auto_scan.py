@@ -4,7 +4,7 @@
 Run just after each 5m candle closes (scan/loop.sh). Prints one summary line. When a setup fires it writes
 /home/user/gold-desk/scan_msg.txt (the Telegram text) and logs the trade in live_log.csv.
 It also follows the open logged trade on 15m candles (stop, target, 8h / 21:00 time exit) so it
-can enforce one trade at a time and the daily limits (2 losses or -$20).
+can enforce one trade at a time and the daily limits (5 losses or -$20).
 Data: Hyperliquid xyz:GOLD (desk feed). Never places orders.
 """
 import csv
@@ -242,7 +242,7 @@ def main():
     if state.get('open'):
         return done('a trade is already open')
     d = state.get('days', {}).get(now.strftime('%Y-%m-%d'), {'pl': 0, 'losses': 0})
-    if d['losses'] >= 2 or d['pl'] <= DAY_LOSS:
+    if d["losses"] >= 5 or d['pl'] <= DAY_LOSS:
         return done(f"daily limit hit ({d['losses']} losses, {d['pl']:+.2f})")
 
     # v3.1 (3 Nov, trader's yes): 1H trend and 15m EMA zone decide direction and place; the 5m candle is the trigger
