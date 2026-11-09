@@ -113,3 +113,7 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
 
 ## 11. Review
 - Every setup given is logged in gold-desk/live_log.csv. After 20, compare with the backtest and decide whether to automate.
+
+## Rules freeze (9 Nov 2026)
+v3.8 runs unchanged until it has 20 closed live trades (3 closed at the freeze: 2 wins, 1 loss, +$16.10).
+Then review: if it is losing over those 20, it has no edge in this market and is switched off.
