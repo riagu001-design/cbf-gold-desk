@@ -273,6 +273,9 @@ def main():
     # stop after 2 losses or -$20. Backtest 13 Oct-6 Nov: 64 trades (3.4/day), 61% wins, +$142, PF 2.07, worst drop $22.55.
     if bias1 != ('UP' if buy else 'DN'):
         return done(f'15m {"UP" if buy else "DN"} but 1H {bias1.lower()}: no trade')
+    # v3.7 (9 Nov, edge review): the 4H trend must agree too. Backtest: +$116 PF 1.62 vs +$92 PF 1.30 without it.
+    if bias4 != ('UP' if buy else 'DN'):
+        return done(f'15m and 1H {"UP" if buy else "DN"} but 4H {bias4.lower()}: no trade')
     bias = 'UP' if buy else 'DN'
     sg = 1 if buy else -1
     rng = bar['h'] - bar['l'] or 1e-9
@@ -291,7 +294,7 @@ def main():
     touch = bar['l'] <= E5 + 0.5 * A5 if buy else bar['h'] >= E5 - 0.5 * A5
     strong = (bar['c'] > E5 and bar['c'] > bar['o'] and pos >= 2 / 3) if buy else (bar['c'] < E5 and bar['c'] < bar['o'] and pos <= 1 / 3)
     eng = (bar['c'] > bar['o'] and pv['c'] < pv['o'] and bar['c'] >= pv['o'] and bar['o'] <= pv['c'] and body > pbody) if buy else \
-          (bar['c'] < bar['o'] and pv['c'] > pv['o'] and bar['c'] <= pv['c'] and bar['o'] >= pv['o'] and body > pbody)
+          (bar['c'] < bar['o'] and pv['c'] > pv['o'] and bar['c'] <= pv['o'] and bar['o'] >= pv['c'] and body > pbody)  # v3.7 fix: true bearish engulfing
     wick = (min(bar['o'], bar['c']) - bar['l']) if buy else (bar['h'] - max(bar['o'], bar['c']))
     pin = wick >= 2 * max(body, 1e-9) and wick >= 0.5 * rng and (pos >= 0.6 if buy else pos <= 0.4)
     beyond = bar['c'] > E5 if buy else bar['c'] < E5
@@ -310,8 +313,8 @@ def main():
         return done(f'signal candle too big ({rng:.1f} > {2 * A5:.1f})')
     ext = min(b['l'] for b in m5[-3:]) if buy else max(b['h'] for b in m5[-3:])
     stop = ext - sg * 1.5
-    if sg * (entry - stop) < 0.5 * A5:
-        stop = entry - sg * 0.5 * A5
+    if sg * (entry - stop) < 1.0 * A5:  # v3.7: stop at least 1 x 5m ATR away (was 0.5): fewer stop-outs from normal noise
+        stop = entry - sg * 1.0 * A5
     R = abs(entry - stop)
     if sg * (entry - stop) <= 0:
         return done('price already through the stop level')

@@ -1,3 +1,12 @@
+## v3.7 (9 Nov 2026, edge review the trader asked for: "check why it produces losing signals and fix them")
+Findings (backtest 13 Oct-6 Nov, all 133 v3.6 trades): losers came mostly from (1) trading against the 4H trend,
+(2) stops only 0.5 ATR away that normal 5m noise hit within ~4 candles, (3) a coding error in the bearish engulfing check
+(it compared the wrong candle prices, so some non-engulfing candles counted), (4) 00:00-06:00 London (9+18 trades, 22-33% wins, -$47).
+Buys lost in every version (36-41% wins) while sells won 57-67%: mostly the falling market of the test period, not a code error.
+Fixes now live: 4H trend must agree with the 15m and 1H; stop at least 1 x 5m ATR (still max $10); bearish engulfing fixed.
+Backtest 24h + 5 losses/-$40: v3.6 132 trades 48% +$92 PF 1.30 -> v3.7 93 trades 53% +$116 PF 1.62 (4-6 Nov -$13 -> -$2).
+Not applied (needs the trader's ok, conflicts with 24/7): pausing 00:00-06:00 London -> 82 trades 55% +$131 PF 1.95, worst drop $29.
+
 ## v3.6 (from Mon 9 Nov 2026, trader: "Switch it on")
 - Same setup as v3.5 (15m EMAs + 1H trend agree, 5m dip trigger, stop max $10, target 1.5R, 1R room, one trade at a time).
 - Hours: around the clock while MT5 gold is open, Sunday 23:00 to Friday 20:00 London, skipping the daily 22:00-23:00 break.

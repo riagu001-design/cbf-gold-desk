@@ -46,7 +46,7 @@ def main():
     hours = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380)
     rows.append(dict(kind='status', id='checker', status='running' if running else 'stopped', note=last, at=iso(now),
                      side=None, entry=mark, stop=None, target=None, result=None,
-                     strategy='Rules v3.6 trend-day dip, 24h Sun 23:00-Fri 20:00 London', last='in hours' if hours else 'outside hours'))
+                     strategy='Rules v3.7 trend-day dip, 24h Sun 23:00-Fri 20:00 London', last='in hours' if hours else 'outside hours'))
 
     # trend and the dip level, as the checker sees them
     hi, lo = a.swings(h1)
@@ -75,8 +75,8 @@ def main():
         sg = 1 if side == 'BUY' else -1
         ext = min(b['l'] for b in m5[-3:]) if side == 'BUY' else max(b['h'] for b in m5[-3:])
         stop = ext - sg * 1.5
-        if sg * (E5 - stop) < 0.5 * A5:
-            stop = E5 - sg * 0.5 * A5
+        if sg * (E5 - stop) < 1.0 * A5:
+            stop = E5 - sg * 1.0 * A5
         R = abs(E5 - stop)
         opp = [p for p, _ in lv if (p > E5 + 0.1 if side == 'BUY' else p < E5 - 0.1)]
         nx = (min(opp) if side == 'BUY' else max(opp)) if opp else None
@@ -88,6 +88,8 @@ def main():
         why.append('market closed (trading Sun 23:00 to Fri 20:00 London, break 22:00-23:00)')
     if bias != ('UP' if side == 'BUY' else 'DOWN'):
         why.append(f'the 1H trend is {bias.lower()}, so no {side.lower()}s until it agrees')
+    if bias4 != ('UP' if side == 'BUY' else 'DOWN'):
+        why.append(f'the 4H trend is {bias4.lower()}, so no {side.lower()}s until it agrees')
     if ot:
         why.append(f"a trade is open ({ot['side']} {ot['entry']}), one trade at a time")
     if last and 'SETUP' in last:
