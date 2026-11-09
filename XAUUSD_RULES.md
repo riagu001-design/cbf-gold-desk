@@ -1,3 +1,10 @@
+## v3.6 (from Mon 9 Nov 2026, trader: "Switch it on")
+- Same setup as v3.5 (15m EMAs + 1H trend agree, 5m dip trigger, stop max $10, target 1.5R, 1R room, one trade at a time).
+- Hours: around the clock while MT5 gold is open, Sunday 23:00 to Friday 20:00 London, skipping the daily 22:00-23:00 break.
+- Exit after 8 hours (Friday: by 21:00 at the latest). Daily stop: 5 losses or -$40 (London calendar day).
+- Backtest warning given before switching (13 Oct-6 Nov): 24h + 5 losses/-$40 = 133 trades 7/day, 48% wins, +$88, PF 1.29;
+  night trades 20:00-07:00 = 62 trades, 35% wins, -$42. v3.5 on the same data: +$142, 61% wins.
+
 ## v3.5 (from Mon 9 Nov 2026; trader chose "the best" on 6 Nov)
 - Direction: buy or sell only when the 15m EMA20 vs EMA50 AND the 1H trend agree (1H flat or against = no trade).
 - Entry unchanged: 5m candle within 0.5 x 5m ATR of the 5m EMA20, closing as strong close / engulfing / pin bar; no chasing > 1.5 x ATR.

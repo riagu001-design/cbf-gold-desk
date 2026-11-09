@@ -43,10 +43,10 @@ def main():
         last = ''
     running = subprocess.run(['bash', '/home/user/cbf-gold-desk/scan/checker_ok.sh'], capture_output=True, text=True).stdout.strip() == 'RUNNING'
     mins = now.hour * 60 + now.minute
-    hours = now.weekday() < 5 and 420 <= mins <= 1200
+    hours = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380)
     rows.append(dict(kind='status', id='checker', status='running' if running else 'stopped', note=last, at=iso(now),
                      side=None, entry=mark, stop=None, target=None, result=None,
-                     strategy='Rules v3.5 trend-day dip, 07:00-20:00 London weekdays', last='in hours' if hours else 'outside hours'))
+                     strategy='Rules v3.6 trend-day dip, 24h Sun 23:00-Fri 20:00 London', last='in hours' if hours else 'outside hours'))
 
     # trend and the dip level, as the checker sees them
     hi, lo = a.swings(h1)
@@ -85,7 +85,7 @@ def main():
         if R > 10:
             why.append(f'a stop now would be ${R:.1f} away, over the $10 limit')
     if not hours:
-        why.append('outside trading hours (07:00-20:00 London, weekdays)')
+        why.append('market closed (trading Sun 23:00 to Fri 20:00 London, break 22:00-23:00)')
     if bias != ('UP' if side == 'BUY' else 'DOWN'):
         why.append(f'the 1H trend is {bias.lower()}, so no {side.lower()}s until it agrees')
     if ot:

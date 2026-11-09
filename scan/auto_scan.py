@@ -4,7 +4,7 @@
 Run just after each 5m candle closes (scan/loop.sh). Prints one summary line. When a setup fires it writes
 /home/user/gold-desk/scan_msg.txt (the Telegram text) and logs the trade in live_log.csv.
 It also follows the open logged trade on 15m candles (stop, target, 8h / 21:00 time exit) so it
-can enforce one trade at a time and the daily limits (2 losses or -$20).
+can enforce one trade at a time and the daily limits (5 losses or -$40).
 Data: Hyperliquid xyz:GOLD (desk feed). Never places orders.
 """
 import csv
@@ -25,7 +25,7 @@ MSG = f'{DESK}/scan_msg.txt'
 RES = f'{DESK}/scan_result.txt'  # trade results the checker could not send itself (sent by the session, see SEND.md)
 BALANCE_START = 194.74  # balance after the 30 Oct weekly report
 FIELDS = ['given_at_london', 'side', 'entry', 'stop', 'target', 'reason', 'result']
-MAX_STOP, DAY_LOSS = 10.0, -20.0
+MAX_STOP, DAY_LOSS = 10.0, -40.0  # v3.6 (9 Nov, trader): daily stop -$40
 
 
 def candles(iv, days):
@@ -131,7 +131,7 @@ def resolve_open(rows, state, bars):
             res = ('SL', sg * (ot['stop'] - ot['entry']), ot['stop'])
         elif hit_tp:
             res = ('TP', sg * (ot['target'] - ot['entry']), ot['target'])
-        elif x['T'] + 1 - ot['bar_close_ms'] >= 8 * 3600e3 or (xt.hour >= 21):
+        elif x['T'] + 1 - ot['bar_close_ms'] >= 8 * 3600e3 or (xt.weekday() == 4 and xt.hour >= 21):  # v3.6: 8h exit; Friday 21:00 before the weekend close
             res = ('TIME', sg * (x['c'] - ot['entry']), x['c'])
         if res:
             break
@@ -178,7 +178,7 @@ def setup_message(side, entry, stop, tp, skip, R, reward, at, exit_by, why, with
 
 def send_result(rows, ot, kind, pl, exit_px, xt, day):
     """Tell the trader on Telegram that the trade closed; if the direct send fails, queue it in RES for the session."""
-    head = {'TP': 'TARGET HIT', 'SL': 'STOP HIT', 'TIME': 'TIME EXIT (8 hours or 21:00)'}[kind]
+    head = {'TP': 'TARGET HIT', 'SL': 'STOP HIT', 'TIME': 'TIME EXIT (8 hours, or Friday 21:00)'}[kind]
     risk = abs(ot['entry'] - ot['stop']) or 1
     total = 0.0
     for r in rows:
@@ -237,12 +237,16 @@ def main():
 
     mins = now.hour * 60 + now.minute
     force = os.environ.get('SCAN_TEST') == '1'  # test only: ignore hours and candle age
-    if not force and (now.weekday() >= 5 or not (420 <= mins <= 1202) or (now.weekday() == 4 and mins >= 19 * 60)):
-        return done('outside 07:00-20:00 London')  # v3.5: hours 07:00-20:00 (Fridays until 19:00)
+    # v3.6 (9 Nov, trader: 'switch it on'): trade around the clock while MT5 gold is open, Sunday 23:00 to Friday 20:00 London,
+    # skipping the daily 22:00-23:00 break. Backtest warned: night trades 35% wins, -$42 (13 Oct-6 Nov).
+    wd = now.weekday()
+    closed = wd == 5 or (wd == 6 and mins < 23 * 60) or (wd == 4 and mins >= 20 * 60) or (22 * 60 <= mins < 23 * 60)
+    if not force and closed:
+        return done('market closed (trading Sun 23:00 to Fri 20:00 London, daily break 22:00-23:00)')
     if state.get('open'):
         return done('a trade is already open')
     d = state.get('days', {}).get(now.strftime('%Y-%m-%d'), {'pl': 0, 'losses': 0})
-    if d["losses"] >= 2 or d['pl'] <= DAY_LOSS:
+    if d["losses"] >= 5 or d['pl'] <= DAY_LOSS:
         return done(f"daily limit hit ({d['losses']} losses, {d['pl']:+.2f})")
 
     # v3.1 (3 Nov, trader's yes): 1H trend and 15m EMA zone decide direction and place; the 5m candle is the trigger
@@ -326,7 +330,10 @@ def main():
     reward = abs(tp - entry)
     given = now.strftime('%Y-%m-%d %H:%M')
     reason = f'15m {bias.replace("DN", "DOWN")} (1H {bias1.replace("DN", "DOWN").lower()}), 5m dip to the EMA20, {trig} on the {ldn(bar["t"]).strftime("%H:%M")} candle'
-    exit_by = min(now + dt.timedelta(hours=8), now.replace(hour=21, minute=0)).strftime('%H:%M')
+    xb = now + dt.timedelta(hours=8)
+    if now.weekday() == 4:
+        xb = min(xb, now.replace(hour=21, minute=0))
+    exit_by = xb.strftime('%a %H:%M') if xb.date() != now.date() else xb.strftime('%H:%M')
     why = [f'15m trend {"up" if buy else "down"}', f'5m {"dip" if buy else "pullback"} to the EMA20', f'{homma} on the {ldn(bar["t"]).strftime("%H:%M")} candle']
     msg = setup_message(side, entry, stop, tp, skip, R, reward, now.strftime('%H:%M'), exit_by, why, bias4 == bias, bias1 == bias, bias1)
     blocked, note = news_block(now)
