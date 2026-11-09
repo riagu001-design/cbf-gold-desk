@@ -106,7 +106,7 @@ def main():
     except (OSError, IndexError):
         pass
     mins = now.hour * 60 + now.minute
-    in_session = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380)
+    in_session = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380 or mins < 360)
     running = subprocess.run(['bash', '/home/user/cbf-gold-desk/scan/checker_ok.sh'], capture_output=True, text=True).stdout.strip() == 'RUNNING'
     status = 'running' if running else ('not running (it is restarted within 15 minutes)' if in_session else 'off until the next session')
     facts.append(f'Scanner: 5 minute checker {status}; trading hours around the clock, Sunday 23:00 to Friday 20:00 London (daily break 22:00 to 23:00). Last scan: {last or "none yet today"}.')
@@ -115,7 +115,7 @@ def main():
         if last and 'no setup (' in last and 'outside' not in last:
             spoken.append('Latest check: ' + last.split('no setup (', 1)[1].split(');')[0].removesuffix(')') + '.')
     else:
-        nxt = 'at 11 pm' if (1320 <= mins < 1380 or now.weekday() == 6) else 'on Sunday at 11 pm'
+        nxt = 'at 6 am' if mins < 360 and now.weekday() < 5 else ('at 11 pm' if (1320 <= mins < 1380 or now.weekday() == 6) else 'on Sunday at 11 pm')
         spoken.append(f'The market is closed, so no new trades; scanning resumes {nxt} London time.')
 
     # trades
@@ -157,7 +157,7 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Rules v3.7 (from 9 Nov): market orders only; trade around the clock, Sunday 23:00 to Friday 20:00 London (daily break 22:00 to 23:00); buy or sell only when the 15 minute EMA20 vs EMA50, the 1 hour trend and the 4 hour trend all agree; enter when a 5 minute candle dips to within half a 5 minute ATR of the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars and at least one 5 minute ATR away, at most 10 dollars at 0.01 lot; at least 1R of room; target 1.5R or the next level; exit after 8 hours (or Friday 21:00); one trade at a time; stop for the day after 5 losses or minus 40 dollars; no news block, setups near news carry a warning. Setups go straight to Telegram as ENTER NOW.')
+    facts.append('Rules v3.8 (from 9 Nov): market orders only; trade Sunday 23:00 to Friday 20:00 London, with no new trades 22:00 to 23:00 and 00:00 to 06:00 (night pause); buy or sell only when the 15 minute EMA20 vs EMA50, the 1 hour trend and the 4 hour trend all agree; enter when a 5 minute candle dips to within half a 5 minute ATR of the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars and at least one 5 minute ATR away, at most 10 dollars at 0.01 lot; at least 1R of room; target 1.5R or the next level; exit after 8 hours (or Friday 21:00); one trade at a time; stop for the day after 5 losses or minus 40 dollars; no news block, setups near news carry a warning. Setups go straight to Telegram as ENTER NOW.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; MT5 has been about 3 to 4 dollars lower, so use the same distances from the MT5 entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 

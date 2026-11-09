@@ -1,3 +1,8 @@
+## v3.8 (9 Nov 2026, trader: "use the best one")
+v3.7 plus no new trades 00:00-06:00 London (open trades are still managed). Trading windows: Sun 23:00-24:00, then
+06:00-22:00 and 23:00-24:00 Mon-Thu, Fri 06:00-20:00. Daily stop 5 losses or -$40, target 1.5R, stop >= 1 ATR (max $10),
+15m + 1H + 4H trends must agree. Backtest 13 Oct-6 Nov: 82 trades (4.3/day), 55% wins, +$131, PF 1.95, worst drop $29.
+
 ## v3.7 (9 Nov 2026, edge review the trader asked for: "check why it produces losing signals and fix them")
 Findings (backtest 13 Oct-6 Nov, all 133 v3.6 trades): losers came mostly from (1) trading against the 4H trend,
 (2) stops only 0.5 ATR away that normal 5m noise hit within ~4 candles, (3) a coding error in the bearish engulfing check

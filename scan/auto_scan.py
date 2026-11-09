@@ -243,6 +243,8 @@ def main():
     closed = wd == 5 or (wd == 6 and mins < 23 * 60) or (wd == 4 and mins >= 20 * 60) or (22 * 60 <= mins < 23 * 60)
     if not force and closed:
         return done('market closed (trading Sun 23:00 to Fri 20:00 London, daily break 22:00-23:00)')
+    if not force and mins < 6 * 60:  # v3.8 (9 Nov, trader: 'use the best one'): no new trades 00:00-06:00 London (22-33% wins in the backtest)
+        return done('night pause 00:00-06:00 London (no new trades)')
     if state.get('open'):
         return done('a trade is already open')
     d = state.get('days', {}).get(now.strftime('%Y-%m-%d'), {'pl': 0, 'losses': 0})
