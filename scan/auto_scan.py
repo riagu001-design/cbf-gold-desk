@@ -44,6 +44,18 @@ def candles(iv, days):
     return [dict(t=b['t'], T=b['T'], o=float(b['o']), h=float(b['h']), l=float(b['l']), c=float(b['c'])) for b in r if b['T'] < now]
 
 
+def bias4_now(h4, price):
+    """v3.9 (10 Nov): the 4H trend from the 4H candle still forming. Hyperliquid's 4H snapshot ends at the last
+    completed candle, so the forming candle's close is the live price and its EMA50 is that price folded onto the
+    EMA of the completed candles. Backtest: 4H reacts up to 4 hours sooner (+$15 over the month)."""
+    H = 4 * 3600 * 1000
+    if h4 and h4[-1]['t'] + H > time.time() * 1000:  # snapshot already holds the forming candle: drop it
+        h4 = h4[:-1]
+    k = 2 / 51
+    e = ema([b['c'] for b in h4], 50)[-1] * (1 - k) + price * k
+    return 'UP' if price > e else 'DN'
+
+
 def ema(x, n):
     k, o = 2 / (n + 1), [x[0]]
     for v in x[1:]:
@@ -264,7 +276,7 @@ def main():
     e50h, c1 = ema([b['c'] for b in h1], 50)[-1], h1[-1]['c']
     st = 'UP' if hi[-1] > hi[-2] and lo[-1] > lo[-2] else 'DN' if hi[-1] < hi[-2] and lo[-1] < lo[-2] else 'MIX'
     bias1 = 'UP' if c1 > e50h and st != 'DN' else 'DN' if c1 < e50h and st != 'UP' else 'FLAT'  # v3.4: shown, no longer a block
-    bias4 = 'UP' if h4[-1]['c'] > ema([b['c'] for b in h4], 50)[-1] else 'DN'
+    bias4 = bias4_now(h4, m5[-1]['c'])
     c15 = [b['c'] for b in m15]
     e20, e50, A = ema(c15, 20)[-1], ema(c15, 50)[-1], atr(m15)
     # v3.4 (6 Nov, trader's call): the 15m EMA20 vs EMA50 alone sets the side; the 1H trend no longer blocks a trade.
@@ -275,6 +287,11 @@ def main():
     # stop after 2 losses or -$20. Backtest 13 Oct-6 Nov: 64 trades (3.4/day), 61% wins, +$142, PF 2.07, worst drop $22.55.
     if bias1 != ('UP' if buy else 'DN'):
         return done(f'15m {"UP" if buy else "DN"} but 1H {bias1.lower()}: no trade')
+    # v3.9 (10 Nov, trader's call 'use the best'): sells only. Live-matched backtest 13 Oct-10 Nov: buys lost $34 over
+    # 36 trades (37% wins) while sells made +$189; sells only with the forming-4H filter: 53 trades, 72% wins, +$193,
+    # PF 4.86, worst drop $25, both halves positive. Buys come back only after a re-test shows them paying.
+    if buy:
+        return done('15m UP: v3.9 is sells only (buys off until a re-test shows them paying)')
     # v3.7 (9 Nov, edge review): the 4H trend must agree too. Backtest: +$116 PF 1.62 vs +$92 PF 1.30 without it.
     if bias4 != ('UP' if buy else 'DN'):
         return done(f'15m and 1H {"UP" if buy else "DN"} but 4H {bias4.lower()}: no trade')

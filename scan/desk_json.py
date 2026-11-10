@@ -46,14 +46,14 @@ def main():
     hours = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380 or mins < 360)
     rows.append(dict(kind='status', id='checker', status='running' if running else 'stopped', note=last, at=iso(now),
                      side=None, entry=mark, stop=None, target=None, result=None,
-                     strategy='Rules v3.8 trend-day dip, 24h Sun 23:00-Fri 20:00 London', last='in hours' if hours else 'outside hours'))
+                     strategy='Rules v3.9 trend-day dip, sells only, 24h Sun 23:00-Fri 20:00 London', last='in hours' if hours else 'outside hours'))
 
     # trend and the dip level, as the checker sees them
     hi, lo = a.swings(h1)
     e50h, c1 = a.ema([b['c'] for b in h1], 50)[-1], h1[-1]['c']
     st = 'UP' if hi[-1] > hi[-2] and lo[-1] > lo[-2] else 'DN' if hi[-1] < hi[-2] and lo[-1] < lo[-2] else 'MIX'
     bias = 'UP' if c1 > e50h and st != 'DN' else 'DOWN' if c1 < e50h and st != 'UP' else 'FLAT'
-    bias4 = 'UP' if h4[-1]['c'] > a.ema([b['c'] for b in h4], 50)[-1] else 'DOWN'
+    bias4 = 'UP' if a.bias4_now(h4, mark) == 'UP' else 'DOWN'
     c15 = [b['c'] for b in m15]
     e20, e50 = a.ema(c15, 20)[-1], a.ema(c15, 50)[-1]
     E5, A5 = a.ema([b['c'] for b in m5], 20)[-1], a.atr(m5)
@@ -84,6 +84,8 @@ def main():
         best.update(entry=round(E5, 1), stop=round(stop, 1), target=round(E5 + sg * R * min(2, max(rr, 1)), 1))
         if R > 10:
             why.append(f'a stop now would be ${R:.1f} away, over the $10 limit')
+    if side == 'BUY':
+        why.append('15m trend is up; v3.9 is sells only, so no buys')
     if not hours:
         why.append('market closed or night pause (trading Sun 23:00-Fri 20:00 London; no new trades 22:00-23:00 or 00:00-06:00)')
     if bias != ('UP' if side == 'BUY' else 'DOWN'):

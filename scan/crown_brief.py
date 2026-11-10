@@ -84,7 +84,8 @@ def main():
         c1 = h1[-1]['c']
         st = 'UP' if hi[-1] > hi[-2] and lo[-1] > lo[-2] else 'DN' if hi[-1] < hi[-2] and lo[-1] < lo[-2] else 'MIX'
         bias = 'UP' if c1 > e50h and st != 'DN' else 'DOWN' if c1 < e50h and st != 'UP' else 'FLAT'
-        b4 = 'UP' if h4[-1]['c'] > ema([b['c'] for b in h4], 50)[-1] else 'DOWN'
+        from auto_scan import bias4_now
+        b4 = 'UP' if bias4_now(h4, mark) == 'UP' else 'DOWN'
         c15 = [b['c'] for b in m15]
         e20, e50 = ema(c15, 20)[-1], ema(c15, 50)[-1]
         e5 = ema([b['c'] for b in m5], 20)[-1] if len(m5) > 20 else c1
@@ -95,7 +96,10 @@ def main():
         where = 'right at the price' if gap < 1.5 else f'{gap:.0f} dollars {"below" if mark >= e5 else "above"} the price'
         agree = 'agrees' if (bias == 'UP') == up15 and bias != 'FLAT' else ('is flat' if bias == 'FLAT' else 'disagrees')
         if agree == 'agrees':
-            spoken.append(f'The 15 minute and one hour trends are both {"up" if up15 else "down"}, so the desk looks for {side}, {"on a dip" if up15 else "on a pullback up"} to the 5 minute EMA20, now about {say(e5)}, {where}. The four hour is {b4.lower()}.')
+            if up15:
+                spoken.append(f'The 15 minute and one hour trends are both up, but v3.9 takes sells only, so the desk stands aside until gold turns down. The 5 minute EMA20 is about {say(e5)}, {where}, and the four hour is {b4.lower()}.')
+            else:
+                spoken.append(f'The 15 minute and one hour trends are both down, so the desk looks for sells, on a pullback up to the 5 minute EMA20, now about {say(e5)}, {where}. The four hour is {b4.lower()}.')
         else:
             spoken.append(f'The 15 minute trend is {"up" if up15 else "down"} but the one hour trend {agree}, so the desk stands aside until they agree. The 5 minute EMA20 is about {say(e5)}, {where}, and the four hour is {b4.lower()}.')
 
@@ -157,7 +161,7 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Rules v3.8 (from 9 Nov): market orders only; trade Sunday 23:00 to Friday 20:00 London, with no new trades 22:00 to 23:00 and 00:00 to 06:00 (night pause); buy or sell only when the 15 minute EMA20 vs EMA50, the 1 hour trend and the 4 hour trend all agree; enter when a 5 minute candle dips to within half a 5 minute ATR of the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars and at least one 5 minute ATR away, at most 10 dollars at 0.01 lot; at least 1R of room; target 1.5R or the next level; exit after 8 hours (or Friday 21:00); one trade at a time; stop for the day after 5 losses or minus 40 dollars; no news block, setups near news carry a warning. Setups go straight to Telegram as ENTER NOW.')
+    facts.append('Rules v3.9 (from 10 Nov, 17:45 London): SELLS ONLY, buys are off; the 4 hour trend uses the 4 hour candle still forming; market orders only; trade Sunday 23:00 to Friday 20:00 London, with no new trades 22:00 to 23:00 and 00:00 to 06:00 (night pause); sell only when the 15 minute EMA20 is below the EMA50 and the 1 hour and 4 hour trends are both down; enter when a 5 minute candle dips to within half a 5 minute ATR of the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars and at least one 5 minute ATR away, at most 10 dollars at 0.01 lot; at least 1R of room; target 1.5R or the next level; exit after 8 hours (or Friday 21:00); one trade at a time; stop for the day after 5 losses or minus 40 dollars; no news block, setups near news carry a warning. Setups go straight to Telegram as ENTER NOW.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; MT5 has been about 3 to 4 dollars lower, so use the same distances from the MT5 entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 

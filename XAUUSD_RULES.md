@@ -117,3 +117,14 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
 ## Rules freeze (9 Nov 2026)
 v3.8 runs unchanged until it has 20 closed live trades (3 closed at the freeze: 2 wins, 1 loss, +$16.10).
 Then review: if it is losing over those 20, it has no edge in this market and is switched off.
+
+## v3.9 (10 Nov 2026, 17:45 London; trader: "use the best and change the rules now")
+Replaces the freeze. Two changes to v3.8, everything else unchanged:
+1. SELLS ONLY. Buys are switched off.
+2. The 4H trend uses the 4H candle still forming (live price vs the 4H EMA50 folded with that price), not the last completed 4H candle, so it reacts up to 4 hours sooner.
+Why: the backtest was rebuilt to match the live 4H filter exactly (it agreed with every live signal on 9-10 Nov). Live-matched results, 13 Oct-10 Nov, at 0.01 lot after costs:
+- v3.8 as it ran: 82 trades, 56% wins, +$141, PF 1.97, worst drop $23 (buys 35 trades -$30, sells 47 trades +$171)
+- forming 4H only: 86 trades, 56% wins, +$155, PF 2.02
+- v3.9 (sells only + forming 4H): 53 trades (2.5/day), 72% wins, +$193, PF 4.86, worst drop $25, both halves positive
+Risk: gold fell over most of the test month. In a rising market v3.9 sends nothing. Buys were roughly break-even in the one rising week (+$9 over 17 trades) and lost $45 in a flat week.
+Review: after 20 closed v3.9 trades, and re-test buys on new data then.
