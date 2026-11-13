@@ -1,3 +1,6 @@
+## v3.9 change (13 Nov 2026, 11:00 London, trader: "TP should be 2.5R")
+Target raised from 1.5R to 2.5R, still capped at the next level when that is nearer (at least 1R of room required). Everything else in v3.9 unchanged. Not yet backtested at 2.5R.
+
 ## v3.8 (9 Nov 2026, trader: "use the best one")
 v3.7 plus no new trades 00:00-06:00 London (open trades are still managed). Trading windows: Sun 23:00-24:00, then
 06:00-22:00 and 23:00-24:00 Mon-Thu, Fri 06:00-20:00. Daily stop 5 losses or -$40, target 1.5R, stop >= 1 ATR (max $10),

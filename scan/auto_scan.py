@@ -344,7 +344,7 @@ def main():
     roomR = abs(nxt - entry) / R if nxt else 9
     if roomR < 1:
         return done(f'only {roomR:.2f}R of room to {nxt:.1f}')
-    cap = 1.5  # v3.5: 1.5R or the next level
+    cap = 2.5  # 13 Nov 10:58 London, Woody: target 2.5R (or the next level if nearer); was 1.5R since v3.5
     tp = entry + sg * R * min(cap, roomR)
     skip = entry + sg * 0.3 * R
     side = 'BUY' if buy else 'SELL'
