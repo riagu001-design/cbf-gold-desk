@@ -80,11 +80,12 @@ def main():
     b1 = snap('1m', 90)
     b5 = snap('5m', 6 * 60)
     b15 = snap('15m', 3 * 24 * 60)
+    b4h = snap('4h', 30 * 24 * 60)  # H4 DI: who controls the bigger picture
     closes15 = [float(b['c']) for b in b15]
     r14 = rsi(closes15)
     read = ('overbought' if r14 is not None and r14 >= 70 else
             'oversold' if r14 is not None and r14 <= 30 else 'neutral')
-    d15, d5 = dmi(b15), dmi(b5)
+    d15, d5, d4h = dmi(b15), dmi(b5), dmi(b4h)
     out = {
         'source': 'Hyperliquid xyz:GOLD (the checker feed)',
         'asOf': asof,
@@ -92,11 +93,11 @@ def main():
         'gold_5m': {'asOf': asof, 'recent': recent(b5, 60)},
         'gold_15m': {'asOf': asof, 'recent': recent(b15, 40)},
         'technicals': {'interval': '15m', 'asOf': asof, 'last': {'close': closes15[-1]},
-                       'indicators': {'rsi14': r14, 'dmi': d15, 'dmi5': d5}, 'read': read},
+                       'indicators': {'rsi14': r14, 'dmi': d15, 'dmi5': d5, 'dmi4h': d4h}, 'read': read},
     }
     with open(OUT, 'w') as f:
         json.dump(out, f)
-    print(f'bars.json {asof}: 1m {len(b1)}, 5m {len(b5)}, 15m {len(b15)}, RSI14(15m) {r14}, DMI 15m {d15}, 5m {d5}')
+    print(f'bars.json {asof}: 1m {len(b1)}, 5m {len(b5)}, 15m {len(b15)}, RSI14(15m) {r14}, DMI 4h {d4h}, 15m {d15}, 5m {d5}')
 
 
 if __name__ == '__main__':
