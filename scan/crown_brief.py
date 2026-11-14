@@ -103,6 +103,18 @@ def main():
         else:
             spoken.append(f'The 15 minute trend is {"up" if up15 else "down"} but the one hour trend {agree}, so the desk stands aside until they agree. The 5 minute EMA20 is about {say(e5)}, {where}, and the four hour is {b4.lower()}.')
 
+    # H4 DI: who is in control on the 4 hour chart (same Wilder +DI/-DI/ADX as the dashboard)
+    try:
+        from bars_json import dmi
+        d4 = dmi(h4) if len(h4) > 30 else None
+    except Exception:
+        d4 = None
+    if d4:
+        grip = {'strong': 'a strong grip', 'building': 'a grip that is building', 'weak': 'only a weak grip'}[d4['strength']]
+        facts.append(f'Who is in control, 4 hour DI (14): {d4["control"]} (+DI {d4["pdi"]}, -DI {d4["mdi"]}, ADX {d4["adx"]}, {d4["strength"]}). ADX under 20 weak, 20 to 25 building, 25 and over strong.')
+        fit = 'which suits the sells-only rules' if d4['control'] == 'sellers' else 'so sells are against the bigger picture'
+        spoken.append(f'On the four hour chart the {d4["control"]} are in control, with {grip}: ADX {d4["adx"]:.0f}, minus DI {d4["mdi"]:.0f} against plus DI {d4["pdi"]:.0f}, {fit}.')
+
     # scan health and latest reason
     last = ''
     try:
