@@ -104,6 +104,20 @@ def main():
             facts.append(f"Swing paper test (daily): trend {tr_} (EMA50 {lv_['ema50']} vs EMA200 {lv_['ema200']}, futures), 21-day EMA about {e21s:.0f} in spot terms, daily ATR {lv_['atr']}; macro bias {sw_.get('macro', {}).get('bias')} (both real yields and the dollar falling = bullish, both rising = bearish).")
             spoken.append(f"The desk is paper-testing the daily swing pullback. The daily trend is {tr_}, so it waits for a {'dip' if tr_ == 'up' else 'rally'} to the 21-day average, now about {say(e21s)}. The macro bias is {({'UP': 'bullish', 'DN': 'bearish'}).get(sw_.get('macro', {}).get('bias'), 'mixed')}.")
 
+    try:
+        em_ = json.load(open(f'{G}/ema_state.json'))
+    except (OSError, ValueError):
+        em_ = {}
+    if em_.get('h4'):
+        t4_ = em_['h4']['trend']; h1_ = em_.get('h1', {})
+        facts.append(f"EMA 9/21 paper test (H1, in the H4 trend): H4 {t4_} (EMA50 {em_['h4']['ema50']} vs EMA200 {em_['h4']['ema200']}); 1H EMA9 {h1_.get('ema9')} vs EMA21 {h1_.get('ema21')}, 1H ATR {h1_.get('atr')}. A test trade starts on a 1H close where EMA9 crosses EMA21 in the H4 direction; stop 3 x 1H ATR; out on the opposite cross.")
+        if em_.get('open'):
+            p_ = em_['open']; lv2 = (mark - p_['entry']) * (1 if p_['side'] == 'BUY' else -1)
+            facts.append(f"EMA paper trade open (not real): {p_['side']} from {p_['entry']:.1f}, stop {p_['stop']:.1f}, opened {p_['opened']}; {lv2:+.2f} dollars per ounce now.")
+            spoken.append(f"There is an EMA paper test {p_['side'].lower()} from {say(p_['entry'])}, stop {say(p_['stop'])}, {'up' if lv2 >= 0 else 'down'} {abs(lv2):.0f} dollars per ounce. It is not a real trade.")
+        else:
+            spoken.append(f"The EMA nine twenty-one test waits for the one hour EMA nine to cross {'above' if t4_ == 'UP' else 'below'} the EMA twenty-one, with the four hour trend {'up' if t4_ == 'UP' else 'down'}.")
+
     # H4 DI: who is in control on the 4 hour chart (same Wilder +DI/-DI/ADX as the dashboard)
     try:
         from bars_json import dmi
@@ -178,7 +192,7 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Desk mode from 16 Nov 2026 (Woody): all earlier strategies are deleted (5 minute dip and 1 hour breakout: no edge in the 12-month and 20-year tests). The desk PAPER-TESTS the daily swing pullback with the macro filter (Woody strategies 1 and 4): daily EMA50 above EMA200 = buys only, below = sells only; the day touches the 21-day EMA and closes back beyond it as a confirmation candle; stop beyond the 5-day swing plus 0.2 daily ATR; target 2R; out after 30 trading days; a trade against a clear macro bias (real yields and dollar both moving) is skipped. 20-year test: about 6 trades a year, both decades profitable (profit factor about 1.4 to 1.5), worst losing run about 12R. Risk 1 percent per trade. With daily stops of about 190 dollars per ounce, 1 percent of a 182 dollar account is about 0.01 ounce, so it cannot be traded at MT5 0.01 lot (1 ounce): that would risk about 190 dollars. Messages are marked PAPER TEST.')
+    facts.append('Desk mode from 16 Nov 2026 (Woody): all earlier strategies are deleted (5 minute dip and 1 hour breakout: no edge in the 12-month and 20-year tests). Two PAPER TESTS run. (1) Frequent: H1 EMA 9/21 cross, only in the H4 trend direction (H4 EMA50 vs EMA200), stop 3 x 1H ATR, exit on the opposite cross or Friday 21:00; 12-month test about 135 trades a year, profit factor about 1.6 to 1.7 in both halves; the plain cross without the H4 filter lost. (2) Slow: the daily swing pullback with the macro filter (Woody strategies 1 and 4): daily EMA50 above EMA200 = buys only, below = sells only; the day touches the 21-day EMA and closes back beyond it as a confirmation candle; stop beyond the 5-day swing plus 0.2 daily ATR; target 2R; out after 30 trading days; a trade against a clear macro bias (real yields and dollar both moving) is skipped. 20-year test: about 6 trades a year, both decades profitable (profit factor about 1.4 to 1.5), worst losing run about 12R. Risk 1 percent per trade. With daily stops of about 190 dollars per ounce, 1 percent of a 182 dollar account is about 0.01 ounce, so it cannot be traded at MT5 0.01 lot (1 ounce): that would risk about 190 dollars. Messages are marked PAPER TEST.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; MT5 has been about 3 to 4 dollars lower, so use the same distances from the MT5 entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 

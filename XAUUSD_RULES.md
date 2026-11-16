@@ -1,4 +1,11 @@
-# 16 Nov 2026 (Woody): ALL EARLIER STRATEGIES DELETED. PAPER TEST: daily swing pullback + macro filter (Woody's 1 + 4).
+# 16 Nov 2026 (Woody): ALL EARLIER STRATEGIES DELETED. Two PAPER TESTS:
+## A. Frequent: H1 EMA 9/21 cross in the H4 trend (Woody asked for a frequent strategy)
+- H4 EMA50 above EMA200 = buys only, below = sells only. Entry on a 1H close where EMA9 crosses EMA21 that way. Stop 3 x 1H ATR,
+  fixed. Exit on the opposite cross, the stop, or Friday 21:00 London. No entries 5 min either side of news or Friday after 19:00.
+- 12 months XAU/USD (backtest/research_2026-11-16/ema921.py): train +17.3R PF 1.71, unseen half +17.9R PF 1.62, ~135 trades a
+  year, worst run ~8R; all 15 nearby settings profitable in both halves. Without the H4 filter the cross lost. Code: scan/ema_scan.py.
+- Stops ~$50/oz now: 1% risk = ~0.035 oz; MT5 0.01 lot (1 oz) would risk ~$50 (27% of the account).
+## B. Slow: daily swing pullback + macro filter (Woody's 1 + 4)
 - Tests (backtest/research_2026-11-16): 5m dip, 1H Donchian 20/10 and 20+3ATR, 9/21 EMA cross, H1 trend pullback, Asian/London
   breakout and retest, NY momentum: none profitable on both the train and the unseen half once costs and the 13-17 UK window
   were applied. Only the daily swing pullback held up: 20 years of daily gold futures, both decades profitable;
