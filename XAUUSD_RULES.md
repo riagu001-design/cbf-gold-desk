@@ -5,6 +5,10 @@
 - 12 months XAU/USD (backtest/research_2026-11-16/ema921.py): train +17.3R PF 1.71, unseen half +17.9R PF 1.62, ~135 trades a
   year, worst run ~8R; all 15 nearby settings profitable in both halves. Without the H4 filter the cross lost. Code: scan/ema_scan.py.
 - Stops ~$50/oz now: 1% risk = ~0.035 oz; MT5 0.01 lot (1 oz) would risk ~$50 (27% of the account).
+## A2. M15 entry, H1 confirmation, H4 bias (Woody, 16 Nov) - paper test next to A to compare
+- H4 EMA50 vs EMA200 sets the side; 1H EMA9 vs EMA21 must agree; entry on a 15m EMA9/21 cross that way. Stop 2 x 1H ATR.
+  Exit when the 1H EMA9/21 flips, the stop, or Friday 21:00. Code: scan/m15_scan.py. Test: train +67R PF 3.73, unseen half
+  +5.6R PF 1.18 (the only M15 variant positive in both halves; the rest lost on the unseen half), ~2 a week.
 ## B. Slow: daily swing pullback + macro filter (Woody's 1 + 4)
 - Tests (backtest/research_2026-11-16): 5m dip, 1H Donchian 20/10 and 20+3ATR, 9/21 EMA cross, H1 trend pullback, Asian/London
   breakout and retest, NY momentum: none profitable on both the train and the unseen half once costs and the 13-17 UK window
