@@ -19,10 +19,7 @@ Bars and indicators (since 11 Nov: Coinversa's candle tool needs a paid plan, so
     with source.url = the new /_blob url, updated {at, by: "Claude (gold desk)"} and edit {via: "claude", at}. All four share the one file.
 8e. Delete the previous bars blob (its id is in /home/user/gold-desk/crown/bars_blob.txt), then write the new id there.
 
-## Ian voice recording for the dashboard (trader chose on 11 Nov: a fresh Ian brief every hour, about 650 ElevenLabs credits each)
-On every :01 watchdog run (hourly), and also when a setup/result was just sent:
-9. creative_generate_speech with voice_id 70HFmYdPmz1aKiKW6Zx3 (Ian), model_id eleven_v4, generations_count 1, and the desk_brief text from crown_vars.json; poll creative_get_flow_run_status until done. Never re-run a generation to retry.
-10. Download the mp3 (elevenlabsusercontent.com is allowed), `ffmpeg -y -i in.mp3 -c:a aac -b:a 96k crown_brief.mp4`.
-11. Upload the mp4 as an asset of the dashboard; write /home/user/gold-desk/crown/voice.json {"url","at","id"}; delete the previous recording's asset.
-12. Re-run steps 5-8 so the brief row carries the new url. The page plays it while under 2 hours old, else reads the text aloud.
-If credits run out, skip 9-12, tell the trader, and the button falls back to the browser voice.
+## Ian voice recording: PAUSED (16 Nov, Woody: "the main goal is profits, not looking fancy")
+Do not run creative_generate_speech on watchdog runs (it cost ~700-800 ElevenLabs credits an hour).
+The dashboard plays the last recording with its time, or reads the briefing in the device voice.
+Make a recording only if the trader asks for one.
