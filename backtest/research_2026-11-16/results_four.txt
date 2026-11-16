@@ -1,0 +1,32 @@
+XAU/USD 15m 2025-11-06 -> 2026-11-16 | R after $0.40/oz cost | $ = 1% risk of $182 per trade
+-- 1. Trend pullback (H4 trend, H1 pullback to EMA50, confirmation candle, stop beyond swing, 2R)
+1  13-17 UK only                                     train   22 trades  45% wins   +4.1R ($  +7.5 at 1%)  PF 1.36  worst run  4.3R
+                                                     TEST    21 trades  33% wins   -3.8R ($  -7.0 at 1%)  PF 0.70  worst run  8.0R
+1  any hour                                          train   46 trades  43% wins   +2.9R ($  +5.3 at 1%)  PF 1.11  worst run  8.8R
+                                                     TEST    57 trades  37% wins   +1.1R ($  +1.9 at 1%)  PF 1.03  worst run  9.7R
+1+4 macro filter, 13-17 UK                           train   21 trades  43% wins   +2.1R ($  +3.9 at 1%)  PF 1.19  worst run  6.3R
+                                                     TEST    21 trades  33% wins   -3.8R ($  -7.0 at 1%)  PF 0.70  worst run  8.0R
+1+4 macro filter, any hour                           train   39 trades  44% wins   +3.0R ($  +5.5 at 1%)  PF 1.14  worst run  8.8R
+                                                     TEST    55 trades  38% wins   +3.1R ($  +5.6 at 1%)  PF 1.10  worst run  9.7R
+-- 2. Breakout (15m close outside the range, stop beyond the breakout candle + 0.5 ATR, 2R)
+2  asia3 plain breakout                              train  137 trades  36% wins   -0.5R ($  -1.0 at 1%)  PF 0.99  worst run 23.6R
+                                                     TEST   117 trades  40% wins  +14.9R ($ +27.2 at 1%)  PF 1.21  worst run  9.6R
+2  asia3 retest                                      train  116 trades  33% wins  -11.1R ($ -20.3 at 1%)  PF 0.86  worst run 15.5R
+                                                     TEST    87 trades  37% wins   +2.1R ($  +3.9 at 1%)  PF 1.04  worst run 10.2R
+2  asia3 retest, 13-17 UK only                       train   90 trades  46% wins  +20.4R ($ +37.2 at 1%)  PF 1.42  worst run  9.3R
+                                                     TEST    61 trades  38% wins   -0.6R ($  -1.1 at 1%)  PF 0.98  worst run 12.0R
+2  lon15 plain breakout                              train  142 trades  30% wins  -24.7R ($ -45.0 at 1%)  PF 0.76  worst run 37.9R
+                                                     TEST   119 trades  36% wins   +2.9R ($  +5.3 at 1%)  PF 1.04  worst run 13.6R
+2  lon15 retest                                      train  128 trades  26% wins  -35.7R ($ -65.0 at 1%)  PF 0.64  worst run 41.3R
+                                                     TEST   106 trades  38% wins   +6.2R ($ +11.3 at 1%)  PF 1.09  worst run 12.1R
+2  lon15 retest, 13-17 UK only                       train   92 trades  30% wins  -22.8R ($ -41.5 at 1%)  PF 0.65  worst run 29.3R
+                                                     TEST    64 trades  39% wins   +1.9R ($  +3.5 at 1%)  PF 1.05  worst run 18.2R
+-- 3. Trend following
+3  Donchian 20/10, 13-17 UK entries                  train   70 trades  34% wins   -9.6R ($ -17.5 at 1%)  PF 0.75  worst run 11.0R
+                                                     TEST    60 trades  28% wins   -6.3R ($ -11.5 at 1%)  PF 0.82  worst run 18.1R
+3  Donchian 20/10, any hour                          train  145 trades  28% wins  +81.2R ($+147.9 at 1%)  PF 1.84  worst run 24.8R
+                                                     TEST   135 trades  27% wins  -24.6R ($ -44.7 at 1%)  PF 0.74  worst run 41.4R
+3  EMA 9/21 cross, 13-17 UK entries                  train   30 trades  33% wins   +1.6R ($  +2.9 at 1%)  PF 1.11  worst run 10.0R
+                                                     TEST    22 trades  27% wins   -0.4R ($  -0.8 at 1%)  PF 0.97  worst run  5.2R
+3  EMA 9/21 cross, any hour                          train  107 trades  26% wins   -1.0R ($  -1.9 at 1%)  PF 0.98  worst run 12.8R
+                                                     TEST    92 trades  28% wins   -0.3R ($  -0.5 at 1%)  PF 1.00  worst run 21.4R

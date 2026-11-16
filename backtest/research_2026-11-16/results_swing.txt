@@ -1,0 +1,10 @@
+daily bars 5000 2007-08-22 -> 2026-11-16
+swing pullback both  2007-2016   82 trades  44% wins  +13.6R  PF 1.31  worst run  8.7R  median stop $39
+                    2017-2026   85 trades  44% wins  +14.5R  PF 1.32  worst run 11.8R  median stop $42
+                    last 12 m    9 trades  56% wins   +3.9R  PF 2.22  worst run  2.2R  median stop $218
+swing pullback buy   2007-2016   46 trades  46% wins  +12.4R  PF 1.53  worst run  6.9R  median stop $41
+                    2017-2026   69 trades  46% wins  +18.3R  PF 1.55  worst run  7.5R  median stop $45
+                    last 12 m    6 trades  33% wins   -0.7R  PF 0.79  worst run  3.2R  median stop $238
+swing pullback sell  2007-2016   36 trades  42% wins   +1.2R  PF 1.06  worst run  5.4R  median stop $39
+                    2017-2026   18 trades  28% wins   -5.8R  PF 0.56  worst run  9.4R  median stop $36
+                    last 12 m    4 trades  75% wins   +3.6R  PF 4.59  worst run  1.0R  median stop $119

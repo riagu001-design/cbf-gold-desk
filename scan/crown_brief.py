@@ -94,9 +94,15 @@ def main():
         side = 'buys' if up15 else 'sells'
         gap = abs(mark - e5)
         where = 'right at the price' if gap < 1.5 else f'{gap:.0f} dollars {"below" if mark >= e5 else "above"} the price'
-        hi20, lo20 = max(b['h'] for b in h1[-20:]), min(b['l'] for b in h1[-20:])
-        facts.append(f'Paper test trigger: a 1 hour close above {hi20:.1f} (20-hour high) starts a test BUY, below {lo20:.1f} (20-hour low) a test SELL.')
-        spoken.append(f'The desk is now paper-testing the one hour trend breakout. A test trade starts if a one hour candle closes above {say(hi20)} or below {say(lo20)}. The four hour trend is {b4.lower()}.')
+        try:
+            sw_ = json.load(open(f'{G}/swing_state.json'))
+        except (OSError, ValueError):
+            sw_ = {}
+        lv_ = sw_.get('levels') or {}
+        if lv_:
+            e21s = lv_['ema21'] - sw_.get('basis', 0); tr_ = 'up' if lv_['ema50'] > lv_['ema200'] else 'down'
+            facts.append(f"Swing paper test (daily): trend {tr_} (EMA50 {lv_['ema50']} vs EMA200 {lv_['ema200']}, futures), 21-day EMA about {e21s:.0f} in spot terms, daily ATR {lv_['atr']}; macro bias {sw_.get('macro', {}).get('bias')} (both real yields and the dollar falling = bullish, both rising = bearish).")
+            spoken.append(f"The desk is paper-testing the daily swing pullback. The daily trend is {tr_}, so it waits for a {'dip' if tr_ == 'up' else 'rally'} to the 21-day average, now about {say(e21s)}. The macro bias is {({'UP': 'bullish', 'DN': 'bearish'}).get(sw_.get('macro', {}).get('bias'), 'mixed')}.")
 
     # H4 DI: who is in control on the 4 hour chart (same Wilder +DI/-DI/ADX as the dashboard)
     try:
@@ -172,7 +178,7 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Desk mode from 16 Nov 2026 (Woody): the 5 minute dip setups are STOPPED (12-month research: no edge). The desk PAPER-TESTS the 1 hour trend breakout for two weeks: a test trade starts when a 1 hour candle closes above the 20-hour high (buy) or below the 20-hour low (sell); stop 3 times the 1 hour ATR, trailed every hour, never loosened, no fixed target; out on the stop or Friday 21:00 London; one at a time; no entries 5 minutes either side of high-impact news. Telegram messages are marked PAPER TEST: nothing to do in MT5. Backtest 12 months: +1,189 dollars at 0.01 lot, about 35 percent wins, worst losing run about 540 dollars, so at 0.01 lot it is too big for a 182 dollar account; about 0.07 ounce per trade would risk 2 percent.')
+    facts.append('Desk mode from 16 Nov 2026 (Woody): all earlier strategies are deleted (5 minute dip and 1 hour breakout: no edge in the 12-month and 20-year tests). The desk PAPER-TESTS the daily swing pullback with the macro filter (Woody strategies 1 and 4): daily EMA50 above EMA200 = buys only, below = sells only; the day touches the 21-day EMA and closes back beyond it as a confirmation candle; stop beyond the 5-day swing plus 0.2 daily ATR; target 2R; out after 30 trading days; a trade against a clear macro bias (real yields and dollar both moving) is skipped. 20-year test: about 6 trades a year, both decades profitable (profit factor about 1.4 to 1.5), worst losing run about 12R. Risk 1 percent per trade. With daily stops of about 190 dollars per ounce, 1 percent of a 182 dollar account is about 0.01 ounce, so it cannot be traded at MT5 0.01 lot (1 ounce): that would risk about 190 dollars. Messages are marked PAPER TEST.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; MT5 has been about 3 to 4 dollars lower, so use the same distances from the MT5 entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 

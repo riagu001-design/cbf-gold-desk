@@ -12,3 +12,5 @@ If /home/user/gold-desk/news_today.json is missing or its "date" is not today's 
 auto_scan.py blocks new entries from 5 min before to 5 min after each listed time (16 Nov rule, Woody) and adds a
 news warning to setups 6-15 min either side. FMP has no economic calendar on this plan, so do not use it.
 If the calendar cannot be read, do not write the file (setups then carry "News calendar not checked").
+
+Also on every watchdog run: if it is after 22:00 London (not Saturday) and swing_state.json levels.day is not today, follow scan/SWING.md.
