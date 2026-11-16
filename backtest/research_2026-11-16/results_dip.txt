@@ -1,0 +1,13 @@
+5m data 2026-06-04 -> 2026-11-16  TRAIN 8 Jun-31 Aug | TEST 1 Sep-16 Nov (unseen)
+LIVE: sells only, 2.5R, 4H on    train  107 trades  33% wins     +26.5 $  PF 1.05  avg -0.02R  worst drop  78.9
+                                 TEST   138 trades  37% wins     +92.6 $  PF 1.16  avg +0.09R  worst drop 153.2
+sells only, 1.5R                 train  129 trades  39% wins     -55.1 $  PF 0.90  avg -0.10R  worst drop  96.7
+                                 TEST   153 trades  49% wins    +112.1 $  PF 1.21  avg +0.14R  worst drop  88.9
+buys only, 2.5R                  train   99 trades  25% wins    -184.6 $  PF 0.62  avg -0.29R  worst drop 215.2
+                                 TEST    51 trades  16% wins    -144.4 $  PF 0.47  avg -0.58R  worst drop 182.2
+both sides, 2.5R                 train  203 trades  29% wins    -153.3 $  PF 0.84  avg -0.15R  worst drop 229.7
+                                 TEST   187 trades  30% wins     -63.2 $  PF 0.93  avg -0.11R  worst drop 210.7
+both, 1.5R                       train  238 trades  35% wins    -254.3 $  PF 0.75  avg -0.20R  worst drop 292.2
+                                 TEST   207 trades  44% wins     +28.2 $  PF 1.04  avg +0.01R  worst drop 146.5
+both, 2.5R, 4H off               train  240 trades  30% wins    -152.3 $  PF 0.86  avg -0.14R  worst drop 227.1
+                                 TEST   236 trades  32% wins     -58.3 $  PF 0.94  avg -0.08R  worst drop 219.9

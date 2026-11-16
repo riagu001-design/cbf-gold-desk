@@ -1,0 +1,27 @@
+London breakout, no stop cap:
+  stop=opp tgt=1.0  train   65 trades  57% wins    -182.3 $  PF 0.87  avg -0.01R  worst drop 641.3
+                    TEST    60 trades  60% wins    +361.4 $  PF 1.51  avg +0.11R  worst drop 124.0
+  stop=opp tgt=1.5  train   65 trades  55% wins     -11.3 $  PF 0.99  avg +0.02R  worst drop 502.9
+                    TEST    60 trades  60% wins    +447.6 $  PF 1.63  avg +0.14R  worst drop 103.4
+  stop=opp tgt=2.0  train   65 trades  55% wins     -53.7 $  PF 0.96  avg +0.03R  worst drop 534.4
+                    TEST    60 trades  60% wins    +480.1 $  PF 1.68  avg +0.16R  worst drop 122.6
+  stop=mid tgt=1.0  train   65 trades  54% wins    -110.3 $  PF 0.89  avg -0.01R  worst drop 441.3
+                    TEST    60 trades  63% wins    +321.2 $  PF 1.63  avg +0.19R  worst drop  80.1
+  stop=mid tgt=1.5  train   65 trades  52% wins     +26.0 $  PF 1.02  avg +0.04R  worst drop 374.6
+                    TEST    60 trades  60% wins    +413.8 $  PF 1.77  avg +0.23R  worst drop  80.1
+  stop=mid tgt=2.0  train   65 trades  51% wins    +138.6 $  PF 1.13  avg +0.08R  worst drop 362.6
+                    TEST    60 trades  58% wins    +525.9 $  PF 1.96  avg +0.30R  worst drop  80.1
+
+1H Donchian, both sides - neighbouring settings (all 12 months, then each quarter):
+  n=15 x2.5:  307 trades  34% wins    +712.5 $  PF 1.15  avg +0.17R  worst drop 480.3 | quarters   +418    -83   +311    +65 | median stop $34
+  n=15 x3.0:  267 trades  36% wins   +1144.0 $  PF 1.27  avg +0.19R  worst drop 545.3 | quarters   +521   +152   +477     -6 | median stop $39
+  n=15 x3.5:  242 trades  36% wins    +917.1 $  PF 1.22  avg +0.11R  worst drop 622.5 | quarters   +572    +45   +402   -102 | median stop $43
+  n=20 x2.5:  286 trades  34% wins    +661.3 $  PF 1.15  avg +0.17R  worst drop 548.4 | quarters   +422    -85   +284    +40 | median stop $34
+  n=20 x3.0:  254 trades  36% wins   +1188.7 $  PF 1.30  avg +0.19R  worst drop 543.1 | quarters   +530   +241   +435    -17 | median stop $38
+  n=20 x3.5:  229 trades  37% wins    +979.1 $  PF 1.26  avg +0.12R  worst drop 547.0 | quarters   +650    -18   +365    -19 | median stop $43
+  n=30 x2.5:  248 trades  32% wins    +663.2 $  PF 1.18  avg +0.19R  worst drop 632.8 | quarters   +646   -226   +308    -64 | median stop $33
+  n=30 x3.0:  223 trades  35% wins    +978.7 $  PF 1.28  avg +0.19R  worst drop 563.3 | quarters   +629    -25   +451    -77 | median stop $37
+  n=30 x3.5:  208 trades  36% wins    +646.3 $  PF 1.19  avg +0.10R  worst drop 521.4 | quarters   +698   -333   +315    -33 | median stop $43
+  n=40 x2.5:  234 trades  30% wins    +326.3 $  PF 1.09  avg +0.15R  worst drop 659.9 | quarters   +588   -389   +217    -91 | median stop $33
+  n=40 x3.0:  211 trades  33% wins    +661.0 $  PF 1.20  avg +0.15R  worst drop 550.4 | quarters   +599   -129   +327   -136 | median stop $37
+  n=40 x3.5:  198 trades  34% wins    +347.5 $  PF 1.10  avg +0.07R  worst drop 685.1 | quarters   +706   -414   +187   -132 | median stop $42
