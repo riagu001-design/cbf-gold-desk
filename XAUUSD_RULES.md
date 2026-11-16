@@ -14,6 +14,11 @@
 - H4 EMA50 vs EMA200 sets the side; 1H EMA9 vs EMA21 must agree; entry on a 15m EMA9/21 cross that way. Stop 2 x 1H ATR.
   Exit when the 1H EMA9/21 flips, the stop, or Friday 21:00. Code: scan/m15_scan.py. Test: train +67R PF 3.73, unseen half
   +5.6R PF 1.18 (the only M15 variant positive in both halves; the rest lost on the unseen half), ~2 a week.
+## A3. 4H EMA 9/21 cross, 2R target (Woody: "Yes add the 4H test", 16 Nov 17:00)
+- Entry on a completed 4H candle where EMA9 crosses EMA21, either way, any hour. Stop 2 x 4H ATR(14), target 2R, out Friday 21:00.
+  Same news / Friday 19:00 / market-closed blocks. Code: scan/h4_scan.py, log h4_log.csv.
+- 12 months: train 27 trades +8.7R PF 1.62, unseen half 31 trades +10.9R PF 1.76, ~1 a week; stops 1.5/2.5/3 ATR all profitable
+  in both halves. Stops ~$64/oz now: 1% risk = ~0.03 oz; MT5 0.01 lot (1 oz) would risk ~$64.
 ## B. Slow: daily swing pullback + macro filter (Woody's 1 + 4)
 - Tests (backtest/research_2026-11-16): 5m dip, 1H Donchian 20/10 and 20+3ATR, 9/21 EMA cross, H1 trend pullback, Asian/London
   breakout and retest, NY momentum: none profitable on both the train and the unseen half once costs and the 13-17 UK window

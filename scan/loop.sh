@@ -11,4 +11,5 @@ while true; do
   # every 5 min) and the daily swing pullback + macro filter (checked once a day by the session, scan/SWING.md).
   python3 "$D/ema_scan.py" >> "$G/scan_loop.log" 2>&1
   python3 "$D/m15_scan.py" >> "$G/scan_loop.log" 2>&1  # 16 Nov (Woody): M15 entry, H1 confirmation, H4 bias
+  python3 "$D/h4_scan.py" >> "$G/scan_loop.log" 2>&1   # 16 Nov 17:00 (Woody): 4H EMA 9/21 cross, 2R target
 done
