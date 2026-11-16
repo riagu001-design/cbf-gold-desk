@@ -90,11 +90,17 @@ def news_block(now):
         return False, 'News calendar not checked'
     if n.get('date') != now.strftime('%Y-%m-%d'):
         return False, 'News calendar not checked'
+    # 16 Nov, Woody: no new entries from 5 minutes before to 5 minutes after high-impact news;
+    # setups 6-15 minutes either side are still sent, with a news warning.
+    note = None
     for hm, name in n.get('events', []):
         h, m = map(int, hm.split(':'))
-        if abs((now.hour * 60 + now.minute) - (h * 60 + m)) <= 15:
+        gap = abs((now.hour * 60 + now.minute) - (h * 60 + m))
+        if gap <= 5:
             return True, f'{name} at {hm}'
-    return False, None
+        if gap <= 15 and note is None:
+            note = f'⚠️ NEWS WINDOW: {name} at {hm}. Expect wide spreads and fast spikes'
+    return False, note
 
 
 def send_telegram(text):
@@ -359,8 +365,8 @@ def main():
     why = [f'15m trend {"up" if buy else "down"}', f'5m {"dip" if buy else "pullback"} to the EMA20', f'{homma} on the {ldn(bar["t"]).strftime("%H:%M")} candle']
     msg = setup_message(side, entry, stop, tp, skip, R, reward, now.strftime('%H:%M'), exit_by, why, bias4 == bias, bias1 == bias, bias1)
     blocked, note = news_block(now)
-    if blocked:  # 6 Nov, Woody: no news block any more; the setup is sent with a warning instead
-        note = f'⚠️ NEWS WINDOW: {note}. Expect wide spreads and fast spikes'
+    if blocked:  # 16 Nov, Woody: no new entries 5 minutes either side of high-impact news
+        return done(f'news block: {note} (no new entries 5 min before to 5 min after)')
     if note:
         msg = msg.replace(LINE + '\nℹ️', f'📰 {note}\n' + LINE + '\nℹ️', 1)
     sent = send_telegram(msg)

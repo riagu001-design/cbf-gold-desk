@@ -104,7 +104,7 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
 - No new trades 21:00-01:00 London, at weekends, or after 19:00 London on Fridays.
 
 ## 8. News
-- No news block since 6 Nov (Woody's call). Setups within 15 min of high-impact USD news (CPI, NFP, PCE, FOMC, GDP, Fed chair) are still sent, with a ⚠️ NEWS WINDOW warning (wide spreads, fast spikes).
+- News rule from 16 Nov (Woody's call): no new entries from 5 min before to 5 min after high-impact USD news (CPI, NFP, PCE, FOMC, GDP, Fed chair, jobless claims, ISM, retail sales). Setups 6-15 min either side are still sent, with a ⚠️ NEWS WINDOW warning (wide spreads, fast spikes). (6-15 Nov: no block, warning only.)
 
 ## 9. Risk limits
 - One open trade at a time, 0.01 lot.
