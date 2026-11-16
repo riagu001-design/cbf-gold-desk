@@ -1,5 +1,10 @@
 # 16 Nov 2026 (Woody): ALL EARLIER STRATEGIES DELETED. Two PAPER TESTS:
-## A. Frequent: H1 EMA 9/21 cross in the H4 trend (Woody asked for a frequent strategy)
+## 16 Nov 15:20 change (Woody: "H4 should not block trades") - applies to A and A2
+- H4 no longer blocks entries; each trade logs whether H4 agreed (h4 = with/against) for the Friday review.
+- Without H4 the tests only held up inside 07:00-17:00 London, so new entries are weekdays 07:00-17:00 only. A's stop is now 2 x 1H ATR.
+  A no-H4 07-17 stop 2: train +27.3R PF 2.28, unseen +8.8R PF 1.51 (all hours: unseen -0.3R to -9.3R).
+  A2 no-H4 07-17: train +16.1R PF 1.44, unseen +0.3R PF 1.01 (all hours: unseen -4.9R PF 0.92). The H4 versions are described below.
+## A. Frequent: H1 EMA 9/21 cross in the H4 trend (Woody asked for a frequent strategy) - original version
 - H4 EMA50 above EMA200 = buys only, below = sells only. Entry on a 1H close where EMA9 crosses EMA21 that way. Stop 3 x 1H ATR,
   fixed. Exit on the opposite cross, the stop, or Friday 21:00 London. No entries 5 min either side of news or Friday after 19:00.
 - 12 months XAU/USD (backtest/research_2026-11-16/ema921.py): train +17.3R PF 1.71, unseen half +17.9R PF 1.62, ~135 trades a

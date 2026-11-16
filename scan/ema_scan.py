@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""PAPER TEST from 16 Nov 2026 (Woody asked for a frequent strategy, EMA 9/21): H1 EMA 9/21 cross in the H4 trend direction.
+"""PAPER TEST from 16 Nov 2026 (Woody asked for a frequent strategy, EMA 9/21): H1 EMA 9/21 cross.
+16 Nov 15:20 (Woody: "H4 should not block trades"): the H4 filter is removed; H4 is logged per trade (with/against) for the review.
+  Without H4 the test only held up with entries 07:00-17:00 London: stop 2 ATR train +27.3R PF 2.28, unseen +8.8R PF 1.51, ~1-2 a week;
+  at all hours it lost on the unseen half (-0.3R to -9.3R). So: entries 07:00-17:00 weekdays, stop 2 x 1H ATR.
+Original version (kept for reference):
 Research (backtest/research_2026-11-16/ema921.py, 12 months XAU/USD, R after costs):
   train +17.3R PF 1.71, unseen half +17.9R PF 1.62, ~135 trades a year (2-3 a week), worst losing run ~8R;
   all 15 nearby settings (EMA 5-12 / 20-26, stops 1.5-3 ATR) profitable in both halves. The plain cross with no H4 filter lost.
@@ -15,8 +19,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from auto_scan import candles, ema, news_block, send_telegram, ldn, L, API, LINE
 import requests
 G = '/home/user/gold-desk'; ST, LOG = f'{G}/ema_state.json', f'{G}/ema_log.csv'; MSG, RES = f'{G}/scan_msg.txt', f'{G}/scan_result.txt'
-BALANCE, RISK, MULT = 182.34, 0.01, 3.0
-FIELDS = ['opened', 'side', 'entry', 'stop', 'risk', 'closed', 'exit', 'usd_001', 'R', 'how']
+BALANCE, RISK, MULT = 182.34, 0.01, 2.0
+FIELDS = ['opened', 'side', 'entry', 'stop', 'risk', 'closed', 'exit', 'usd_001', 'R', 'how', 'h4']
 def atr_s(b, n=14):
     tr = [b[0]['h'] - b[0]['l']] + [max(x['h'] - x['l'], abs(x['h'] - p['c']), abs(x['l'] - p['c'])) for p, x in zip(b, b[1:])]
     o = [None] * len(b); a = sum(tr[:n]) / n; o[n - 1] = a
@@ -72,22 +76,23 @@ def main():
         return out(f'EMA paper {pos["side"]} open from {pos["entry"]:.1f}, stop {pos["stop"]:.1f} ({sg * (px - pos["entry"]):+.2f} per oz)')
     closed = wd == 5 or (wd == 6 and mins < 1380) or (wd == 4 and mins >= 19 * 60) or 1320 <= mins < 1380
     if closed: return out('EMA test: no new entries now (market closed, daily break, or Friday after 19:00)')
-    if not new_hour: return out(f'EMA test: H4 {trend4.lower()}, 1H EMA9 {e9[-1]:.1f} vs EMA21 {e21[-1]:.1f}, waiting for a cross {"up" if trend4 == "UP" else "down"}')
+    if not (wd < 5 and 7 <= now.hour < 17): return out('EMA test: no new entries outside 07:00-17:00 London (weekdays)')
+    if not new_hour: return out(f'EMA test: 1H EMA9 {e9[-1]:.1f} vs EMA21 {e21[-1]:.1f}, waiting for a cross {"down" if e9[-1] > e21[-1] else "up"} (H4 {trend4.lower()}, info only)')
     st['last_hour'] = h1[-1]['t']
     up = e9[-1] > e21[-1] and e9[-2] <= e21[-2]; dn = e9[-1] < e21[-1] and e9[-2] >= e21[-2]
-    if not ((up and trend4 == 'UP') or (dn and trend4 == 'DN')):
-        return out(f'EMA test: no cross in the H4 direction on the {ldn(h1[-1]["t"]).strftime("%H:%M")} hour (H4 {trend4.lower()}, EMA9 {e9[-1]:.1f} vs EMA21 {e21[-1]:.1f})')
+    if not (up or dn):
+        return out(f'EMA test: no 9/21 cross on the {ldn(h1[-1]["t"]).strftime("%H:%M")} hour (EMA9 {e9[-1]:.1f} vs EMA21 {e21[-1]:.1f}; H4 {trend4.lower()}, info only)')
     blocked, note = news_block(now)
     if blocked: return out(f'EMA test: cross but news block ({note})')
     buy = up; sg = 1 if buy else -1; side = 'BUY' if buy else 'SELL'; stop = round(px - sg * MULT * A[-1], 1); risk = round(abs(px - stop), 2)
-    oz = round(BALANCE * RISK / risk, 4); opened = now.strftime('%Y-%m-%d %H:%M')
+    oz = round(BALANCE * RISK / risk, 4); opened = now.strftime('%Y-%m-%d %H:%M'); h4w = 'with' if (trend4 == 'UP') == buy else 'against'
     msg = '\n'.join([f'🧪 PAPER TEST · GOLD EMA 9/21 {side} {"🟢" if buy else "🔴"}', 'Not a real trade: watch only, nothing to do in MT5.', LINE,
-                     f'📍 Entry {px:.1f} (1H EMA9 crossed {"above" if buy else "below"} EMA21; H4 trend {"up" if buy else "down"})',
-                     f'🛑 Stop {stop:.1f} (3 x 1H ATR, −${risk:.0f} per oz) · exit on the opposite cross, no fixed target',
+                     f'📍 Entry {px:.1f} (1H EMA9 crossed {"above" if buy else "below"} EMA21; H4 trend {trend4.lower()}: {h4w} it)',
+                     f'🛑 Stop {stop:.1f} (2 x 1H ATR, −${risk:.0f} per oz) · exit on the opposite cross, no fixed target',
                      f'⚖️ 1% risk of ${BALANCE:.0f} = {oz} oz. At 0.01 lot (1 oz) the risk would be ${risk:.0f}.',
                      '⏰ Out on the opposite 9/21 cross, the stop, or Friday 21:00 London', f'🕐 Signal {tag} London'] + ([f'📰 {note}'] if note else []))
     r = send(msg, MSG)
-    rs.append(dict(opened=opened, side=side, entry=f'{px:.1f}', stop=f'{stop:.1f}', risk=f'{risk:.2f}')); save(rs)
+    rs.append(dict(opened=opened, side=side, entry=f'{px:.1f}', stop=f'{stop:.1f}', risk=f'{risk:.2f}', h4=h4w)); save(rs)
     st['open'] = dict(opened=opened, side=side, entry=px, stop=stop, risk=risk, checked_ms=h1[-1]['T'] + 1)
     return out(f'EMA PAPER {side} {px:.1f} stop {stop:.1f} (risk ${risk:.2f}/oz); Telegram {r}')
 if __name__ == '__main__':
