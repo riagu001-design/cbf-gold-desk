@@ -7,5 +7,6 @@ G=/home/user/gold-desk
 echo $$ > "$G/scan_loop.pid"
 while true; do
   now=$(date +%s); next=$(( (now / 300 + 1) * 300 + 20 )); sleep $(( next - now ))
-  python3 "$D/auto_scan.py" >> "$G/scan_loop.log" 2>&1
+  # 16 Nov 2026 (Woody): the 5m dip setups are stopped; the desk paper-tests the 1H trend breakout instead.
+  python3 "$D/trend_scan.py" >> "$G/scan_loop.log" 2>&1
 done

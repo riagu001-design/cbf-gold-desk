@@ -1,3 +1,12 @@
+# PAPER TEST from 16 Nov 2026 (Woody's yes): 1H trend breakout. The 5m dip setups below are STOPPED.
+- Research (backtest/research_2026-11-16, 12 months XAU/USD): the dip had no reliable edge (sells ~break-even, buys losing);
+  the 1H 20-hour breakout with a 3 x ATR trailing stop made +$1,189 at 0.01 lot (PF 1.30), all 12 nearby settings profitable,
+  unseen half +$400 (PF 1.25). Worst losing run ~$540 at 0.01 lot, so it is too big for the ~$182 account at 0.01 lot.
+- Rule: BUY when a 1H candle closes above the previous 20 hours' high, SELL below their low; stop 3 x 1H ATR(14), trailed every
+  closed hour (close -/+ 3 x ATR), never loosened; no target; out on the stop or Friday 21:00 London; one at a time;
+  no entries 5 min either side of high-impact USD news. Code: scan/trend_scan.py (run by scan/loop.sh). Log: trend_log.csv.
+- Two-week paper test, then Woody decides: smaller size (e.g. ~0.07 oz risks 2%), more capital, or stop.
+
 ## v3.9 change (13 Nov 2026, 11:00 London, trader: "TP should be 2.5R")
 Target raised from 1.5R to 2.5R, still capped at the next level when that is nearer (at least 1R of room required). Everything else in v3.9 unchanged. Not yet backtested at 2.5R.
 

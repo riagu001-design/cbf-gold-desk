@@ -94,14 +94,9 @@ def main():
         side = 'buys' if up15 else 'sells'
         gap = abs(mark - e5)
         where = 'right at the price' if gap < 1.5 else f'{gap:.0f} dollars {"below" if mark >= e5 else "above"} the price'
-        agree = 'agrees' if (bias == 'UP') == up15 and bias != 'FLAT' else ('is flat' if bias == 'FLAT' else 'disagrees')
-        if agree == 'agrees':
-            if up15:
-                spoken.append(f'The 15 minute and one hour trends are both up, but v3.9 takes sells only, so the desk stands aside until gold turns down. The 5 minute EMA20 is about {say(e5)}, {where}, and the four hour is {b4.lower()}.')
-            else:
-                spoken.append(f'The 15 minute and one hour trends are both down, so the desk looks for sells, on a pullback up to the 5 minute EMA20, now about {say(e5)}, {where}. The four hour is {b4.lower()}.')
-        else:
-            spoken.append(f'The 15 minute trend is {"up" if up15 else "down"} but the one hour trend {agree}, so the desk stands aside until they agree. The 5 minute EMA20 is about {say(e5)}, {where}, and the four hour is {b4.lower()}.')
+        hi20, lo20 = max(b['h'] for b in h1[-20:]), min(b['l'] for b in h1[-20:])
+        facts.append(f'Paper test trigger: a 1 hour close above {hi20:.1f} (20-hour high) starts a test BUY, below {lo20:.1f} (20-hour low) a test SELL.')
+        spoken.append(f'The desk is now paper-testing the one hour trend breakout. A test trade starts if a one hour candle closes above {say(hi20)} or below {say(lo20)}. The four hour trend is {b4.lower()}.')
 
     # H4 DI: who is in control on the 4 hour chart (same Wilder +DI/-DI/ADX as the dashboard)
     try:
@@ -112,8 +107,7 @@ def main():
     if d4:
         grip = {'strong': 'a strong grip', 'building': 'a grip that is building', 'weak': 'only a weak grip'}[d4['strength']]
         facts.append(f'Who is in control, 4 hour DI (14): {d4["control"]} (+DI {d4["pdi"]}, -DI {d4["mdi"]}, ADX {d4["adx"]}, {d4["strength"]}). ADX under 20 weak, 20 to 25 building, 25 and over strong.')
-        fit = 'which suits the sells-only rules' if d4['control'] == 'sellers' else 'so sells are against the bigger picture'
-        spoken.append(f'On the four hour chart the {d4["control"]} are in control, with {grip}: ADX {d4["adx"]:.0f}, minus DI {d4["mdi"]:.0f} against plus DI {d4["pdi"]:.0f}, {fit}.')
+        spoken.append(f'On the four hour chart the {d4["control"]} are in control, with {grip}: ADX {d4["adx"]:.0f}, minus DI {d4["mdi"]:.0f} against plus DI {d4["pdi"]:.0f}.')
 
     # scan health and latest reason
     last = ''
@@ -138,6 +132,11 @@ def main():
     state = json.load(open(f'{G}/scan_state.json')) if os.path.exists(f'{G}/scan_state.json') else {}
     rows = list(csv.DictReader(open(f'{G}/live_log.csv'))) if os.path.exists(f'{G}/live_log.csv') else []
     ot = state.get('open')
+    tp_ = json.load(open(f'{G}/trend_state.json')).get('open') if os.path.exists(f'{G}/trend_state.json') else None
+    if tp_:
+        lv_ = (mark - tp_['entry']) * (1 if tp_['side'] == 'BUY' else -1)
+        facts.append(f"Paper test trade (not real): {tp_['side']} from {tp_['entry']:.1f}, trailing stop {tp_['stop']:.1f}, opened {tp_['opened']} London; paper result {lv_:+.2f} dollars at 0.01 lot.")
+        spoken.append(f"There is a paper test {tp_['side'].lower()} from {say(tp_['entry'])} with a trailing stop at {say(tp_['stop'])}, currently {'up' if lv_ >= 0 else 'down'} {abs(lv_):.0f} dollars at 0.01 lot. It is not a real trade.")
     if ot:
         live = (mark - ot['entry']) * (1 if ot['side'] == 'BUY' else -1)
         facts.append(f'Open trade: {ot["side"]} at {ot["entry"]}, stop {ot["stop"]}, target {ot["target"]}, sent {ot["given"]} London; live result {live:+.2f} dollars at 0.01 lot.')
@@ -173,7 +172,7 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Rules v3.9 (from 10 Nov, 17:45 London): SELLS ONLY, buys are off; the 4 hour trend uses the 4 hour candle still forming; market orders only; trade Sunday 23:00 to Friday 20:00 London, with no new trades 22:00 to 23:00 and 00:00 to 06:00 (night pause); sell only when the 15 minute EMA20 is below the EMA50 and the 1 hour and 4 hour trends are both down; enter when a 5 minute candle dips to within half a 5 minute ATR of the 5 minute EMA20 and closes as a strong close, engulfing or pin bar; no chasing beyond 1.5 x 5 minute ATR from it; stop beyond the last 3 five minute candles plus 1.50 dollars and at least one 5 minute ATR away, at most 10 dollars at 0.01 lot; at least 1R of room; target 2.5R (from 13 Nov, 11:00 London; was 1.5R) or the next level if nearer; exit after 8 hours (or Friday 21:00); one trade at a time; stop for the day after 5 losses or minus 40 dollars; no new entries 5 minutes either side of high-impact news (from 16 Nov), setups within 15 minutes carry a warning. Setups go straight to Telegram as ENTER NOW.')
+    facts.append('Desk mode from 16 Nov 2026 (Woody): the 5 minute dip setups are STOPPED (12-month research: no edge). The desk PAPER-TESTS the 1 hour trend breakout for two weeks: a test trade starts when a 1 hour candle closes above the 20-hour high (buy) or below the 20-hour low (sell); stop 3 times the 1 hour ATR, trailed every hour, never loosened, no fixed target; out on the stop or Friday 21:00 London; one at a time; no entries 5 minutes either side of high-impact news. Telegram messages are marked PAPER TEST: nothing to do in MT5. Backtest 12 months: +1,189 dollars at 0.01 lot, about 35 percent wins, worst losing run about 540 dollars, so at 0.01 lot it is too big for a 182 dollar account; about 0.07 ounce per trade would risk 2 percent.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; MT5 has been about 3 to 4 dollars lower, so use the same distances from the MT5 entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 
