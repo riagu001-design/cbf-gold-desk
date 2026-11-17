@@ -152,7 +152,7 @@ def main():
     except (OSError, IndexError):
         pass
     mins = now.hour * 60 + now.minute
-    in_session = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380 or mins < 360)
+    in_session = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380)
     running = subprocess.run(['bash', '/home/user/cbf-gold-desk/scan/checker_ok.sh'], capture_output=True, text=True).stdout.strip() == 'RUNNING'
     status = 'running' if running else ('not running (it is restarted within 15 minutes)' if in_session else 'off until the next session')
     facts.append(f'Scanner: 5 minute checker {status}; trading hours around the clock, Sunday 23:00 to Friday 20:00 London (daily break 22:00 to 23:00). Last scan: {last or "none yet today"}.')
@@ -161,7 +161,7 @@ def main():
         if last and 'no setup (' in last and 'outside' not in last:
             spoken.append('Latest check: ' + last.split('no setup (', 1)[1].split(');')[0].removesuffix(')') + '.')
     else:
-        nxt = 'at 6 am' if mins < 360 and now.weekday() < 5 else ('at 11 pm' if (1320 <= mins < 1380 or now.weekday() == 6) else 'on Sunday at 11 pm')
+        nxt = ('at 11 pm' if (1320 <= mins < 1380 or now.weekday() == 6) else 'on Sunday at 11 pm')
         spoken.append(f'The market is closed, so no new trades; scanning resumes {nxt} London time.')
 
     # trades
