@@ -178,8 +178,7 @@ def main():
         facts.append(f'Open trade: {ot["side"]} at {ot["entry"]}, stop {ot["stop"]}, target {ot["target"]}, sent {ot["given"]} London; live result {live:+.2f} dollars at 0.01 lot.')
         spoken.append(f'We have an open {ot["side"].lower()} from {say(ot["entry"])}, stop {say(ot["stop"])}, target {say(ot["target"])}, currently {"up" if live >= 0 else "down"} {abs(live):.2f} dollars.')
     else:
-        facts.append('Open trade: none.')
-        spoken.append('No trade is open.')
+        facts.append('Open real-strategy trade: none (the old dip strategy is deleted; paper tests are listed above).')
     today = [r for r in rows if r['given_at_london'].startswith(now.strftime('%Y-%m-%d'))]
     pl = 0.0
     for r in rows:
@@ -190,7 +189,14 @@ def main():
     closed = [r for r in rows if r['result'] and not r['result'].startswith('SKIPPED')]
     facts.append(f'Setups sent today: {len(today)}' + (': ' + '; '.join(f'{r["given_at_london"][11:]} {r["side"]} {r["entry"]} SL {r["stop"]} TP {r["target"]} {r["result"] or "open"}' for r in today) if today else '') + '.')
     facts.append(f'Live log since the new rules: {len(rows)} setups, {len(closed)} closed, {pl:+.2f} dollars. Account about {BALANCE_START + pl:.2f} dollars (194.74 at the 30 Oct weekly report plus live results). Review after 20 trades.')
-    spoken.append(f'{"Today the desk has sent " + str(len(today)) + " setup" + ("s" if len(today) != 1 else "") if today else "No setups have been sent today"}, and the account is about {BALANCE_START + pl:.0f} dollars.')
+    import csv as _csv
+    paper_today = 0
+    for _f in ('ema_log.csv', 'm15_log.csv', 'h4_log.csv', 'swing_log.csv'):
+        try:
+            paper_today += sum(1 for r in _csv.DictReader(open(f'{G}/{_f}')) if (r.get('opened') or '').startswith(now.strftime('%Y-%m-%d')))
+        except (OSError, ValueError):
+            pass
+    spoken.append(f'{"Paper test setups today: " + str(paper_today) if paper_today else "No paper test setups yet today"}, and the account is about {BALANCE_START + pl:.0f} dollars.')
 
     # news
     try:
