@@ -1,3 +1,6 @@
+# 17 Nov 2026 (Woody's MASTER AI BRAIN spec): CROWNBEARER NEURAL BRAIN decides and sends
+All engines below (A, A2, A3, B) are intelligence providers only: they propose and paper-track. The Neural Brain (scan/brain/, see its README) scores each proposal 0-100 from the evidence and checks market open, news, freshness, stop size, daily loss limit (-3R) and duplicate/conflicting signals. Only score 85+ with every check passed goes to Telegram, immediately (75-84 watchlist, below 75 rejected). Today only an H1 cross with the H4 trend reaches 85 (89), so the H4 trend effectively decides what is SENT again (engines still propose and track everything). Signals only, no orders, no MT5 connection.
+
 # 16 Nov 2026 (Woody): ALL EARLIER STRATEGIES DELETED. Two PAPER TESTS:
 ## 16 Nov 15:20 change (Woody: "H4 should not block trades") - applies to A and A2
 - H4 no longer blocks entries; each trade logs whether H4 agreed (h4 = with/against) for the Friday review.

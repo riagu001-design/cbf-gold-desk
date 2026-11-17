@@ -16,7 +16,8 @@ Rules:
 Run every 5 minutes by loop.sh; acts on each newly closed 1H candle and checks the stop on 5m candles. Never places orders."""
 import csv, datetime as dt, json, os, sys, time
 sys.path.insert(0, os.path.dirname(__file__))
-from auto_scan import candles, ema, news_block, send_telegram, ldn, L, API, LINE
+from auto_scan import candles, ema, news_block, ldn, L, API, LINE
+from brain_link import propose, finish  # 17 Nov: the Neural Brain decides and publishes; this engine only proposes
 import requests
 G = '/home/user/gold-desk'; ST, LOG = f'{G}/ema_state.json', f'{G}/ema_log.csv'; MSG, RES = f'{G}/scan_msg.txt', f'{G}/scan_result.txt'
 BALANCE, RISK, MULT = 182.34, 0.01, 2.0
@@ -40,10 +41,8 @@ def rows():
 def save(rs):
     with open(LOG, 'w', newline='') as f: w = csv.DictWriter(f, fieldnames=FIELDS); w.writeheader(); w.writerows(rs)
 def send(text, fb):
-    if os.environ.get('SCAN_TEST') == '1': print('MESSAGE (test, not sent):\n' + text); return 'test'
-    r = send_telegram(text)
-    if not r.startswith('ok'): open(fb, 'w').write(text)
-    return r
+    raise PermissionError("17 Nov 2026: strategy engines may not publish; propose to the Neural Brain (brain_link.propose)")
+
 def main():
     st = json.load(open(ST)) if os.path.exists(ST) else {}
     now = dt.datetime.now(L); tag = now.strftime('%H:%M'); mins = now.hour * 60 + now.minute; wd = now.weekday()
@@ -71,7 +70,7 @@ def main():
             msg = '\n'.join([f'🧪 PAPER TEST · EMA 9/21 TRADE CLOSED ({how})', LINE, f'{"🟢" if buy else "🔴"} {pos["side"]} from {pos["entry"]:.1f} (opened {pos["opened"][5:]} London)',
                              f'🏁 Exit {ex:.1f} at {xt.strftime("%a %H:%M")} London', f'💰 {R:+.2f}R = {"+" if R >= 0 else "−"}${abs(R) * BALANCE * RISK:.2f} at 1% risk ({"+" if pl >= 0 else "−"}${abs(pl):.2f} per oz)',
                              LINE, f'📒 EMA paper test so far: {len(done_)} trades, {sum(done_):+.1f}R', 'Not a real trade: nothing to do in MT5.'])
-            r = send(msg, RES); return out(f'EMA paper {pos["side"]} closed ({how}) at {ex:.1f}: {R:+.2f}R; Telegram {r}')
+            r = finish(pos, ex, how, xt); return out(f'EMA paper {pos["side"]} closed ({how}) at {ex:.1f}: {R:+.2f}R; {r}')
         st['open'] = pos
         return out(f'EMA paper {pos["side"]} open from {pos["entry"]:.1f}, stop {pos["stop"]:.1f} ({sg * (px - pos["entry"]):+.2f} per oz)')
     closed = wd == 5 or (wd == 6 and mins < 1380) or (wd == 4 and mins >= 19 * 60) or 1320 <= mins < 1380
@@ -91,9 +90,9 @@ def main():
                      f'🛑 Stop {stop:.1f} (2 x 1H ATR, −${risk:.0f} per oz) · exit on the opposite cross, no fixed target',
                      f'⚖️ 1% risk of ${BALANCE:.0f} = {oz} oz. At 0.01 lot (1 oz) the risk would be ${risk:.0f}.',
                      '⏰ Out on the opposite 9/21 cross, the stop, or Friday 21:00 London', f'🕐 Signal {tag} London'] + ([f'📰 {note}'] if note else []))
-    r = send(msg, MSG)
+    dec, r = propose('H1', side, px, stop, 'the opposite 1H EMA 9/21 cross (or Friday 21:00)', note)
     rs.append(dict(opened=opened, side=side, entry=f'{px:.1f}', stop=f'{stop:.1f}', risk=f'{risk:.2f}', h4=h4w)); save(rs)
-    st['open'] = dict(opened=opened, side=side, entry=px, stop=stop, risk=risk, checked_ms=h1[-1]['T'] + 1)
-    return out(f'EMA PAPER {side} {px:.1f} stop {stop:.1f} (risk ${risk:.2f}/oz); Telegram {r}')
+    st['open'] = dict(opened=opened, side=side, entry=px, stop=stop, risk=risk, checked_ms=h1[-1]['T'] + 1, brain_id=dec.get('id'))
+    return out(f'EMA PAPER {side} {px:.1f} stop {stop:.1f} (risk ${risk:.2f}/oz); {r}')
 if __name__ == '__main__':
     main()

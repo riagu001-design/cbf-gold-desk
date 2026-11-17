@@ -77,6 +77,26 @@ def main():
         facts.append(f'Today so far: high {t["h"]:.1f}, low {t["l"]:.1f}. Yesterday: high {d1[-2]["h"]:.1f}, low {d1[-2]["l"]:.1f}.')
         spoken.append(f'Today\'s range is {say(t["l"])} to {say(t["h"])}.')
 
+    # CrownBearer Neural Brain: the only signal authority; Crown speaks from its status
+    try:
+        bs = json.load(open(f'{G}/brain/status.json')); n = bs.get('now', {}); act = bs.get('active') or []
+        top = sorted(n.get('scores', []), key=lambda r: -r['score'])[:3]
+        facts.append('NEURAL BRAIN (the only thing that sends Telegram signals; engines only propose): sends only setups scoring 85+ with all checks passed (market open, news, fresh, stop size, daily loss limit -3R, no duplicate or conflicting signal); 75-84 watchlist; below 75 rejected. '
+                     f"Now: H4 bias {n.get('bias')}, regime {n.get('regime')}, session {n.get('session')}. Scores a setup would get now: " + ', '.join(f"{r['side']} {r['strategy']} {r['score']}" for r in top) + '. '
+                     f"Unseen-test check of the score: 85+ band {bs['calibration_unseen']['85+']['avgR']:+.2f}R per trade on {bs['calibration_unseen']['85+']['n']} setups, below 75 {bs['calibration_unseen']['<75']['avgR']:+.2f}R. "
+                     f"Decisions so far: {bs['counts']['proposals']} proposals, {bs['counts']['sent']} sent, {bs['counts']['watchlist']} watchlist, {bs['counts']['rejected']} rejected.")
+        for r in (bs.get('last') or [])[-3:]:
+            facts.append(f"Brain decision {r['london']}: {r['side']} {r['strategy']} at {r['entry']}, score {r['score']}, {r['verdict']}" + (f" ({'; '.join(r['reasons'])})" if r.get('reasons') else '') + '.')
+        if act:
+            a_ = act[0]; facts.append(f"ACTIVE BRAIN SIGNAL {a_['id']}: {a_['side']} {a_['strategy']} entry {a_['entry']}, stop {a_['stop']}, TP1 {a_['tp1']}, TP2 {a_['tp2']}, score {a_['score']}, sent {a_['london']} London.")
+            spoken.append(f"The brain has an active {a_['side'].lower()} signal from {say(a_['entry'])}, stop {say(a_['stop'])}, first target {say(a_['tp1'])}.")
+        elif n.get('best'):
+            b_ = n['best']
+            spoken.append(f"The brain's H4 bias is {str(n.get('bias')).lower()}. The best setup right now would be a {b_['side'].lower()} from the {b_['strategy']} engine, scoring {b_['score']}"
+                          + (", which is enough to send the moment it fires." if b_['band'] == 'SEND' else ", below the 85 needed, so nothing will be sent yet."))
+    except (OSError, ValueError, KeyError):
+        pass
+
     bias = 'FLAT'
     if len(h1) > 60 and len(h4) > 50 and len(m15) > 60:
         hi, lo = swings(h1)
@@ -214,8 +234,8 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Desk mode from 16 Nov 2026 (Woody): all earlier strategies are deleted (5 minute dip and 1 hour breakout: no edge in the 12-month and 20-year tests). Four PAPER TESTS run (the 4H EMA 9/21 cross with a 2R target was added at 17:00 on 16 Nov, Woody, for about one more setup a week at any hour). (0) M15 entry with H1 confirmation (Woody design, 16 Nov; since 15:20 the H4 trend no longer blocks, entries 07:00 to 17:00 London; without H4 it was break-even in the unseen test): 15m EMA9/21 cross in the direction of the 1H EMA9/21, stop 2 x 1H ATR, exit when the 1H EMA9/21 flips; the weakest of the tests. (1) Frequent: H1 EMA 9/21 cross either way (H4 no longer blocks since 16 Nov 15:20; entries 07:00 to 17:00 London; without H4 that test made +8.8R PF 1.5 on the unseen half, about 1 to 2 trades a week), stop 2 x 1H ATR, exit on the opposite cross or Friday 21:00; at all hours without H4 it lost in the test, which is why entries are limited to 07:00 to 17:00. The earlier H4 version made profit factor about 1.4 to 2.0 in both halves. (2) Slow: the daily swing pullback with the macro filter (Woody strategies 1 and 4): daily EMA50 above EMA200 = buys only, below = sells only; the day touches the 21-day EMA and closes back beyond it as a confirmation candle; stop beyond the 5-day swing plus 0.2 daily ATR; target 2R; out after 30 trading days; a trade against a clear macro bias (real yields and dollar both moving) is skipped. 20-year test: about 6 trades a year, both decades profitable (profit factor about 1.4 to 1.5), worst losing run about 12R. Risk 1 percent per trade. With daily stops of about 190 dollars per ounce, 1 percent of a 182 dollar account is about 0.01 ounce, so it cannot be traded at MT5 0.01 lot (1 ounce): that would risk about 190 dollars. Messages are marked PAPER TEST.')
-    facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; MT5 has been about 3 to 4 dollars lower, so use the same distances from the MT5 entry.')
+    facts.append('Desk mode from 16 Nov 2026 (Woody): all earlier strategies are deleted (5 minute dip and 1 hour breakout: no edge in the 12-month and 20-year tests). Four PAPER TESTS run (the 4H EMA 9/21 cross with a 2R target was added at 17:00 on 16 Nov, Woody, for about one more setup a week at any hour). (0) M15 entry with H1 confirmation (Woody design, 16 Nov; since 15:20 the H4 trend no longer blocks, entries 07:00 to 17:00 London; without H4 it was break-even in the unseen test): 15m EMA9/21 cross in the direction of the 1H EMA9/21, stop 2 x 1H ATR, exit when the 1H EMA9/21 flips; the weakest of the tests. (1) Frequent: H1 EMA 9/21 cross either way (H4 no longer blocks since 16 Nov 15:20; entries 07:00 to 17:00 London; without H4 that test made +8.8R PF 1.5 on the unseen half, about 1 to 2 trades a week), stop 2 x 1H ATR, exit on the opposite cross or Friday 21:00; at all hours without H4 it lost in the test, which is why entries are limited to 07:00 to 17:00. The earlier H4 version made profit factor about 1.4 to 2.0 in both halves. (2) Slow: the daily swing pullback with the macro filter (Woody strategies 1 and 4): daily EMA50 above EMA200 = buys only, below = sells only; the day touches the 21-day EMA and closes back beyond it as a confirmation candle; stop beyond the 5-day swing plus 0.2 daily ATR; target 2R; out after 30 trading days; a trade against a clear macro bias (real yields and dollar both moving) is skipped. 20-year test: about 6 trades a year, both decades profitable (profit factor about 1.4 to 1.5), worst losing run about 12R. Risk 1 percent per trade. With daily stops of about 190 dollars per ounce, 1 percent of a 182 dollar account is about 0.01 ounce, so it cannot be traded at the broker 0.01 lot (1 ounce): that would risk about 190 dollars. Messages are marked PAPER TEST.')
+    facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; the broker price has been about 3 to 4 dollars lower, so use the same distances from the broker entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 
     brief = f'Crown here, Woody. Desk update at {now.strftime("%-I:%M %p").lower()} London time, {day}. ' + ' '.join(spoken)

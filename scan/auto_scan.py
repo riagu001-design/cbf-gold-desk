@@ -104,13 +104,8 @@ def news_block(now):
 
 
 def send_telegram(text):
-    """Send directly to the trader's Telegram. Returns 'ok <id>' or 'FAILED <why>'. Never prints the token."""
-    try:
-        token = [l.split('=', 1)[1].strip() for l in open(TG_ENV) if l.startswith('TELEGRAM_BOT_TOKEN=')][0]
-        r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage', data={'chat_id': TG_CHAT, 'text': text}, timeout=15).json()
-        return f"ok {r['result']['message_id']}" if r.get('ok') else f"FAILED {r.get('description')}"
-    except Exception as e:  # blocked host, no token file, timeout
-        return f'FAILED {type(e).__name__}'
+    """Retired 17 Nov 2026: only the CrownBearer Neural Brain (scan/brain/publisher.py) may publish."""
+    raise PermissionError("only the Neural Brain may publish to Telegram (scan/brain/publisher.py)")
 
 
 def ldn(ms):
@@ -380,4 +375,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # The 5m dip strategy was deleted on 16 Nov 2026 (no edge). Kept only for its shared helpers.
+    raise SystemExit('auto_scan.py strategy retired; signals come only from the Neural Brain (scan/brain/core.py)')

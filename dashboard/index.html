@@ -1,0 +1,1196 @@
+<style>
+  /* Gold desk · future office: night glass, champagne gold accent, cyan for anything live, green/red for buy/sell. */
+  #dash-root { --dash-gutter: 0; }
+  .gd { --bg: #070b12; --ink: #0a0f17; --glass: rgba(22, 30, 44, .62); --glass2: rgba(30, 40, 58, .55); --line: rgba(255, 255, 255, .08); --hi: rgba(232, 196, 122, .45);
+    --gold: #e8c47a; --amber: #f2b45c; --cyan: #5ee3f0; --cyan2: #9fc7d3; --violet: #a99bff; --up: #43e3a0; --down: #ff6b7f; --text: #eef3f8; --dim: #8b98aa;
+    --grid: rgba(255, 255, 255, .06); --r: 18px; --r-sm: 12px;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; --sans: var(--font-anthropic-sans, "Inter", system-ui, sans-serif);
+    --serif: var(--font-anthropic-serif, Georgia, serif);
+    color-scheme: dark; position: relative; display: grid; gap: 20px; padding: 0 max(16px, 2.6vw) 32px; min-width: 0; isolation: isolate;
+    background:
+      radial-gradient(60% 45% at 85% -5%, rgba(232, 196, 122, .16), transparent 70%),
+      radial-gradient(55% 40% at 0% 10%, rgba(94, 227, 240, .10), transparent 70%),
+      radial-gradient(70% 60% at 50% 110%, rgba(110, 90, 255, .10), transparent 70%),
+      linear-gradient(180deg, #0a1019 0%, var(--bg) 60%);
+    color: var(--text); font-family: var(--sans); font-variant-numeric: tabular-nums; overflow: clip; }
+  /* Faint "window grid" of a high-rise office behind the glass. */
+  .gd::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
+    background: linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px) 0 0 / 96px 100%, linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px) 0 0 / 100% 64px;
+    mask-image: linear-gradient(180deg, #000, transparent 55%); }
+  .gd h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--text); display: flex; align-items: center; gap: 10px; }
+  .gd h2::before { content: ""; width: 8px; height: 8px; border-radius: 3px; background: linear-gradient(135deg, var(--gold), var(--amber)); box-shadow: 0 0 10px rgba(232, 196, 122, .6); flex: none; }
+  .gd-note { margin: 0; color: var(--dim); font-size: 12.5px; line-height: 1.55; }
+  .gd-card { position: relative; display: grid; gap: 14px; align-content: start; min-width: 0; padding: 18px 18px 20px; border-radius: var(--r);
+    background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.01)), var(--glass); border: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 20px 40px -24px rgba(0,0,0,.7); }
+  .gd-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; padding: 1px;
+    background: linear-gradient(140deg, rgba(232,196,122,.35), transparent 35%, transparent 70%, rgba(94,227,240,.18));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .gd-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+  .gd-up { color: var(--up); } .gd-down { color: var(--down); }
+  .gd-fail { display: flex; align-items: center; gap: 8px; min-height: 3rem; font-size: 12px; color: var(--dim); }
+  .gd-fail::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--down); }
+  [data-dash-source-state=refreshing] { opacity: .6; }
+
+  /* Office floor plan: trading floor on the left, side rail on the right. */
+  .gd-office { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .gd-floor, .gd-rail { display: grid; gap: 20px; min-width: 0; }
+  @media (min-width: 64rem) { .gd-office { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); } .gd-rail { position: sticky; top: 56px; } }
+  .gd-pair { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+
+  /* News strip */
+  .gd-news { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; min-width: 0; margin: 0 calc(-1 * max(16px, 2.6vw));
+    padding: 9px max(16px, 2.6vw); background: rgba(7, 11, 18, .78); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+  .gd-news-label { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--down); white-space: nowrap; }
+  .gd-news-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--down); box-shadow: 0 0 8px var(--down); }
+  .gd-news-view { flex: 1; min-width: 0; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+  .gd-news-track { display: inline-flex; gap: 34px; white-space: nowrap; align-items: center; min-height: 20px; }
+  .gd-news-track.moving { animation: gd-marquee var(--dur, 120s) linear infinite; }
+  .gd-news-view:hover .gd-news-track { animation-play-state: paused; }
+  .gd-tick { display: inline-flex; gap: 8px; align-items: baseline; }
+  .gd-tick .m { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
+  .gd-tick a, .gd-tick .t { color: var(--text); text-decoration: none; font-size: 13px; }
+  .gd-tick a:hover { color: var(--cyan); text-decoration: underline; }
+  .gd-tick.ev .t { color: var(--amber); font-weight: 600; }
+  @keyframes gd-marquee { to { transform: translateX(-50%); } }
+
+  /* Command bar */
+  .gd-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 24px; align-items: center; padding: 22px 24px; border-radius: 24px;
+    background: linear-gradient(120deg, rgba(232,196,122,.10), rgba(94,227,240,.05) 55%, rgba(255,255,255,.02)), var(--glass2); border: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%); box-shadow: 0 30px 60px -36px rgba(0,0,0,.8); margin-top: 18px; }
+  .gd-brand { display: grid; gap: 6px; min-width: 0; }
+  .gd-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .gd-logo { width: 40px; height: 40px; flex: none; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 15px; color: var(--ink);
+    background: linear-gradient(135deg, #f6dda0, var(--gold) 45%, #b8873f); box-shadow: 0 6px 20px -6px rgba(232,196,122,.7); }
+  .gd-kicker { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+  .gd-brand h1 { margin: 0; font-weight: 300; font-size: clamp(22px, 3.2vw, 32px); letter-spacing: .02em; line-height: 1.1; }
+  .gd-px { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-top: 6px; }
+  .gd-px b { font-family: var(--serif); font-size: clamp(34px, 5.4vw, 52px); font-weight: 400; color: #fff; letter-spacing: -.01em; }
+  .gd-px > span:not(.gd-note) { font-family: var(--mono); font-size: 14px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.06); }
+  .gd-side { display: grid; gap: 8px; justify-items: end; text-align: right; font-size: 12px; color: var(--dim); }
+  .gd-clock { font-family: var(--mono); font-size: 28px; font-weight: 300; letter-spacing: .04em; color: var(--text); }
+  #gd-date { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+  .gd-dot { display: inline-flex; gap: 8px; align-items: center; padding: 5px 11px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid var(--line); }
+  .gd-dot i { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 8px var(--amber); flex: none; }
+  .gd-dot.ok i { background: var(--up); box-shadow: 0 0 8px var(--up); } .gd-dot.bad i { background: var(--down); box-shadow: 0 0 8px var(--down); }
+
+  /* Crown concierge */
+  .gd-crown { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; padding: 14px 16px; border-radius: var(--r);
+    background: rgba(7, 11, 18, .45); border: 1px solid var(--line); }
+  .gd-avatar { width: 42px; height: 42px; flex: none; border-radius: 50%; position: relative;
+    background: radial-gradient(circle at 35% 30%, #fff6, transparent 40%), conic-gradient(from 200deg, var(--gold), var(--cyan), var(--violet), var(--gold)); box-shadow: 0 0 22px rgba(94,227,240,.35); }
+  .gd-avatar::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--ink); opacity: .55; }
+  .gd-crown-id { display: grid; gap: 1px; margin-right: auto; min-width: 9rem; }
+  .gd-crown-id b { font-size: 14px; font-weight: 600; } .gd-crown-id span { font-size: 11.5px; color: var(--dim); }
+  .gd-crown-btn { display: inline-flex; align-items: center; gap: 9px; padding: 10px 18px; border-radius: 999px; border: 1px solid transparent; cursor: pointer;
+    font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: .02em; text-decoration: none;
+    color: var(--ink); background: linear-gradient(135deg, #f6dda0, var(--gold) 55%, #c99a4f); box-shadow: 0 8px 22px -10px rgba(232,196,122,.8); }
+  .gd-crown-btn.alt { color: var(--cyan); background: rgba(94,227,240,.08); border-color: rgba(94,227,240,.45); box-shadow: none; }
+  .gd-crown-btn[data-state="live"] { color: var(--ink); background: linear-gradient(135deg, #a8f3fa, var(--cyan)); box-shadow: 0 0 22px rgba(94,227,240,.55); }
+  .gd-crown-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+  .gd-crown-msg { flex: 1 1 100%; margin: 0; font-size: 12.5px; color: var(--cyan2); }
+  @media (max-width: 40rem) { .gd-head { grid-template-columns: 1fr; padding: 18px; } .gd-side { justify-items: start; text-align: left; } }
+
+  /* Desk now */
+  .gd-dir { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px; border-radius: var(--r-sm); border: 1px solid currentColor; }
+  .gd-dir.buy { color: var(--up); background: linear-gradient(90deg, rgba(67,227,160,.16), rgba(67,227,160,.03)); }
+  .gd-dir.sell { color: var(--down); background: linear-gradient(90deg, rgba(255,107,127,.16), rgba(255,107,127,.03)); } .gd-dir.flat { color: var(--dim); }
+  .gd-dir b { font-size: clamp(26px, 4.6vw, 38px); font-weight: 700; letter-spacing: .06em; line-height: 1; }
+  .gd-dir span { font-size: 14px; color: var(--text); }
+  .gd-badge { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--hi); color: var(--gold); background: rgba(232,196,122,.06); }
+  .gd-badge.valid { color: var(--ink); background: var(--up); border-color: var(--up); }
+  .gd-lv { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: 10px; }
+  .gd-lv div { display: grid; gap: 4px; padding: 10px 12px; border-radius: var(--r-sm); background: rgba(255,255,255,.035); border: 1px solid var(--line); min-width: 0; }
+  .gd-lv span, .gd-stat > span { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+  .gd-lv b, .gd-stat b { font-family: var(--mono); font-size: 16px; font-weight: 500; }
+  .gd-why { margin: 0; padding: 12px 14px; border-radius: var(--r-sm); background: rgba(232,196,122,.07); border: 1px solid rgba(232,196,122,.22); font-size: 14px; line-height: 1.55; }
+  .nb-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; } .nb-head b { font-size: 18px; letter-spacing: .04em; }
+  .nb-head span { font-size: 13px; line-height: 1.5; opacity: .85; }
+  .nb-stats { grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr)); }
+  .nb-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+  .nb-h { margin: 4px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .75; font-weight: 600; } .nb-h small { text-transform: none; letter-spacing: 0; opacity: .8; }
+  .nb-scores { display: grid; gap: 5px; }
+  .nb-row { display: grid; grid-template-columns: 6.5rem 1fr 2.6rem; gap: 8px; align-items: center; font-size: 12.5px; }
+  .nb-row .t { height: 8px; border-radius: 4px; background: rgba(255,255,255,.07); overflow: hidden; position: relative; }
+  .nb-row .t i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--down); }
+  .nb-row .t i.w { background: var(--amber); } .nb-row .t i.s { background: var(--up); box-shadow: 0 0 10px var(--up); }
+  .nb-row .t::after { content: ""; position: absolute; top: -2px; bottom: -2px; left: 85%; width: 2px; background: var(--cyan, #5ee3f0); opacity: .8; }
+  .nb-noline .nb-row .t::after { display: none; }
+  .nb-row b { text-align: right; font-variant-numeric: tabular-nums; }
+  .nb-list li { font-size: 12.5px; } .nb-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+  .gd-chk { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+  .gd-chk li { display: flex; gap: 10px; align-items: baseline; font-size: 13px; line-height: 1.45; }
+  .gd-chk li b { display: inline-grid; place-items: center; width: 20px; height: 20px; flex: none; border-radius: 50%; font-size: 11px; background: rgba(255,255,255,.06); }
+  .gd-chk .ok b { color: var(--up); background: rgba(67,227,160,.14); } .gd-chk .no b { color: var(--down); background: rgba(255,107,127,.14); } .gd-chk .wait b { color: var(--amber); background: rgba(242,180,92,.14); }
+  .gd-stats { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); }
+  .gd-stat { display: grid; gap: 4px; padding: 10px 12px; border-radius: var(--r-sm); background: rgba(255,255,255,.035); border: 1px solid var(--line); min-width: 0; }
+
+  /* Tables */
+  .gd-tw { max-height: 22rem; overflow: auto; border-radius: var(--r-sm); border: 1px solid var(--line); }
+  .gd-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+  .gd-table th { position: sticky; top: 0; background: #121a27; text-align: left; font-family: var(--sans); font-weight: 600; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .gd-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.04); white-space: nowrap; }
+  .gd-table tbody tr:hover td { background: rgba(255,255,255,.03); }
+  .gd-table .n { text-align: right; }
+
+  /* Controls and charts */
+  .gd-seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid var(--line); }
+  .gd-seg button { font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--dim); background: none; border: 0; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+  .gd-seg button[aria-pressed="true"] { background: rgba(232,196,122,.16); color: var(--gold); box-shadow: inset 0 0 0 1px rgba(232,196,122,.35); }
+  .gd-seg button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+  .gd-chart { position: relative; min-height: 320px; }
+  .gd-chart svg { display: block; overflow: visible; }
+  .gd-tip { position: absolute; pointer-events: none; background: rgba(14, 20, 31, .96); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 30px -10px rgba(0,0,0,.8);
+    padding: 8px 11px; font-family: var(--mono); font-size: 11px; line-height: 1.5; white-space: nowrap; z-index: 2; }
+  .gd-tip .k { color: var(--gold); }
+  .gd-key { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; padding: 2px 8px; margin: 2px 4px 2px 0; border-radius: 999px; background: rgba(255,255,255,.04); white-space: nowrap; border-left: 0 !important; }
+  .gd-key::before { content: ""; width: 12px; height: 3px; border-radius: 2px; background: var(--k); }
+  .gd-read { margin: 0; font-size: 12.5px; color: var(--cyan2); line-height: 1.6; padding: 10px 12px; border-radius: var(--r-sm); background: rgba(94,227,240,.05); border: 1px solid rgba(94,227,240,.15); }
+  .gd-live { display: inline-flex; align-items: center; gap: 8px; font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--cyan); background: rgba(94,227,240,.07); border: 1px solid rgba(94,227,240,.4); border-radius: 999px; padding: 6px 14px; cursor: pointer; justify-self: start; }
+  .gd-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); }
+  .gd-live[aria-pressed="true"] { color: var(--down); border-color: rgba(255,107,127,.55); background: rgba(255,107,127,.07); } .gd-live[aria-pressed="true"] i { background: var(--down); box-shadow: 0 0 8px var(--down); }
+  .gd-live:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .gd-form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
+  .gd-form label { display: grid; gap: 5px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+  .gd-input { font-family: var(--mono); font-size: 14px; color: var(--text); background: rgba(0, 0, 0, .3); border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px; min-width: 0; }
+  .gd-input:focus-visible { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(232,196,122,.15); }
+  .gd-banner { display: flex; gap: 10px; border-radius: var(--r-sm); border: 1px solid rgba(242,180,92,.5); background: rgba(242,180,92,.08); padding: 10px 12px; font-size: 12.5px; line-height: 1.5; }
+  .gd-banner b { color: var(--amber); }
+  .gd-banner[hidden] { display: none; }
+  .gd-rail .gd-stats, .gd-rail .gd-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gd-rail #today .gd-stats .gd-stat:first-child { grid-column: 1 / -1; }
+  .gd-foot { text-align: center; font-size: 11px; color: var(--dim); letter-spacing: .04em; }
+  @media (prefers-reduced-motion: no-preference) {
+    .gd-card { animation: gd-in var(--cds-dur-slow, .5s) var(--cds-ease-out, ease-out) both; }
+    .gd-dot.ok i, .gd-live[aria-pressed="true"] i { animation: gd-pulse 2.4s ease-in-out infinite; }
+  }
+  @keyframes gd-in { from { opacity: 0; transform: translateY(8px); } }
+  @keyframes gd-pulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .gd-news-track.moving { animation: none; } }
+
+  /* ===== Neon console skin (v103): black glass, glowing gold/cyan/green frame, central dial ===== */
+  .gd { --bg: #020306; --glass: rgba(8, 11, 17, .86); --glass2: rgba(10, 13, 20, .9); --line: rgba(255, 255, 255, .07); --neon-g: #3cff9a; --neon-o: #ff9a3c;
+    background: radial-gradient(50% 35% at 50% 38%, rgba(94,227,240,.08), transparent 70%), radial-gradient(40% 30% at 90% 0%, rgba(232,196,122,.12), transparent 70%), #020306;
+    padding-top: 0; }
+  .gd::before { opacity: .35; }
+  .gd::after { content: ""; position: absolute; inset: 8px; border-radius: 30px; pointer-events: none; z-index: 6; padding: 1.5px;
+    background: linear-gradient(180deg, var(--gold), rgba(94,227,240,.9) 22%, rgba(60,255,154,.55) 50%, rgba(94,227,240,.9) 78%, var(--neon-o));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    filter: drop-shadow(0 0 6px rgba(94,227,240,.7)) drop-shadow(0 0 14px rgba(232,196,122,.35)); }
+  .gd-card { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.2)), var(--glass); border-color: rgba(255,255,255,.06);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 24px -8px rgba(94,227,240,.18), 0 24px 40px -24px rgba(0,0,0,.9); }
+  .gd-card::after { background: linear-gradient(140deg, rgba(232,196,122,.75), transparent 30%, transparent 70%, rgba(94,227,240,.6)); }
+  .gd h2 { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; text-shadow: 0 0 10px rgba(232,196,122,.35); }
+  .gd-head { background: linear-gradient(120deg, rgba(232,196,122,.08), rgba(94,227,240,.05) 55%, rgba(0,0,0,.2)), var(--glass2);
+    border-color: rgba(232,196,122,.25); box-shadow: 0 0 30px -10px rgba(232,196,122,.25), inset 0 1px 0 rgba(255,255,255,.06); }
+  .gd-brand h1 { display: inline-block; font-weight: 700; text-transform: uppercase; letter-spacing: .18em; font-size: clamp(18px, 2.6vw, 26px); padding: 8px 18px;
+    border-radius: 12px; background: #05070b; border: 1px solid rgba(255,255,255,.12); box-shadow: inset 0 0 18px rgba(0,0,0,.9), 0 0 16px -4px rgba(94,227,240,.35); }
+  .gd-px b { text-shadow: 0 0 18px rgba(232,196,122,.55); color: #fff4d8; }
+  .gd-clock { color: var(--cyan); text-shadow: 0 0 12px rgba(94,227,240,.6); }
+
+  /* KPI tiles */
+  .gd-kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); }
+  .gd-kpi { position: relative; display: grid; gap: 6px; padding: 14px 14px 12px; border-radius: 14px; background: #06080d; border: 1px solid rgba(255,255,255,.08);
+    box-shadow: inset 0 0 22px rgba(0,0,0,.9), 0 0 18px -10px var(--k, var(--gold)); overflow: hidden; min-width: 0; }
+  .gd-kpi::before { content: ""; position: absolute; left: 12px; right: 12px; top: 0; height: 2px; border-radius: 2px; background: var(--k, var(--gold)); box-shadow: 0 0 10px var(--k, var(--gold)); }
+  .gd-kpi span { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .gd-kpi b { font-family: var(--mono); font-size: clamp(17px, 2.2vw, 22px); font-weight: 600; color: #fff; text-shadow: 0 0 12px var(--k, var(--gold)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gd-kpi b.gd-up { color: var(--neon-g); } .gd-kpi b.gd-down { color: var(--down); }
+
+  /* Reactor: central dial with side panels */
+  .gd-reactor { display: grid; gap: 20px; align-items: center; grid-template-columns: minmax(0, 1fr); padding: 22px 18px; border-radius: 26px;
+    background: radial-gradient(closest-side, rgba(94,227,240,.10), transparent), #04060a; border: 1px solid rgba(255,255,255,.07);
+    box-shadow: inset 0 0 60px rgba(0,0,0,.9), 0 0 30px -12px rgba(94,227,240,.3); }
+  @media (min-width: 56rem) { .gd-reactor { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); } }
+  .gd-wing { display: grid; gap: 12px; min-width: 0; }
+  .gd-chip { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.08); min-width: 0; }
+  .gd-chip > div { display: grid; gap: 3px; min-width: 0; }
+  .gd-chip span { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .gd-chip b { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+  .gd-coin { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 800 12px var(--sans); color: #5a3b0c;
+    background: radial-gradient(circle at 35% 30%, #fff3c4, #f0c86a 40%, #b47a22 75%, #6e4410); box-shadow: 0 0 16px rgba(240,200,106,.55), inset 0 -3px 6px rgba(0,0,0,.35); }
+  .gd-coin.c { background: radial-gradient(circle at 35% 30%, #e2fdff, #5ee3f0 45%, #1f7f8a 80%); color: #053338; box-shadow: 0 0 16px rgba(94,227,240,.55), inset 0 -3px 6px rgba(0,0,0,.35); }
+  .gd-coin.g { background: radial-gradient(circle at 35% 30%, #e0ffef, #3cff9a 45%, #13784a 80%); color: #053320; box-shadow: 0 0 16px rgba(60,255,154,.5), inset 0 -3px 6px rgba(0,0,0,.35); }
+  .gd-dial { position: relative; width: min(84vw, 340px); aspect-ratio: 1; justify-self: center; }
+  .gd-dial > i { position: absolute; inset: 0; border-radius: 50%; }
+  .gd-dial .seg { background: conic-gradient(from -135deg, var(--cyan) 0 81deg, var(--gold) 81deg 189deg, var(--down) 189deg 270deg, transparent 270deg);
+    -webkit-mask: radial-gradient(closest-side, transparent 80%, #000 81% 99%, transparent 100%), repeating-conic-gradient(from -135deg, #000 0 4.2deg, transparent 4.2deg 5.625deg);
+    -webkit-mask-composite: source-in; mask: radial-gradient(closest-side, transparent 80%, #000 81% 99%, transparent 100%) intersect, repeating-conic-gradient(from -135deg, #000 0 4.2deg, transparent 4.2deg 5.625deg);
+    filter: drop-shadow(0 0 6px rgba(232,196,122,.55)); }
+  .gd-dial .trk { inset: 13%; border: 2px dashed rgba(94,227,240,.45); box-shadow: 0 0 18px rgba(94,227,240,.25), inset 0 0 18px rgba(94,227,240,.18); }
+  .gd-dial .core { inset: 19%; background: radial-gradient(circle at 50% 40%, #0d1a24, #04070b 70%); border: 1px solid rgba(94,227,240,.25); box-shadow: inset 0 0 40px rgba(0,0,0,.9), 0 0 30px rgba(94,227,240,.15); }
+  .gd-needle { position: absolute; inset: 0; transform: rotate(var(--a, -135deg)); transition: transform 1s cubic-bezier(.2,.8,.2,1); }
+  .gd-needle::before { content: ""; position: absolute; left: 50%; top: -1%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px #fff, 0 0 22px var(--cyan); }
+  .gd-dial-txt { position: absolute; inset: 22%; display: grid; place-content: center; justify-items: center; gap: 4px; text-align: center; }
+  .gd-dial-txt small { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+  .gd-dial-txt .px { font-family: var(--mono); font-size: clamp(24px, 6vw, 34px); font-weight: 600; color: #fff4d8; text-shadow: 0 0 16px rgba(232,196,122,.7); }
+  .gd-dial-txt .sig { font-size: 15px; font-weight: 800; letter-spacing: .2em; color: var(--dim); }
+  .gd-dial-txt .sig.sell { color: var(--down); text-shadow: 0 0 12px rgba(255,107,127,.7); } .gd-dial-txt .sig.buy { color: var(--neon-g); text-shadow: 0 0 12px rgba(60,255,154,.7); }
+  .gd-dial-txt .rsi { font-family: var(--mono); font-size: 12px; color: var(--cyan); }
+  .gd-scale { display: flex; justify-content: space-between; width: min(84vw, 340px); margin: -6px auto 0; font-size: 10px; letter-spacing: .1em; color: var(--dim); }
+  @media (prefers-reduced-motion: no-preference) { .gd-dial .trk { animation: gd-spin 40s linear infinite; } }
+  @keyframes gd-spin { to { transform: rotate(360deg); } }
+
+  /* Desk signal bar on top (v104) */
+  .gd-sigbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 18px; padding: 16px 22px; border-radius: 22px; background: #05070b;
+    border: 1.5px solid rgba(255,255,255,.12); box-shadow: inset 0 0 30px rgba(0,0,0,.9), 0 0 26px -8px rgba(232,196,122,.35); color: var(--dim); }
+  .gd-sigbar.sell { color: var(--down); border-color: rgba(255,107,127,.7); box-shadow: inset 0 0 30px rgba(0,0,0,.9), 0 0 30px -6px rgba(255,107,127,.6); background: linear-gradient(90deg, rgba(255,107,127,.16), #05070b 60%); }
+  .gd-sigbar.buy { color: var(--neon-g); border-color: rgba(60,255,154,.7); box-shadow: inset 0 0 30px rgba(0,0,0,.9), 0 0 30px -6px rgba(60,255,154,.6); background: linear-gradient(90deg, rgba(60,255,154,.14), #05070b 60%); }
+  .gd-sigbar small { width: 100%; font-size: 10.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+  .gd-sigbar b { font-size: clamp(30px, 6vw, 46px); font-weight: 800; letter-spacing: .1em; line-height: 1; text-shadow: 0 0 18px currentColor; }
+  .gd-sigbar #gd-top-sub { flex: 1 1 16rem; min-width: 0; font-size: 14px; line-height: 1.5; color: var(--text); }
+  .gd-sigbar .gd-badge:empty { display: none; }
+  .gd-nowtop { border: 1.5px solid rgba(232,196,122,.35); box-shadow: 0 0 30px -8px rgba(232,196,122,.35), 0 24px 40px -24px rgba(0,0,0,.9); }
+
+  /* Who is in control: +DI / -DI tug of war (v108) */
+  .gd-ctl-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+  .gd-ctl-head b { font-size: clamp(24px, 4.4vw, 34px); font-weight: 800; letter-spacing: .08em; color: var(--dim); }
+  .gd-ctl-head b.sellers { color: var(--down); text-shadow: 0 0 16px rgba(255,107,127,.6); } .gd-ctl-head b.buyers { color: var(--neon-g); text-shadow: 0 0 16px rgba(60,255,154,.6); }
+  .gd-ctl-head span { font-size: 13.5px; color: var(--text); }
+  .gd-tug { display: grid; gap: 6px; }
+  .gd-tug-row { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr) 5.5rem; gap: 10px; align-items: center; font-size: 12px; }
+  .gd-tug-row > span:first-child { font-family: var(--mono); color: var(--dim); } .gd-tug-row > span:last-child { font-family: var(--mono); text-align: right; color: var(--dim); }
+  .gd-bar { position: relative; display: flex; height: 22px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
+  .gd-bar i { display: grid; place-items: center; font: 700 10.5px var(--mono); color: #04110a; transition: flex-basis .8s ease; min-width: 0; white-space: nowrap; overflow: hidden; }
+  .gd-bar .p { background: linear-gradient(90deg, #1fa86a, var(--neon-g)); box-shadow: 0 0 14px rgba(60,255,154,.5); }
+  .gd-bar .m { background: linear-gradient(90deg, var(--down), #c23a50); color: #1a0308; box-shadow: 0 0 14px rgba(255,107,127,.5); }
+  .gd-bar::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: rgba(255,255,255,.7); }
+
+  /* Crown in the dial: glows and pulses while Crown is speaking (v110) */
+  .gd-crownorb { position: relative; width: 46px; height: 46px; border: 0; padding: 0; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
+    font-size: 20px; color: #2a1a00; background: radial-gradient(circle at 35% 30%, #fff6d8, var(--gold) 45%, #a8742a 85%);
+    box-shadow: 0 0 12px rgba(232,196,122,.55), inset 0 -3px 6px rgba(0,0,0,.35); margin-bottom: 2px; transition: transform .3s ease; }
+  .gd-crownorb:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+  .gd-crownorb::before, .gd-crownorb::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(94,227,240,0); pointer-events: none; }
+  .gd-crown-say { font-size: 10px; letter-spacing: .18em; color: var(--gold); min-height: 12px; }
+  .gd-dial.speaking .gd-crownorb { transform: scale(1.12); background: radial-gradient(circle at 35% 30%, #ffffff, #ffe6a3 35%, var(--gold) 60%, #c88a2c);
+    box-shadow: 0 0 26px rgba(255,214,120,.95), 0 0 60px rgba(94,227,240,.55); }
+  .gd-dial.speaking .core { box-shadow: inset 0 0 40px rgba(0,0,0,.9), 0 0 50px rgba(232,196,122,.45), 0 0 90px rgba(94,227,240,.3); border-color: rgba(232,196,122,.6); }
+  .gd-dial.speaking .seg { filter: drop-shadow(0 0 12px rgba(255,214,120,.9)); }
+  .gd-dial.speaking .gd-crown-say { color: #fff1c9; text-shadow: 0 0 10px rgba(255,214,120,.9); }
+  .gd-head .gd-avatar { transition: box-shadow .3s; } .gd.speaking .gd-avatar { box-shadow: 0 0 30px rgba(255,214,120,.9), 0 0 60px rgba(94,227,240,.5); }
+  @media (prefers-reduced-motion: no-preference) {
+    .gd-dial.speaking .gd-crownorb { animation: gd-talk 1.1s ease-in-out infinite; }
+    .gd-dial.speaking .gd-crownorb::before { animation: gd-ring 1.6s ease-out infinite; }
+    .gd-dial.speaking .gd-crownorb::after { animation: gd-ring 1.6s ease-out .8s infinite; }
+    .gd-dial.speaking .trk { animation-duration: 6s; }
+    .gd.speaking .gd-avatar { animation: gd-talk 1.1s ease-in-out infinite; }
+  }
+  @keyframes gd-talk { 50% { transform: scale(1.2); filter: brightness(1.25); } }
+  @keyframes gd-ring { from { inset: -4px; border-color: rgba(255,214,120,.9); } to { inset: -26px; border-color: rgba(94,227,240,0); } }
+  /* HUD theme (17 Nov, Woody): navy glass, cyan lines, amber accents, a turning world globe. */
+  .gd { --bg:#050b14; --glass:rgba(8,22,38,.72); --glass2:rgba(8,24,42,.7); --line:rgba(94,227,240,.18); --cyan:#4fe3f2; --gold:#f2b445; --amber:#ffb340;
+    background: radial-gradient(70% 50% at 50% 0%, rgba(79,227,242,.10), transparent 70%), radial-gradient(60% 50% at 100% 100%, rgba(242,180,69,.07), transparent 70%), #050b14; }
+  .gd::before { opacity:.9; background: radial-gradient(rgba(79,227,242,.16) 1px, transparent 1.2px) 0 0/22px 22px; mask-image: none; }
+  .gd h2 { font-family: var(--mono); text-transform: uppercase; letter-spacing: .14em; font-size: 11.5px; color: var(--cyan); }
+  .gd h2::before { border-radius: 0; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); width: 10px; height: 2px; }
+  .gd-card { border-radius: 6px; border-color: var(--line); background: linear-gradient(180deg, rgba(79,227,242,.05), rgba(79,227,242,.01)), var(--glass); }
+  .gd-card::after { background: linear-gradient(var(--cyan),var(--cyan)) 0 0/14px 2px no-repeat, linear-gradient(var(--cyan),var(--cyan)) 0 0/2px 14px no-repeat,
+    linear-gradient(var(--cyan),var(--cyan)) 100% 100%/14px 2px no-repeat, linear-gradient(var(--cyan),var(--cyan)) 100% 100%/2px 14px no-repeat; padding: 0; -webkit-mask: none; mask: none; opacity: .8; }
+  .gd-head { border-radius: 8px; border-color: var(--line); background: linear-gradient(120deg, rgba(79,227,242,.08), rgba(242,180,69,.05)), var(--glass2); }
+  .gd-kicker { font-family: var(--mono); color: var(--cyan); }
+  .gd-clock { color: var(--cyan); text-shadow: 0 0 12px rgba(79,227,242,.5); }
+  .gd-hud { position: relative; display: grid; gap: 14px; grid-template-columns: minmax(0,1fr); padding: 16px; border: 1px solid var(--line); border-radius: 8px;
+    background: radial-gradient(50% 60% at 50% 50%, rgba(79,227,242,.10), transparent 70%), rgba(5,14,26,.75); overflow: hidden; }
+  @media (min-width: 52rem) { .gd-hud { grid-template-columns: 13rem minmax(0,1fr) 13rem; align-items: center; } }
+  .gd-hud-globe { position: relative; aspect-ratio: 1 / 1; width: 100%; max-width: 520px; margin: 0 auto; }
+  .gd-hud-globe canvas { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 0 10px rgba(79,227,242,.55)); }
+  .gd-hud-globe::before { content: ""; position: absolute; inset: 14%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, rgba(79,227,242,.35), rgba(79,227,242,.12) 45%, transparent 70%); animation: gd-glow 3.2s ease-in-out infinite; }
+  @keyframes gd-glow { 0%,100% { opacity: .55; transform: scale(.96); } 50% { opacity: 1; transform: scale(1.04); } }
+  .gd-hud-col { display: grid; gap: 10px; min-width: 0; }
+  .gd-hud-box { border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; background: rgba(79,227,242,.04); font-family: var(--mono); min-width: 0; }
+  .gd-hud-box span { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #7fb6c2; }
+  .gd-hud-box b { display: block; margin-top: 4px; font-size: 18px; font-weight: 500; color: #e9fbff; overflow-wrap: anywhere; }
+  .gd-hud-box small { display: block; margin-top: 2px; font-size: 11px; color: #9fc7d3; overflow-wrap: anywhere; }
+  .gd-hud-sec { display: flex; justify-content: space-between; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 3px; padding: 7px 10px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: #9fc7d3; }
+  .gd-hud-sec i { width: 9px; height: 9px; border: 1px solid #3f6f7a; flex: none; }
+  .gd-hud-sec.on { color: #e9fbff; border-color: rgba(242,180,69,.6); }
+  .gd-hud-sec.on i { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .gd-hud-title { grid-column: 1 / -1; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; font-family: var(--mono); font-size: 11px; letter-spacing: .16em; color: var(--cyan); text-transform: uppercase; }
+  .gd-hud-title em { font-style: normal; color: var(--amber); }
+</style>
+
+<div class="gd">
+  <section class="gd-news" id="news" aria-label="Gold news">
+    <span class="gd-news-label">NEWS</span>
+    <div class="gd-seg" id="gd-topic" role="group" aria-label="News topic"><button type="button" data-q="gold price XAUUSD">Gold</button><button type="button" data-q="Federal Reserve interest rates">Fed</button></div>
+    <div class="gd-news-view"><div class="gd-news-track" id="gd-news" data-source="news desk"></div></div>
+  </section>
+
+  <header class="gd-head" id="overview">
+    <div class="gd-brand">
+      <div class="gd-id"><span class="gd-logo" aria-hidden="true">CBF</span>
+        <div><span class="gd-kicker">CBF FX · Gold desk · Paper tests: H1 · M15 · 4H · Swing</span><h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">CBF FX gold desk</h1></div></div>
+      <div class="gd-px"><b data-source="gold" data-field="mark" data-row="0">—</b><span data-source="gold" data-field="change24h" data-row="0">—</span>
+        <span class="gd-note">XAUUSD · Hyperliquid desk feed (your broker’s price runs about $3–4 lower)</span></div>
+    </div>
+    <div class="gd-side">
+      <span class="gd-clock" id="gd-clock">--:--:--</span><span id="gd-date">LONDON</span>
+      <span class="gd-dot" id="gd-checker" data-source="desk"><i></i><span>—</span></span>
+      <span class="gd-dot" id="gd-feeds"><i></i><span>Linking feeds</span></span>
+    </div>
+    <div class="gd-crown" id="crown">
+      <span class="gd-avatar" aria-hidden="true"></span>
+      <div class="gd-crown-id"><b>Crown · desk assistant</b><span>Spoken updates in Ian’s voice</span></div>
+      <button type="button" class="gd-crown-btn" id="gd-crown" data-state="idle" aria-pressed="false" data-source="desk">🔊 HEAR CROWN'S UPDATE</button>
+      <a class="gd-crown-btn alt" id="gd-crown-live" href="https://elevenlabs.io/app/talk-to?agent_id=agent_3401m5j08eqgf6ascsd9ttbf1mgw" target="_blank" rel="noopener noreferrer">🎙 Talk to Crown live ↗</a>
+      <p class="gd-crown-msg" id="gd-crown-msg" role="status" aria-live="polite">Hear Crown's latest desk update read aloud here, or open live Crown in a new tab to ask questions by voice.</p>
+    </div>
+  </header>
+
+<section class="gd-hud" id="globe" aria-label="World gold markets globe">
+  <div class="gd-hud-title"><span>// Global gold desk · live</span><em id="hud-utc">UTC --:--</em></div>
+  <div class="gd-hud-col">
+    <div class="gd-hud-box"><span>XAUUSD · mark</span><b data-source="gold" data-field="mark" data-row="0">—</b><small data-source="gold" data-field="change24h" data-row="0">—</small></div>
+    <div class="gd-hud-box"><span>H4 control · DI</span><b id="hud-ctl">—</b><small id="hud-adx">ADX —</small></div>
+    <div class="gd-hud-box"><span>Checker</span><b id="hud-chk" style="font-size:13px">—</b></div>
+  </div>
+  <div class="gd-hud-globe"><canvas id="hud-canvas" role="img" aria-label="Rotating globe marking London, New York, Tokyo and Sydney; lit markers are open sessions"></canvas></div>
+  <div class="gd-hud-col">
+    <div class="gd-hud-sec" id="hud-s-ldn"><span>SECTOR_01 · LONDON</span><i></i></div>
+    <div class="gd-hud-sec" id="hud-s-ny"><span>SECTOR_02 · NEW YORK</span><i></i></div>
+    <div class="gd-hud-sec" id="hud-s-tky"><span>SECTOR_03 · TOKYO</span><i></i></div>
+    <div class="gd-hud-sec" id="hud-s-syd"><span>SECTOR_04 · SYDNEY</span><i></i></div>
+    <div class="gd-hud-box"><span>Next news</span><small id="hud-news">See the news strip</small></div>
+  </div>
+</section>
+<script>
+(() => {
+  const cv = document.getElementById('hud-canvas'); if (!cv) return;
+  const ctx = cv.getContext('2d'); const reduce = false; let lastFrame = 0;
+  // Gold market hubs: lat, lon, label, session hours in UTC [open, close)
+  const HUBS = [[51.5,-0.1,'LDN','hud-s-ldn',7,16],[40.7,-74,'NY','hud-s-ny',13,22],[35.7,139.7,'TKY','hud-s-tky',0,9],[-33.9,151.2,'SYD','hud-s-syd',22,7]];
+  const N = 1400, pts = []; // even dot cloud on a sphere (golden spiral)
+  for (let i = 0; i < N; i++) { const y = 1 - 2 * (i + .5) / N, r = Math.sqrt(1 - y * y), t = i * 2.39996; pts.push([Math.cos(t) * r, y, Math.sin(t) * r]); }
+  const isOpen = (h, a, b) => a < b ? h >= a && h < b : h >= a || h < b;
+  let W = 0, H = 0, dpr = 1, rot = 0, ring = 0, last = performance.now();
+  function size() { const r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; }
+  function proj(lat, lon, R, cx, cy) {
+    const la = lat * Math.PI / 180, lo = lon * Math.PI / 180 + rot, tilt = .32;
+    let x = Math.cos(la) * Math.sin(lo), y = Math.sin(la), z = Math.cos(la) * Math.cos(lo);
+    const y2 = y * Math.cos(tilt) - z * Math.sin(tilt), z2 = y * Math.sin(tilt) + z * Math.cos(tilt);
+    return [cx + x * R, cy - y2 * R, z2];
+  }
+  function draw(now) {
+    const dt = Math.min(100, now - last); last = now;
+    rot += dt * 0.00035; ring += dt * 0.0008; lastFrame = now;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.34;
+    // outer scale ring with ticks
+    ctx.strokeStyle = 'rgba(79,227,242,.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, R * 1.42, 0, 7); ctx.stroke();
+    for (let k = 0; k < 120; k++) { const a = k / 120 * Math.PI * 2, l = k % 10 ? 4 : 10; ctx.strokeStyle = k % 10 ? 'rgba(79,227,242,.35)' : 'rgba(242,180,69,.8)';
+      ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * R * 1.42, cy + Math.sin(a) * R * 1.42); ctx.lineTo(cx + Math.cos(a) * (R * 1.42 - l), cy + Math.sin(a) * (R * 1.42 - l)); ctx.stroke(); }
+    // glow
+    const gl = .22 + .12 * Math.sin(now / 500); const g = ctx.createRadialGradient(cx, cy, R * .2, cx, cy, R * 1.3); g.addColorStop(0, `rgba(79,227,242,${gl.toFixed(2)})`); g.addColorStop(.75, 'rgba(79,227,242,.06)'); g.addColorStop(1, 'rgba(79,227,242,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.3, 0, 7); ctx.fill();
+    ctx.save(); ctx.shadowColor = 'rgba(79,227,242,.9)'; ctx.shadowBlur = 18; ctx.strokeStyle = 'rgba(120,240,255,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke(); ctx.restore();
+    // graticule
+    ctx.strokeStyle = 'rgba(79,227,242,.22)'; ctx.lineWidth = .8;
+    for (let lon = 0; lon < 180; lon += 30) { ctx.beginPath(); let up = false;
+      for (let a = 0; a <= 360; a += 6) { const lat = a <= 180 ? a - 90 : 270 - a, lo = a <= 180 ? lon : lon + 180, [x, y, z] = proj(lat, lo, R, cx, cy);
+        if (z > -0.05) { up ? ctx.lineTo(x, y) : ctx.moveTo(x, y); up = true; } else up = false; } ctx.stroke(); }
+    for (let lat = -60; lat <= 60; lat += 30) { ctx.beginPath(); let up = false;
+      for (let lon = 0; lon <= 360; lon += 6) { const [x, y, z] = proj(lat, lon, R, cx, cy); if (z > -0.05) { up ? ctx.lineTo(x, y) : ctx.moveTo(x, y); up = true; } else up = false; } ctx.stroke(); }
+    // dot cloud
+    const c = Math.cos(rot), s = Math.sin(rot), tc = Math.cos(.32), ts = Math.sin(.32);
+    for (const [px, py, pz] of pts) { const x = px * c + pz * s, z0 = -px * s + pz * c, y = py * tc - z0 * ts, z = py * ts + z0 * tc;
+      if (z < 0) continue; ctx.fillStyle = `rgba(170,245,255,${(.25 + z * .75).toFixed(2)})`; const sz = 1.2 + z * 1.1; ctx.fillRect(cx + x * R - sz / 2, cy - y * R - sz / 2, sz, sz); }
+    // orbit ring with moving amber segment
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(-.35); ctx.scale(1, .32);
+    ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(79,227,242,.35)'; ctx.beginPath(); ctx.arc(0, 0, R * 1.18, 0, 7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(242,180,69,.95)'; ctx.beginPath(); ctx.arc(0, 0, R * 1.18, ring % (Math.PI * 2), ring % (Math.PI * 2) + .45); ctx.stroke(); ctx.restore();
+    // market hubs
+    const hu = new Date().getUTCHours();
+    ctx.font = '600 11px ui-monospace, Menlo, monospace';
+    for (const [lat, lon, name, id, a, b] of HUBS) { const [x, y, z] = proj(lat, lon, R, cx, cy), open = isOpen(hu, a, b);
+      if (z <= 0) continue; const pulse = open ? 3 + 2 * Math.sin(now / 300) : 0;
+      ctx.fillStyle = open ? '#ffb340' : 'rgba(159,199,211,.8)'; ctx.beginPath(); ctx.arc(x, y, 3.5, 0, 7); ctx.fill();
+      if (open) { ctx.strokeStyle = 'rgba(255,179,64,.6)'; ctx.beginPath(); ctx.arc(x, y, 6 + pulse, 0, 7); ctx.stroke(); }
+      ctx.fillStyle = open ? '#ffd9a0' : 'rgba(159,199,211,.8)'; ctx.fillText(name, x + 8, y - 6); }
+    requestAnimationFrame(draw);
+  }
+  function side() {
+    const n = new Date(), hu = n.getUTCHours();
+    for (const [, , , id, a, b] of HUBS) { const el = document.getElementById(id); if (el) el.classList.toggle('on', isOpen(hu, a, b)); }
+    const u = document.getElementById('hud-utc'); if (u) u.textContent = 'UTC ' + n.toISOString().slice(11, 19);
+    const t = (id) => (document.getElementById(id)?.textContent || '').trim();
+    const ctl = document.getElementById('hud-ctl'); if (ctl) ctl.textContent = t('ctl-side') || '—';
+    const adx = document.getElementById('hud-adx'); if (adx) adx.textContent = 'H4 ' + (t('ctl4a') || 'ADX —');
+    const chk = document.getElementById('hud-chk'); if (chk) chk.textContent = t('gd-checker') || '—';
+    const ev = document.querySelector('.gd-tick.ev .t'); const nw = document.getElementById('hud-news'); if (nw && ev) nw.textContent = ev.textContent;
+  }
+  size(); addEventListener('resize', size); new ResizeObserver(size).observe(cv);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { last = performance.now(); requestAnimationFrame(draw); } });
+  requestAnimationFrame(draw); side();
+  // keep it turning even where the frame clock is paused or throttled
+  setInterval(() => { side(); if (performance.now() - lastFrame > 900) { draw(performance.now()); } }, 1000);
+  setInterval(() => { if (performance.now() - lastFrame > 250) draw(performance.now()); }, 66);
+})();
+</script>
+
+  <article class="gd-card" id="brain">
+    <div class="gd-top"><h2>👑 CrownBearer Neural Brain · one brain, one decision</h2><span class="gd-note" id="nb-at" data-source="desk">—</span></div>
+    <div class="nb-head" data-source="desk"><b id="nb-verdict">—</b><span id="nb-explain">Waiting for the brain status…</span></div>
+    <div class="gd-stats nb-stats" data-source="desk">
+      <div class="gd-stat"><span>Status</span><b id="nb-status">—</b></div><div class="gd-stat"><span>H4 bias</span><b id="nb-bias">—</b></div>
+      <div class="gd-stat"><span>Regime</span><b id="nb-regime">—</b></div><div class="gd-stat"><span>Session</span><b id="nb-session">—</b></div>
+      <div class="gd-stat"><span>Best score now</span><b id="nb-best">—</b></div><div class="gd-stat"><span>Conflict</span><b id="nb-conflict">—</b></div>
+    </div>
+    <div class="nb-grid">
+      <div><h3 class="nb-h">Score each engine's setup would get now <small>(send 85+ · watchlist 75–84)</small></h3><div id="nb-scores" class="nb-scores" data-source="desk"></div></div>
+      <div><h3 class="nb-h">Is the score real? Unseen-half check</h3><div id="nb-calib" class="nb-scores nb-noline" data-source="desk"></div>
+        <h3 class="nb-h">Evidence ranking (expected R per trade)</h3><div id="nb-rank" class="nb-scores nb-noline" data-source="desk"></div></div>
+    </div>
+    <h3 class="nb-h">Latest decisions · approved and rejected, with reasons</h3>
+    <ul class="gd-chk nb-list" id="nb-decisions" data-source="desk"></ul>
+    <h3 class="nb-h">Learning engine · recommendations (never applied automatically)</h3>
+    <ul class="gd-chk nb-list" id="nb-recs" data-source="desk"></ul>
+    <p class="gd-note" id="nb-foot" data-source="desk">—</p>
+  </article>
+
+  <article class="gd-card gd-nowtop" id="desk-now">
+    <div class="gd-top"><h2>Desk now · setup or why no trade</h2><span class="gd-note" id="gd-now-at" data-source="desk">—</span></div>
+    <div id="gd-now" data-source="desk gold" style="display:grid;gap:12px"></div>
+    <p class="gd-note">Setups are market orders only (ENTER NOW at the live price), sent straight to your Telegram by the checker the moment a closed 5 minute candle confirms. The levels below are where a setup would come from if price dips there; nothing here is an order.</p>
+  </article>
+
+  <article class="gd-card" id="control">
+    <div class="gd-top"><h2>Who is in control · DI</h2><span class="gd-note" id="ctl-at">+DI buyers · −DI sellers · ADX strength (14)</span></div>
+    <div class="gd-ctl-head"><b id="ctl-side">—</b><span id="ctl-sub">Waiting for the desk data…</span></div>
+    <div class="gd-tug">
+      <div class="gd-tug-row"><span>H4</span><div class="gd-bar"><i class="p" id="ctl4p" style="flex-basis:50%">+DI</i><i class="m" id="ctl4m" style="flex-basis:50%">−DI</i></div><span id="ctl4a">ADX —</span></div>
+      <div class="gd-tug-row"><span>15m</span><div class="gd-bar"><i class="p" id="ctl15p" style="flex-basis:50%">+DI</i><i class="m" id="ctl15m" style="flex-basis:50%">−DI</i></div><span id="ctl15a">ADX —</span></div>
+      <div class="gd-tug-row"><span>5m</span><div class="gd-bar"><i class="p" id="ctl5p" style="flex-basis:50%">+DI</i><i class="m" id="ctl5m" style="flex-basis:50%">−DI</i></div><span id="ctl5a">ADX —</span></div>
+    </div>
+    <p class="gd-note">Buyers on the left (green, +DI), sellers on the right (red, −DI). The bigger side is in control; ADX under 20 means neither side has a real grip, 20–25 building, 25+ strong.</p>
+  </article>
+
+  <section class="gd-kpis" aria-label="Key numbers">
+    <div class="gd-kpi" style="--k:var(--gold)"><span>Gold</span><b data-source="gold" data-field="mark" data-row="0">—</b></div>
+    <div class="gd-kpi" style="--k:var(--cyan)"><span>24h move</span><b data-source="gold" data-field="change24h" data-row="0">—</b></div>
+    <div class="gd-kpi" style="--k:var(--neon-g)"><span>Balance</span><b data-mirror="ac-bal">—</b></div>
+    <div class="gd-kpi" style="--k:var(--neon-o)"><span>Total P&amp;L</span><b data-mirror="ac-pl" data-tone="1">—</b></div>
+    <div class="gd-kpi" style="--k:var(--violet)"><span>Today</span><b data-mirror="ac-today">—</b></div>
+    <div class="gd-kpi" style="--k:var(--down)"><span>RSI 15m</span><b data-source="technicals" data-field="rsi14">—</b></div>
+  </section>
+
+  <section class="gd-reactor" aria-label="Desk dial">
+    <div class="gd-wing">
+      <div class="gd-chip"><span class="gd-coin" aria-hidden="true">Au</span><div><span>Gold 24h</span><b data-source="gold" data-field="change24h" data-row="0">—</b></div></div>
+      <div class="gd-chip"><span class="gd-coin c" aria-hidden="true">5m</span><div><span>Checker</span><b data-mirror="gd-checker">—</b></div></div>
+    </div>
+    <div>
+      <div class="gd-dial" id="gd-dial" role="img" aria-label="RSI dial">
+        <i class="seg"></i><i class="trk"></i><i class="core"></i>
+        <div class="gd-needle" id="gd-needle"></div>
+        <div class="gd-dial-txt"><button type="button" class="gd-crownorb" id="gd-crownorb" aria-label="Hear Crown's update" title="Hear Crown's update">♛</button><span class="gd-crown-say" id="gd-crown-say">TAP CROWN</span><small>XAUUSD</small><span class="px" data-source="gold" data-field="mark" data-row="0">—</span>
+          <span class="sig" id="gd-dial-sig">—</span><span class="rsi">RSI <span data-source="technicals" data-field="rsi14" id="gd-dial-rsi">—</span></span></div>
+      </div>
+      <div class="gd-scale" aria-hidden="true"><span>OVERSOLD 30</span><span>70 OVERBOUGHT</span></div>
+    </div>
+    <div class="gd-wing">
+      <div class="gd-chip"><span class="gd-coin g" aria-hidden="true">$</span><div><span>Next news</span><b data-mirror="td-ev">—</b></div></div>
+      <div class="gd-chip"><span class="gd-coin" aria-hidden="true">◆</span><div><span>Feeds</span><b data-mirror="gd-feeds">—</b></div></div>
+    </div>
+  </section>
+
+  <div class="gd-office">
+    <main class="gd-floor" aria-label="Trading floor">
+
+      <article class="gd-card" id="chart">
+        <div class="gd-top">
+          <h2>Desk chart · XAUUSD</h2>
+          <div class="gd-seg" id="gd-int" role="group" aria-label="Candle interval"><button type="button" data-v="5m">5m</button><button type="button" data-v="15m">15m</button><button type="button" data-v="1h">1h</button><button type="button" data-v="4h">4h</button><button type="button" data-v="1d">1d</button></div>
+        </div>
+        <p class="gd-note">Last 120 candles (PAXG, a gold-backed token, shifted onto the live gold price).<br><span class="gd-key" style="--k:var(--amber)">EMA 20</span><span class="gd-key" style="--k:var(--violet)">EMA 50</span><span class="gd-key" style="--k:var(--down)">resistance</span><span class="gd-key" style="--k:var(--up)">support</span><span class="gd-key" style="--k:var(--cyan)">open trade or dip level</span></p>
+        <div class="gd-chart" id="gd-candles" data-source="chart desk" style="min-height:400px"></div>
+        <p class="gd-read" id="gd-chart-read">—</p>
+      </article>
+
+      <article class="gd-card" id="live">
+        <div class="gd-top"><h2>Gold live · last hour</h2><button type="button" class="gd-live" id="gd-live" aria-pressed="true"><i></i><span>Live</span></button></div>
+        <div class="gd-banner" id="gd-wk" role="note" hidden><span aria-hidden="true">⚠️</span><div><b>WEEKEND FEED</b>: spot gold is closed until Sunday about 22:00 London. This is the 24/7 Hyperliquid contract; your broker may open at a gap.</div></div>
+        <div class="gd-stats">
+          <div class="gd-stat"><span>RSI 14 (15m)</span><b data-source="technicals" data-field="rsi14" data-row="0">—</b></div>
+          <div class="gd-stat"><span>24h volume</span><b data-source="gold" data-field="volume24h" data-row="0">—</b></div>
+          <div class="gd-stat"><span>Funding / h</span><b data-source="gold" data-field="funding" data-row="0">—</b></div>
+        </div>
+        <div class="gd-chart" id="gd-1m" data-source="gold_1m" style="min-height:280px"></div>
+        <p class="gd-note" id="gd-live-note">The price updates every 15 seconds.</p>
+      </article>
+    </main>
+
+    <aside class="gd-rail" aria-label="Side rail">
+      <article class="gd-card" id="account">
+        <div class="gd-top"><h2>Account · since the new rules</h2><span class="gd-note">0.01 lot · $1 per $1 move</span></div>
+        <div class="gd-stats" data-source="desk">
+          <div class="gd-stat"><span>Balance</span><b id="ac-bal">—</b></div>
+          <div class="gd-stat"><span>Total P&amp;L</span><b id="ac-pl">—</b></div>
+          <div class="gd-stat"><span>Wins · losses</span><b id="ac-wl">—</b></div>
+          <div class="gd-stat"><span>Today</span><b id="ac-today">—</b></div>
+        </div>
+        <p class="gd-note" id="ac-note">—</p>
+        <div class="gd-tw">
+          <table class="gd-table" data-source="trades" data-row-key="id" id="gd-trades"><thead><tr>
+            <th data-field="sent">Sent (London)</th><th data-field="side">Side</th><th class="n" data-field="entry">Entry</th><th class="n" data-field="stop">Stop</th><th class="n" data-field="target">Target</th><th data-field="status">Status</th><th class="n" data-field="result">Result $</th>
+          </tr></thead><tbody></tbody></table>
+        </div>
+      </article>
+
+      <article class="gd-card" id="today">
+        <div class="gd-top"><h2>Today · news and hours</h2></div>
+        <div class="gd-stats" data-source="desk">
+          <div class="gd-stat"><span>Trading hours</span><b>Sun 23:00–Fri 20:00</b></div>
+          <div class="gd-stat"><span>Next news</span><b id="td-ev">—</b></div>
+          <div class="gd-stat"><span>News window</span><b id="td-bo">—</b></div>
+        </div>
+        <ul class="gd-chk" id="gd-events" data-source="desk"></ul>
+        <p class="gd-note">No news block: setups within 15 minutes of high-impact US news are still sent, with a ⚠️ news warning (wide spreads, fast spikes). No new trades 22:00–23:00 or 00:00–06:00 London. One trade at a time; the desk stops for the day after 5 losses or −$40.</p>
+        <p class="gd-read" id="gd-last" data-source="desk">—</p>
+      </article>
+
+      <article class="gd-card" id="sizer">
+        <div class="gd-top"><h2>Lot size</h2><span class="gd-note" id="ps-src" data-source="desk">—</span></div>
+        <p class="gd-note">0.01 lot = 1 oz: every $1 gold moves is $1 per 0.01 lot. Entry and stop fill in from the open trade or the desk's dip level; change them to try your own.</p>
+        <div class="gd-form">
+          <label for="ps-bal">Balance ($)<input class="gd-input" id="ps-bal" type="number" min="0" step="10"></label>
+          <label for="ps-risk">Risk per trade (%)<input class="gd-input" id="ps-risk" type="number" min="0" step="0.5" value="5"></label>
+          <label for="ps-entry">Entry<input class="gd-input" id="ps-entry" type="number" min="0" step="0.1"></label>
+          <label for="ps-stop">Stop loss<input class="gd-input" id="ps-stop" type="number" min="0" step="0.1"></label>
+        </div>
+        <div class="gd-stats">
+          <div class="gd-stat"><span>Side</span><b id="ps-side">—</b></div>
+          <div class="gd-stat"><span>Lots</span><b id="ps-lots">—</b></div>
+          <div class="gd-stat"><span>$ at risk</span><b id="ps-usd">—</b></div>
+          <div class="gd-stat"><span>Stop distance</span><b id="ps-dist">—</b></div>
+        </div>
+        <p class="gd-note" id="ps-warn"></p>
+        <button type="button" class="gd-live" id="ps-reload">↺ Use the desk's levels</button>
+      </article>
+    </aside>
+  </div>
+  <p class="gd-foot">CBF FX · London · market orders only · nothing on this page places an order</p>
+</div>
+
+<script>
+  // Shared helpers. Every time shown is London time.
+  window.gd = {
+    px: (v) => v == null || isNaN(v) ? '—' : d3.format(',.2f')(v),
+    p1: (v) => v == null || isNaN(v) ? '—' : d3.format(',.1f')(v),
+    usd: (v) => v == null || isNaN(v) ? '—' : (v < 0 ? '−$' : '$') + Math.abs(v).toFixed(2),
+    sgn: (v) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + '$' + Math.abs(v).toFixed(2),
+    pct: (v) => v == null || isNaN(v) ? '—' : (v > 0 ? '+' : '') + d3.format('.2%')(v),
+    tone: (el, v) => { el.classList.toggle('gd-up', v > 0); el.classList.toggle('gd-down', v < 0); },
+    hm: (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(d)),
+    dm: (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(d)).replace(',', ''),
+    day: (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: '2-digit', month: 'short' }).format(new Date(d)),
+    fail: (box, t) => { const f = document.createElement('div'); f.className = 'gd-fail'; f.textContent = t || 'Did not load'; box.replaceChildren(f); },
+    el: (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; },
+    rows: (id) => { const d = dash.data(id); return d.status === 'ok' && Array.isArray(d.data) ? d.data : []; },
+  };
+
+  dash.loader('gold', {
+    description: 'Coinversa’s gold mark price record as one row, text made numbers.',
+    fn: ({ answer }) => {
+      const a = typeof answer === 'string' ? JSON.parse(answer) : answer;
+      if (!a || a.markPrice == null) throw new Error((a && (a.error || a.message)) || 'No mark price in the answer');
+      return [{ symbol: a.symbol, mark: Number(a.markPrice), index: Number(a.indexPrice), change24h: Number(a.change24h) / 100, funding: Number(a.fundingRate), volume24h: Number(a.volume24h) }];
+    },
+  });
+  dash.loader('gold_1m', {
+    description: 'Coinversa’s recent one-minute gold bars as rows of time, open, high, low and close.',
+    fn: ({ answer }) => {
+      const a0 = typeof answer === 'string' ? JSON.parse(answer) : answer, a = (a0 && a0.gold_1m) || a0;
+      if (!a || !a.recent) throw new Error((a && (a.error || a.message)) || 'No bars in the answer');
+      return a.recent.rows.map((c) => { const o = Object.fromEntries(d3.zip(a.recent.columns, c)); return { time: new Date(o.t).toISOString(), open: +o.o, high: +o.h, low: +o.l, close: +o.c }; })
+        .sort((x, y) => (x.time < y.time ? -1 : 1));
+    },
+  });
+  dash.loader('technicals', {
+    description: 'Coinversa’s latest indicator readings for gold as one row.',
+    fn: ({ answer }) => {
+      const a0 = typeof answer === 'string' ? JSON.parse(answer) : answer, a = (a0 && a0.technicals) || a0;
+      if (!a || !a.indicators) throw new Error((a && (a.error || a.message)) || 'No indicators in the answer');
+      const D = a.indicators.dmi || {}, D5 = a.indicators.dmi5 || {}, D4 = a.indicators.dmi4h || {};
+      return [{ interval: a.interval, asOf: a.asOf, close: a.last && a.last.close, rsi14: a.indicators.rsi14, read: a.read,
+        pdi: D.pdi ?? null, mdi: D.mdi ?? null, adx: D.adx ?? null, ctl: D.control ?? null, str: D.strength ?? null,
+        pdi5: D5.pdi ?? null, mdi5: D5.mdi ?? null, adx5: D5.adx ?? null, ctl5: D5.control ?? null,
+        pdi4: D4.pdi ?? null, mdi4: D4.mdi ?? null, adx4: D4.adx ?? null, ctl4: D4.control ?? null, str4: D4.strength ?? null }];
+    },
+  });
+  dash.loader('candles', {
+    description: 'Text to Quant’s PAXGUSDT candle tuples as rows of time, open, high, low, close and volume, oldest first.',
+    fn: ({ answer }) => {
+      const a = typeof answer === 'string' ? JSON.parse(answer) : answer;
+      if (!a || a.success === false || !Array.isArray(a.candles)) throw new Error((a && (a.message || a.error)) || 'No candles in the answer');
+      return a.candles.map(([t, o, h, l, c, v]) => ({ time: new Date(t).toISOString(), open: +o, high: +h, low: +l, close: +c, volume: +v })).sort((x, y) => (x.time < y.time ? -1 : 1));
+    },
+  });
+  dash.loader('news', {
+    description: 'Firecrawl’s news results as rows of headline, link, site and age.',
+    fn: ({ answer }) => {
+      const a = typeof answer === 'string' ? JSON.parse(answer) : answer;
+      if (!a || a.success === false) throw new Error((a && (a.error || a.message)) || 'The news search failed');
+      return ((a.data && a.data.news) || a.news || []).map((n) => { let site = ''; try { site = new URL(n.url).hostname.replace(/^www\./, ''); } catch (e) { site = ''; } return { title: n.title, url: n.url, site, age: n.date || '' }; });
+    },
+  });
+
+  dash.calc('trades', {
+    inputs: ['desk'],
+    title: 'Desk trades',
+    description: 'Every setup the live desk sent since the new rules, newest first.',
+    fn: (desk) => desk.filter((r) => r.kind === 'trade').map((r) => ({ id: r.id, sent: r.at, side: r.side, entry: r.entry, stop: r.stop, target: r.target, status: r.status, result: r.result }))
+      .sort((x, y) => String(y.sent).localeCompare(String(x.sent))),
+  });
+
+  // The chart's window follows the picked interval: the last 175 candles up to now.
+  const TF = { '5m': 5, '15m': 15, '1h': 60, '4h': 240, '1d': 1440 };
+  window.gdWin = (tf) => { const q = 6e4 * Math.min(TF[tf] || 60, 15), to = Math.floor(Date.now() / q) * q, iso = (t) => new Date(t).toISOString().slice(0, 19) + 'Z';
+    return { chart_from: iso(to - (TF[tf] || 60) * 175 * 6e4), chart_to: iso(to) }; };
+  dash.setParams({ ...gdWin(dash.params().interval || '15m') });
+</script>
+
+<script>
+  // Header: London clock, checker status, feed count, price.
+  (() => {
+    const clock = document.getElementById('gd-clock'), date = document.getElementById('gd-date');
+    const tick = () => { const n = new Date(); clock.textContent = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(n); date.textContent = gd.day(n).toUpperCase() + ' · LONDON'; };
+    tick(); setInterval(tick, 1000);
+    const feeds = ['gold', 'gold_1m', 'candles', 'technicals', 'news', 'desk'];
+    dash.onData(() => {
+      const g = dash.data('gold'), r = g.status === 'ok' ? g.data[0] : null;
+      document.querySelectorAll('[data-source="gold"][data-field="mark"]').forEach((e) => { e.textContent = r ? gd.px(r.mark) : '—'; });
+      document.querySelectorAll('[data-source="gold"][data-field="change24h"]').forEach((e) => { e.textContent = r ? gd.pct(r.change24h) + ' 24h' : '—'; gd.tone(e, r ? r.change24h : 0); });
+      document.querySelectorAll('[data-source="gold"][data-field="volume24h"]').forEach((e) => { e.textContent = r ? '$' + d3.format('.3s')(r.volume24h).replace('G', 'B') : '—'; });
+      document.querySelectorAll('[data-source="gold"][data-field="funding"]').forEach((e) => { e.textContent = r ? d3.format('.4%')(r.funding) : '—'; });
+      const t = dash.data('technicals'), tr = t.status === 'ok' ? t.data[0] : null;
+      document.querySelectorAll('[data-source="technicals"][data-field="rsi14"]').forEach((e) => { e.textContent = tr && tr.rsi14 != null ? d3.format('.1f')(tr.rsi14) : '—'; });
+      if (window.gdDMI) window.gdDMI(tr);
+      window.gdLast = r ? r.mark : null;
+      const ok = feeds.filter((id) => dash.data(id).status === 'ok').length, wait = feeds.filter((id) => dash.data(id).status === 'loading').length;
+      const f = document.getElementById('gd-feeds'); f.className = 'gd-dot ' + (ok === feeds.length ? 'ok' : wait ? '' : 'bad');
+      f.lastElementChild.textContent = ok === feeds.length ? `All ${ok} feeds online` : wait ? `Linking feeds ${ok}/${feeds.length}` : `${feeds.length - ok - wait} feed(s) offline · ${ok}/${feeds.length}`;
+      const st = gd.rows('desk').find((x) => x.kind === 'status'), c = document.getElementById('gd-checker');
+      const age = st ? (Date.now() - Date.parse(st.at)) / 6e4 : null;
+      c.className = 'gd-dot ' + (!st ? '' : st.status === 'running' && age < 40 ? 'ok' : 'bad');
+      c.lastElementChild.textContent = !st ? 'Checker: —' : `Checker ${st.status} · desk read ${gd.hm(st.at)}${age > 40 ? ' (' + Math.round(age) + ' min old)' : ''}`;
+    });
+  })();
+</script>
+
+<script>
+  // Desk now: what the live checker is looking for, how far price is from it, and every reason there is no trade yet.
+  // Retired: the v3.3 renderer read only the 15-minute desk file. Kept uncalled; the live renderer below replaces it.
+  const gdRetiredNow = () => {
+    const box = document.getElementById('gd-now'), at = document.getElementById('gd-now-at'), E = gd.el;
+    const draw = () => {
+      const d = dash.data('desk');
+      if (d.status === 'loading') return;
+      if (d.status !== 'ok') { gd.fail(box, 'Desk state did not load'); at.textContent = '—'; return; }
+      const rows = d.data, b = rows.find((r) => r.kind === 'best'), st = rows.find((r) => r.kind === 'status');
+      const open = rows.filter((r) => r.kind === 'trade' && r.status === 'Open').sort((x, y) => String(y.at).localeCompare(String(x.at)))[0];
+      const price = window.gdLast != null ? Number(window.gdLast) : st ? st.entry : null;
+      at.textContent = b ? 'Desk read ' + gd.hm(b.at) + ' London' : '—';
+      box.replaceChildren();
+      if (open) {
+        const sg = open.side === 'BUY' ? 1 : -1, live = price != null ? sg * (price - open.entry) : null;
+        const dir = E('div', 'gd-dir ' + open.side.toLowerCase()); dir.append(E('b', null, (sg > 0 ? '▲ ' : '▼ ') + open.side), E('span', null, `Open trade from ${gd.p1(open.entry)}, sent ${gd.hm(open.at)} London · live ${live == null ? '—' : gd.sgn(live)} at 0.01 lot`));
+        box.append(dir);
+        const lv = E('div', 'gd-lv'); [['Entry', open.entry, ''], ['Stop', open.stop, 'gd-down'], ['Target', open.target, 'gd-up'], ['Live', price, '']].forEach(([k, v, c]) => { const x = E('div'); x.append(E('span', null, k), E('b', c, gd.p1(v))); lv.append(x); });
+        box.append(lv, E('p', 'gd-note', 'The result goes to your Telegram when the stop, the target or the time exit (8 hours or 21:00) is hit.'));
+        return;
+      }
+      if (!b) { box.append(E('p', 'gd-note', 'No desk read yet.')); return; }
+      const valid = b.status === 'VALID', side = b.side;
+      const dir = E('div', 'gd-dir ' + (side ? side.toLowerCase() : 'flat'));
+      dir.append(E('b', null, side ? (side === 'BUY' ? '▲ BUY' : '▼ SELL') : '■ STAND ASIDE'), E('span', null, side ? (valid ? 'VALID: sent to Telegram as ENTER NOW' : `Only ${side === 'BUY' ? 'buys' : 'sells'} today · waiting for the trigger`) : 'The 1H trend is flat: no buys or sells'));
+      const badge = E('span', 'gd-badge' + (valid ? ' valid' : ''), valid ? 'VALID ✓ SENT' : 'NO TRADE YET');
+      const head = E('div', 'gd-top'); head.append(dir, badge); box.append(head);
+      if (side && b.entry != null) {
+        const lv = E('div', 'gd-lv');
+        [['Dip level (5m EMA20)', b.entry, ''], ['Stop if it fired now', b.stop, 'gd-down'], ['Target (2R or level)', b.target, 'gd-up'],
+          ['Live price', price, ''], ['Distance', price != null ? Math.abs(price - b.entry) : null, '']].forEach(([k, v, c]) => { const x = E('div'); x.append(E('span', null, k), E('b', c, gd.p1(v))); lv.append(x); });
+        box.append(lv);
+      }
+      box.append(E('p', 'gd-why', (valid ? 'Why: ' : 'Why no trade: ') + (b.last || '—')));
+      if (b.note) box.append(E('p', 'gd-note', b.note + '.'));
+      const now = new Date(), mins = +gd.hm(now).slice(0, 2) * 60 + +gd.hm(now).slice(3), wk = ![0, 6].includes(new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' })).getDay());
+      const ev = rows.filter((r) => r.kind === 'event').map((r) => Date.parse(r.note)), inNews = ev.some((t) => Math.abs(+now - t) <= 15 * 6e4);
+      const chk = E('ul', 'gd-chk'), item = (s, t) => { const li = E('li', s); li.append(E('b', null, s === 'ok' ? '✓' : s === 'no' ? '✗' : '…'), E('span', null, t)); chk.append(li); };
+      item(side ? 'ok' : 'no', side ? `1H trend ${side === 'BUY' ? 'up' : 'down'}` : '1H trend flat');
+      item(/15m EMAs are not lined up/.test(b.last || '') ? 'no' : side ? 'ok' : 'wait', '15 minute EMAs agree with the trend');
+      item(!(new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' })).getDay() === 6 || (new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' })).getDay() === 0 && mins < 1380) || (new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' })).getDay() === 5 && mins >= 1200) || (mins >= 1320 && mins < 1380) || mins < 360) ? 'ok' : 'no', 'Trading window (Sun 23:00–Fri 20:00 London; pauses 22:00–23:00 and 00:00–06:00)');
+      item(inNews ? 'wait' : 'ok', inNews ? 'High-impact news window: setups still sent, with a news warning' : 'No news window right now');
+      item(valid ? 'ok' : 'wait', valid ? 'Trigger candle confirmed and sent' : 'Waiting for a 5m candle to dip to the EMA20 and close strongly');
+      box.append(chk);
+    };
+  };
+</script>
+
+<script>
+  // LIVE desk now (rules v3.4). The desk file (refreshed every 15 min) carries the checker's EMA and ATR values with the
+  // candle they were taken on; the page carries them forward with every newer CLOSED candle from the live feed, exactly
+  // as the checker does, so the trend, dip level, zone, stop and target here are live to the last closed candle.
+  const gdBars = (answer, mins) => {
+    const a = typeof answer === 'string' ? JSON.parse(answer) : answer;
+    if (!a || !a.recent) throw new Error((a && (a.error || a.message)) || 'No bars in the answer');
+    const asOf = Date.parse(a.asOf) || Date.now();
+    return a.recent.rows.map((c) => { const o = Object.fromEntries(d3.zip(a.recent.columns, c)); return { t: +o.t, time: new Date(+o.t).toISOString(), open: +o.o, high: +o.h, low: +o.l, close: +o.c, asOf: a.asOf }; })
+      .filter((b) => b.t + mins * 6e4 <= asOf + 1000).sort((x, y) => x.t - y.t);
+  };
+  dash.loader('gold_5m', { description: 'Coinversa’s latest closed 5 minute gold bars, oldest first.', fn: ({ answer }) => { const a = typeof answer === 'string' ? JSON.parse(answer) : answer; return gdBars((a && a.gold_5m) || a, 5); } });
+  dash.loader('gold_15m', { description: 'Coinversa’s latest closed 15 minute gold bars, oldest first.', fn: ({ answer }) => { const a = typeof answer === 'string' ? JSON.parse(answer) : answer; return gdBars((a && a.gold_15m) || a, 15); } });
+  dash.calc('live', {
+    inputs: ['gold_5m', 'gold_15m', 'desk'],
+    title: 'Live desk read',
+    description: 'The checker’s 5m EMA20, 5m ATR and 15m EMA20/EMA50 carried forward over newer closed candles, with the side, dip zone, stop, target and the last candle’s trigger check.',
+    fn: (b5, b15, desk) => {
+      const best = desk.find((r) => r.kind === 'best'), s = best && best.seed;
+      if (!s || !b5.length) return [];
+      const k20 = 2 / 21, k50 = 2 / 51; let e5 = s.e5, a5 = s.a5, pc = s.c5, e20 = s.e20_15, e50 = s.e50_15;
+      const n5 = b5.filter((b) => b.t > s.t5), n15 = b15.filter((b) => b.t > s.t15);
+      n5.forEach((b) => { const tr = Math.max(b.high - b.low, Math.abs(b.high - pc), Math.abs(b.low - pc)); a5 = (a5 * 13 + tr) / 14; e5 = b.close * k20 + e5 * (1 - k20); pc = b.close; });
+      n15.forEach((b) => { e20 = b.close * k20 + e20 * (1 - k20); e50 = b.close * k50 + e50 * (1 - k50); });
+      const buy = e20 > e50, sg = buy ? 1 : -1, last3 = b5.slice(-3), bar = b5[b5.length - 1], prev = b5[b5.length - 2];
+      const ext = buy ? d3.min(last3, (b) => b.low) : d3.max(last3, (b) => b.high);
+      let stop = ext - sg * 1.5; if (sg * (e5 - stop) < 0.5 * a5) stop = e5 - sg * 0.5 * a5;
+      const R = Math.abs(e5 - stop), lv = desk.filter((r) => r.kind === 'level').map((r) => r.entry);
+      const opp = lv.filter((p) => (buy ? p > e5 + 0.1 : p < e5 - 0.1)), nx = opp.length ? (buy ? d3.min(opp) : d3.max(opp)) : null;
+      const rr = nx != null && R ? Math.abs(nx - e5) / R : 9, target = e5 + sg * R * Math.min(2, Math.max(rr, 1));
+      const zone = e5 + (buy ? 1 : -1) * 0.5 * a5, touched = buy ? bar.low <= zone : bar.high >= zone;
+      const rng = bar.high - bar.low || 1e-9, pos = (bar.close - bar.low) / rng, body = (b) => Math.abs(b.close - b.open), bull = (b) => b.close > b.open, bear = (b) => b.close < b.open;
+      const beyond = buy ? bar.close > e5 : bar.close < e5;
+      const strong = beyond && (buy ? bull(bar) && pos >= 2 / 3 : bear(bar) && pos <= 1 / 3);
+      const eng = prev && (buy ? bull(bar) && bear(prev) && bar.close >= prev.open && bar.open <= prev.close && body(bar) > body(prev) : bear(bar) && bull(prev) && bar.close <= prev.close && bar.open >= prev.open && body(bar) > body(prev));
+      const wick = buy ? Math.min(bar.open, bar.close) - bar.low : bar.high - Math.max(bar.open, bar.close);
+      const pin = wick >= 2 * Math.max(body(bar), 1e-9) && wick >= 0.5 * rng && (buy ? pos >= 0.6 : pos <= 0.4);
+      const trig = beyond && eng ? 'engulfing' : beyond && pin ? (buy ? 'hammer' : 'shooting star') : strong ? 'strong close' : null;
+      const chase = Math.abs(bar.close - e5) > 1.5 * a5 || rng > 2 * a5;
+      return [{ side: buy ? 'BUY' : 'SELL', e5, a5, e20, e50, zone, stop, target, R, rr, nx, barT: bar.t, barClose: bar.close, touched, trig, chase, asOf: bar.asOf, n5: n5.length, seedAt: best.at, bias1: s.bias1, bias4: s.bias4 }];
+    },
+  });
+
+  (() => {
+    const box = document.getElementById('gd-now'), at = document.getElementById('gd-now-at'), E = gd.el;
+    const draw = () => {
+      const d = dash.data('desk'), lvd = dash.data('live');
+      if (d.status === 'loading') return;
+      if (d.status !== 'ok') { gd.fail(box, 'Desk state did not load'); at.textContent = '—'; return; }
+      const rows = d.data, b = rows.find((r) => r.kind === 'best'), st = rows.find((r) => r.kind === 'status');
+      const L = lvd.status === 'ok' && lvd.data.length ? lvd.data[0] : null;
+      const open = rows.filter((r) => r.kind === 'trade' && r.status === 'Open').sort((x, y) => String(y.at).localeCompare(String(x.at)))[0];
+      const price = window.gdLast != null ? Number(window.gdLast) : st ? st.entry : null;
+      at.textContent = L ? `LIVE · last closed candle ${gd.hm(L.barT + 5 * 6e4)} London · price ${gd.hm(new Date())}` : b ? 'Desk read ' + gd.hm(b.at) + ' London (live candles loading)' : '—';
+      box.replaceChildren();
+      if (open) {
+        const sg = open.side === 'BUY' ? 1 : -1, live = price != null ? sg * (price - open.entry) : null;
+        const dir = E('div', 'gd-dir ' + open.side.toLowerCase()); dir.append(E('b', null, (sg > 0 ? '▲ ' : '▼ ') + open.side), E('span', null, `Open trade from ${gd.p1(open.entry)}, sent ${gd.hm(open.at)} London · live ${live == null ? '—' : gd.sgn(live)} at 0.01 lot`));
+        box.append(dir);
+        const lv = E('div', 'gd-lv'); [['Entry', open.entry, ''], ['Stop', open.stop, 'gd-down'], ['Target', open.target, 'gd-up'], ['Live', price, ''], ['To stop', price != null ? Math.abs(price - open.stop) : null, 'gd-down'], ['To target', price != null ? Math.abs(open.target - price) : null, 'gd-up']].forEach(([k, v, c]) => { const x = E('div'); x.append(E('span', null, k), E('b', c, gd.p1(v))); lv.append(x); });
+        box.append(lv, E('p', 'gd-note', 'The result goes to your Telegram when the stop, the target or the time exit (8 hours or 21:00) is hit.'));
+        return;
+      }
+      if (!b) { box.append(E('p', 'gd-note', 'No desk read yet.')); return; }
+      const side = L ? L.side : b.side, valid = b.status === 'VALID' && (!L || L.side === b.side), buy = side === 'BUY';
+      const dir = E('div', 'gd-dir ' + side.toLowerCase());
+      dir.append(E('b', null, buy ? '▲ BUY' : '▼ SELL'), E('span', null, valid ? 'VALID: sent to Telegram as ENTER NOW' : `Only ${buy ? 'buys' : 'sells'} now · waiting for the trigger`));
+      const head = E('div', 'gd-top'); head.append(dir, E('span', 'gd-badge' + (valid ? ' valid' : ''), valid ? 'VALID ✓ SENT' : 'NO TRADE YET')); box.append(head);
+      const e5 = L ? L.e5 : b.entry, zone = L ? L.zone : null, stop = L ? L.stop : b.stop, target = L ? L.target : b.target;
+      const gap = price != null && zone != null ? (buy ? price - zone : zone - price) : null;
+      const lv = E('div', 'gd-lv');
+      [['Dip level (5m EMA20)', e5, ''], [buy ? 'Buy zone from' : 'Sell zone from', zone, ''], ['Stop if it fired now', stop, 'gd-down'], ['Target (2R or level)', target, 'gd-up'],
+        ['Live price', price, ''], ['Price to zone', gap == null ? null : Math.max(0, gap), '']].forEach(([k, v, c]) => { const x = E('div'); x.append(E('span', null, k), E('b', c, gd.p1(v))); lv.append(x); });
+      box.append(lv);
+      let why;
+      if (valid) why = 'Why: ' + (b.last || '—');
+      else if (!L) why = 'Why no trade: ' + (b.last || '—');
+      else {
+        const t = gd.hm(L.barT), room = L.rr < 1 ? ` Only ${L.rr.toFixed(2)}R of room to ${gd.p1(L.nx)}, so the checker would skip it (needs 1R).` : '';
+        why = `Live, ${t} candle: ` + (L.chase ? 'closed too far from the EMA20 (no chasing).' : !L.touched ? `no ${buy ? 'dip' : 'pullback'} to the zone yet (needs a ${buy ? 'low at or below' : 'high at or above'} ${gd.p1(L.zone)}).` : L.trig ? `${L.trig} in the zone. The checker confirms it about 20 seconds after the candle closes; watch your Telegram.` : 'reached the zone but closed without a trigger candle.') + room;
+      }
+      box.append(E('p', 'gd-why', why));
+      if (st && st.note) box.append(E('p', 'gd-note', `Checker’s last logged check: ${st.note} (desk file ${gd.hm(st.at)}).`));
+      if (L) box.append(E('p', 'gd-note', `Live: 15m EMA20 ${gd.p1(L.e20)} ${L.e20 > L.e50 ? 'above' : 'below'} EMA50 ${gd.p1(L.e50)} · 5m ATR ${gd.p1(L.a5)} · 1H ${String(L.bias1).toLowerCase()}, 4H ${String(L.bias4).toLowerCase()} (desk read ${gd.hm(L.seedAt)}, information only).`));
+      const now = new Date(), mins = +gd.hm(now).slice(0, 2) * 60 + +gd.hm(now).slice(3), wk = ![0, 6].includes(new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' })).getDay());
+      const ev = rows.filter((r) => r.kind === 'event').map((r) => Date.parse(r.note)), inNews = ev.some((t) => Math.abs(+now - t) <= 15 * 6e4);
+      const chk = E('ul', 'gd-chk'), item = (s, t) => { const li = E('li', s); li.append(E('b', null, s === 'ok' ? '✓' : s === 'no' ? '✗' : '…'), E('span', null, t)); chk.append(li); };
+      item('ok', `15m trend ${buy ? 'up' : 'down'}: ${buy ? 'buys' : 'sells'} only`);
+      if (L) { const ok1 = String(L.bias1).toUpperCase().startsWith(buy ? 'UP' : 'D'); item(ok1 ? 'ok' : 'no', ok1 ? '1H trend agrees (v3.5 needs it)' : `1H trend ${String(L.bias1).toLowerCase()}: no trade until it agrees (v3.5)`); }
+      item(!(new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' })).getDay() === 6 || (new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' })).getDay() === 0 && mins < 1380) || (new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' })).getDay() === 5 && mins >= 1200) || (mins >= 1320 && mins < 1380) || mins < 360) ? 'ok' : 'no', 'Trading window (Sun 23:00–Fri 20:00 London; pauses 22:00–23:00 and 00:00–06:00)');
+      item(inNews ? 'wait' : 'ok', inNews ? 'High-impact news window: setups still sent, with a news warning' : 'No news window right now');
+      if (L) { item(L.rr >= 1 ? 'ok' : 'no', L.rr >= 1 ? 'At least 1R of room to the next level' : `Only ${L.rr.toFixed(2)}R of room to ${gd.p1(L.nx)}`);
+        item(L.touched ? 'ok' : 'wait', L.touched ? `Last candle reached the ${buy ? 'buy' : 'sell'} zone` : `Waiting for a ${buy ? 'dip' : 'pullback'} to ${gd.p1(L.zone)}`);
+        item(L.trig ? 'ok' : 'wait', L.trig ? `Trigger candle: ${L.trig}` : 'Waiting for a strong close, engulfing or pin bar'); }
+      box.append(chk);
+    };
+    dash.onData(draw); setInterval(draw, 15000);
+  })();
+</script>
+
+<script>
+  // CrownBearer Neural Brain panel: brain/status.json, shipped in the desk feed as the kind 'brain' row.
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const bar = (host, label, val, cls, right) => { const r = document.createElement('div'); r.className = 'nb-row';
+      const a = document.createElement('span'); a.textContent = label; const t = document.createElement('div'); t.className = 't';
+      const i = document.createElement('i'); i.className = cls || ''; i.style.width = Math.max(2, Math.min(100, val)) + '%'; t.append(i);
+      const b = document.createElement('b'); b.textContent = right; r.append(a, t, b); host.append(r); };
+    const li = (host, mark, cls, text) => { const l = document.createElement('li'); l.className = cls; const b = document.createElement('b'); b.textContent = mark;
+      const sp = document.createElement('span'); sp.textContent = text; l.append(b, sp); host.append(l); };
+    dash.onData(() => {
+      const row = gd.rows('desk').find((r) => r.kind === 'brain'); const d = dash.data('desk');
+      if (!row) { $('nb-explain').textContent = d.status === 'loading' ? 'Waiting for the brain status…' : 'Brain status not in the desk feed yet.'; return; }
+      const b = row.brain || {}, n = b.now || {};
+      $('nb-at').textContent = 'updated ' + (b.updated || '—') + ' London · config v' + (b.version ?? '—');
+      $('nb-status').textContent = row.status === 'operational' ? 'Operational' : row.status;
+      const act = (b.active || [])[0];
+      $('nb-verdict').textContent = act ? `ACTIVE ${act.side} · ${act.strategy} · score ${act.score}` : (n.best ? (n.best.band === 'SEND' ? `READY: next ${n.best.side} ${n.best.strategy} setup sends` : 'NO 85+ SETUP POSSIBLE NOW') : '—');
+      gd.tone($('nb-verdict'), act ? (act.side === 'BUY' ? 1 : -1) : 0);
+      $('nb-explain').textContent = act ? `Entry ${act.entry} · stop ${act.stop} · TP1 ${act.tp1} · TP2 ${act.tp2} (sent ${act.london} London)` : (n.explain || n.error || '');
+      $('nb-bias').textContent = n.bias || '—'; gd.tone($('nb-bias'), n.bias === 'UP' ? 1 : n.bias === 'DOWN' ? -1 : 0);
+      $('nb-regime').textContent = n.regime || '—'; $('nb-session').textContent = n.session || '—';
+      $('nb-best').textContent = n.best ? `${n.best.score} · ${n.best.side} ${n.best.strategy}` : '—';
+      $('nb-conflict').textContent = n.support ? (n.conflict ? 'YES: both sides' : `none (BUY: ${n.support.BUY.join(', ') || '—'} · SELL: ${n.support.SELL.join(', ') || '—'})`) : '—';
+      const sc = $('nb-scores'); sc.replaceChildren();
+      (n.scores || []).slice().sort((x, y) => y.score - x.score).forEach((r) => bar(sc, `${r.side} ${r.strategy}`, r.score, r.band === 'SEND' ? 's' : r.band === 'WATCHLIST' ? 'w' : '', String(r.score)));
+      const cb = $('nb-calib'); cb.replaceChildren();
+      Object.entries(b.calibration_unseen || {}).forEach(([k, v]) => bar(cb, `score ${k} (${v.n})`, 50 + 60 * (v.avgR || 0), (v.avgR || 0) > 0 ? 's' : '', (v.avgR >= 0 ? '+' : '') + v.avgR + 'R'));
+      const rk = $('nb-rank'); rk.replaceChildren();
+      (b.strategy_ranking && b.strategy_ranking.length ? b.strategy_ranking.map((x) => ({ strategy: x.strategy + ' live', base_R: x.avg })) : (b.evidence_ranking || []))
+        .forEach((x) => bar(rk, x.strategy, 50 + 100 * x.base_R, x.base_R > 0 ? 's' : '', (x.base_R >= 0 ? '+' : '') + x.base_R.toFixed(2)));
+      const dl = $('nb-decisions'); dl.replaceChildren();
+      const last = (b.last || []).slice().reverse();
+      if (!last.length) li(dl, '·', 'wait', 'No proposals yet. Each engine setup (H1, M15, 4H, swing) is scored here: SENT, WATCHLIST or REJECTED with the reason.');
+      last.forEach((r) => li(dl, r.verdict === 'SENT' ? '✓' : r.verdict === 'WATCHLIST' ? '!' : '✕', r.verdict === 'SENT' ? 'ok' : r.verdict === 'WATCHLIST' ? 'wait' : 'no',
+        `${r.london} ${r.side} ${r.strategy} @ ${r.entry} · score ${r.score} · ${r.verdict}${(r.reasons || []).length ? ' — ' + r.reasons.join('; ') : ''}`));
+      const rc = $('nb-recs'); rc.replaceChildren();
+      (b.recommendations || []).forEach((r) => li(rc, r.passed ? '!' : r.kind === 'improvement backtest' ? '✕' : '·', r.passed ? 'wait' : 'no',
+        `${r.what}: ${r.action}` + (r.unseen_85_proposed ? ` (unseen 85+: ${r.unseen_85_proposed.avgR}R on ${r.unseen_85_proposed.n} vs now ${r.unseen_85_current.avgR}R on ${r.unseen_85_current.n})` : r.n != null ? ` (${r.n} trades, ${r.avgR}R)` : '')));
+      const c = b.counts || {};
+      $('nb-foot').textContent = `${c.proposals || 0} proposals · ${c.sent || 0} sent · ${c.watchlist || 0} watchlist · ${c.rejected || 0} rejected · sent results ${(b.sent_results || {}).n || 0} trades ${(b.sent_results || {}).R || 0}R. Telegram: ${b.telegram || '—'}. Signals only: the brain never places orders.`;
+    });
+  })();
+</script>
+
+<script>
+  // Account and trades from the live desk log.
+  (() => {
+    const body = document.getElementById('gd-trades').tBodies[0];
+    dash.onData(() => {
+      const d = dash.data('desk'), a = gd.rows('desk').find((r) => r.kind === 'account');
+      const set = (id, t, v) => { const e = document.getElementById(id); e.textContent = t; if (v !== undefined) gd.tone(e, v); };
+      set('ac-bal', a ? gd.usd(a.entry) : '—'); set('ac-pl', a ? gd.sgn(a.result) : '—', a ? a.result : 0);
+      set('ac-wl', a ? `${a.stop} · ${a.target}` : '—'); set('ac-today', a ? a.strategy.replace('today ', '') + ' · ' + a.status : '—');
+      document.getElementById('ac-note').textContent = a ? `${a.last}; ${a.note}. Balance starts from $194.74 at the 30 Oct weekly report.` : (d.status === 'loading' ? '' : '—');
+      const t = dash.data('trades');
+      body.replaceChildren();
+      const msg = (txt) => { const c = body.insertRow().insertCell(); c.colSpan = 7; c.className = 'gd-note'; c.textContent = txt; };
+      if (t.status === 'loading') return;
+      if (t.status !== 'ok') return msg('Trades did not load.');
+      if (!t.data.length) return msg('No setups yet. Each one the checker sends appears here.');
+      t.data.forEach((r) => {
+        const tr = body.insertRow(); tr.dataset.key = r.id;
+        const cell = (txt, cls) => { const c = tr.insertCell(); if (cls) c.className = cls; c.textContent = txt; return c; };
+        cell(gd.dm(r.sent)); cell(r.side, r.side === 'BUY' ? 'gd-up' : 'gd-down'); cell(gd.p1(r.entry), 'n'); cell(gd.p1(r.stop), 'n'); cell(gd.p1(r.target), 'n'); cell(r.status);
+        const c = cell(r.result == null ? '—' : gd.sgn(r.result), 'n'); gd.tone(c, r.result || 0);
+      });
+    });
+  })();
+</script>
+
+<script>
+  // Today: news windows and the checker's last check.
+  (() => {
+    const list = document.getElementById('gd-events');
+    const draw = () => {
+      const rows = gd.rows('desk'), now = Date.now();
+      const ev = rows.filter((r) => r.kind === 'event').sort((x, y) => String(x.note).localeCompare(String(y.note)));
+      list.replaceChildren();
+      if (!ev.length) list.append(gd.el('li', 'ok', 'No high-impact US news loaded for today.'));
+      ev.forEach((r) => { const t = Date.parse(r.note), li = gd.el('li', t + 15 * 6e4 < now ? 'ok' : Math.abs(now - t) <= 15 * 6e4 ? 'no' : 'wait'); li.append(gd.el('b', null, t + 15 * 6e4 < now ? '✓' : '⏰'), gd.el('span', null, `${gd.hm(r.note)} London · ${r.strategy}`)); list.append(li); });
+      const nx = ev.find((r) => Date.parse(r.note) + 15 * 6e4 > now);
+      document.getElementById('td-ev').textContent = nx ? gd.hm(nx.note) : 'None';
+      document.getElementById('td-bo').textContent = nx ? (now >= Date.parse(nx.last) ? 'NOW' : gd.hm(nx.last) + '–' + gd.hm(Date.parse(nx.note) + 15 * 6e4)) : '—';
+      const st = rows.find((r) => r.kind === 'status');
+      document.getElementById('gd-last').textContent = st ? 'Checker’s last check: ' + (st.note || '—') : '—';
+    };
+    dash.onData(draw); setInterval(draw, 30000);
+  })();
+</script>
+
+<script>
+  // Desk chart: deep PAXG candles shifted onto gold's live price, with the desk's levels, dip level and open trade.
+  dash.calc('chart', {
+    inputs: ['candles', 'gold'],
+    title: 'Desk chart candles',
+    description: 'PAXG candles shifted by the PAXG-to-gold gap at the latest bar, with EMA 20 and EMA 50 on every bar.',
+    fn: (candles, gold) => {
+      if (!candles.length) return [];
+      const mark = gold[0] ? Number(gold[0].mark) : null, lastC = candles[candles.length - 1].close;
+      const shift = mark != null && Math.abs(lastC - mark) < 40 ? lastC - mark : 0, k20 = 2 / 21, k50 = 2 / 51;
+      let e20, e50;
+      return candles.map((b, i) => { const c = b.close - shift; e20 = i ? c * k20 + e20 * (1 - k20) : c; e50 = i ? c * k50 + e50 * (1 - k50) : c;
+        return { time: b.time, open: b.open - shift, high: b.high - shift, low: b.low - shift, close: c, ema20: e20, ema50: e50 }; });
+    },
+  });
+  (() => {
+    const box = document.getElementById('gd-candles'), seg = document.getElementById('gd-int'), read = document.getElementById('gd-chart-read');
+    seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) dash.setParams({ interval: b.dataset.v, ...gdWin(b.dataset.v) }); });
+    function draw() {
+      const tf = dash.params().interval || '15m';
+      seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === tf)));
+      const d = dash.data('chart');
+      if (d.status === 'loading') return;
+      if (d.status !== 'ok') { gd.fail(box, 'Chart candles did not load'); read.textContent = '—'; return; }
+      const rows = d.data.slice(-120).map((r) => ({ ...r, t: new Date(r.time) }));
+      if (!rows.length) { gd.fail(box, 'No candles in this window'); return; }
+      const desk = gd.rows('desk'), last = rows[rows.length - 1], price = window.gdLast != null ? Number(window.gdLast) : last.close;
+      let lo = d3.min(rows, (r) => r.low), hi = d3.max(rows, (r) => r.high);
+      const near = (v) => v > lo - (hi - lo) * 0.2 && v < hi + (hi - lo) * 0.2;
+      const lv = desk.filter((r) => r.kind === 'level' && near(r.entry));
+      const open = desk.find((r) => r.kind === 'trade' && r.status === 'Open'), b = desk.find((r) => r.kind === 'best');
+      const lines = open ? [['Entry', open.entry, 'var(--cyan)'], ['Stop', open.stop, 'var(--down)'], ['Target', open.target, 'var(--up)']]
+        : b && b.entry != null ? [['Dip level', b.entry, 'var(--cyan)']] : [];
+      for (const v of [...lv.map((r) => r.entry), ...lines.map((l) => l[1]), price]) if (near(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+      const W = Math.max(280, box.clientWidth), H = W < 520 ? 320 : 400, pb = 22;
+      const y = d3.scaleLinear([lo, hi], [H - pb, 10]).nice();
+      const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', `Gold ${tf} candles with desk levels`);
+      const ya = svg.append('g').call(d3.axisRight(y).ticks(6).tickSize(0).tickFormat(gd.p1)); ya.select('.domain').remove();
+      ya.selectAll('text').attr('fill', 'var(--dim)').style('font-size', '10px').style('font-family', 'var(--mono)');
+      const yw = d3.max(ya.selectAll('text').nodes(), (n) => n.getComputedTextLength()) || 44, pw = W - yw - 12;
+      ya.attr('transform', `translate(${W - yw - 4},0)`).selectAll('text').attr('x', 0);
+      const x = d3.scaleBand(rows.map((r) => r.time), [0, pw]).padding(0.25);
+      svg.insert('g', ':first-child').selectAll('line').data(y.ticks(6)).join('line').attr('x1', 0).attr('x2', pw).attr('y1', y).attr('y2', y).attr('stroke', 'var(--grid)');
+      lv.forEach((r) => { const c = r.side === 'resistance' ? 'var(--down)' : 'var(--up)';
+        svg.append('line').attr('x1', 0).attr('x2', pw).attr('y1', y(r.entry)).attr('y2', y(r.entry)).attr('stroke', c).attr('opacity', .5);
+        svg.append('text').attr('x', 4).attr('y', y(r.entry) - 3).attr('fill', c).style('font-size', '9px').style('font-family', 'var(--mono)').text(`${r.note} ${gd.p1(r.entry)}`); });
+      const every = Math.ceil(rows.length / Math.max(2, Math.floor(pw / 70))), intra = !['4h', '1d'].includes(tf);
+      svg.append('g').selectAll('text').data(rows.filter((_, i) => i % every === 0)).join('text').attr('x', (r) => x(r.time) + x.bandwidth() / 2).attr('y', H - 5).attr('text-anchor', 'middle')
+        .attr('fill', 'var(--dim)').style('font-size', '10px').style('font-family', 'var(--mono)').text((r) => (intra ? gd.hm(r.t) : gd.day(r.t)));
+      const col = (r) => (r.close >= r.open ? 'var(--up)' : 'var(--down)');
+      const c = svg.append('g').selectAll('g').data(rows).join('g').attr('transform', (r) => `translate(${x(r.time)},0)`);
+      c.append('line').attr('x1', x.bandwidth() / 2).attr('x2', x.bandwidth() / 2).attr('y1', (r) => y(r.high)).attr('y2', (r) => y(r.low)).attr('stroke', col);
+      c.append('rect').attr('width', Math.max(1, x.bandwidth())).attr('y', (r) => y(Math.max(r.open, r.close))).attr('height', (r) => Math.max(1, Math.abs(y(r.open) - y(r.close)))).attr('fill', col);
+      const mid = (r) => x(r.time) + x.bandwidth() / 2;
+      [['ema20', 'var(--amber)'], ['ema50', 'var(--violet)']].forEach(([k, s]) => svg.append('path').attr('d', d3.line().x(mid).y((r) => y(r[k]))(rows)).attr('fill', 'none').attr('stroke', s).attr('stroke-width', 1.5));
+      lines.filter((l) => near(l[1])).forEach(([k, v, s]) => { svg.append('line').attr('x1', 0).attr('x2', pw).attr('y1', y(v)).attr('y2', y(v)).attr('stroke', s).attr('stroke-dasharray', '6 4');
+        svg.append('text').attr('x', pw - 4).attr('y', y(v) - 3).attr('text-anchor', 'end').attr('fill', s).style('font-size', '10px').style('font-family', 'var(--mono)').text(`${k} ${gd.p1(v)}`); });
+      ya.selectAll('.tick').filter((v) => Math.abs(y(v) - y(price)) < 14).remove();
+      svg.append('line').attr('x1', 0).attr('x2', pw).attr('y1', y(price)).attr('y2', y(price)).attr('stroke', 'var(--cyan)').attr('opacity', .8);
+      svg.append('rect').attr('x', pw + 2).attr('y', y(price) - 8).attr('width', yw + 8).attr('height', 16).attr('fill', 'var(--cyan)');
+      svg.append('text').attr('x', pw + 6).attr('y', y(price) + 4).attr('fill', 'var(--ink)').style('font-size', '10px').style('font-family', 'var(--mono)').style('font-weight', 700).text(gd.p1(price));
+      const tip = gd.el('div', 'gd-tip'); tip.hidden = true;
+      c.append('rect').attr('width', x.step()).attr('x', -x.step() * x.padding() / 2).attr('height', H - pb).attr('fill', 'transparent')
+        .on('mousemove', (ev, r) => { tip.hidden = false; tip.replaceChildren(gd.el('div', 'k', gd.dm(r.t) + ' London'), ...[['O', r.open], ['H', r.high], ['L', r.low], ['C', r.close], ['EMA20', r.ema20], ['EMA50', r.ema50]].map(([k, v]) => gd.el('div', null, `${k} ${gd.p1(v)}`)));
+          const [mx, my] = d3.pointer(ev, box); tip.style.left = Math.max(0, Math.min(mx + 12, box.clientWidth - tip.offsetWidth - 4)) + 'px'; tip.style.top = Math.max(0, my - 70) + 'px'; })
+        .on('mouseleave', () => { tip.hidden = true; });
+      box.replaceChildren(svg.node(), tip);
+      const up = last.ema20 > last.ema50, res = lv.filter((r) => r.entry > price).sort((p, q) => p.entry - q.entry)[0], sup = lv.filter((r) => r.entry < price).sort((p, q) => q.entry - p.entry)[0];
+      read.textContent = `${tf}: price ${gd.p1(price)} is ${price > last.ema20 ? 'above' : 'below'} the EMA20 (${gd.p1(last.ema20)}), EMA20 ${up ? 'above' : 'below'} the EMA50 (${gd.p1(last.ema50)}).` +
+        (res ? ` Next resistance ${gd.p1(res.entry)} (${res.note}).` : '') + (sup ? ` Next support ${gd.p1(sup.entry)} (${sup.note}).` : '') + (b ? ` Desk: ${b.side ? (b.status === 'VALID' ? 'VALID ' + b.side : 'watching for ' + b.side.toLowerCase() + 's near ' + gd.p1(b.entry)) : 'standing aside'}.` : '');
+    }
+    dash.onData(draw);
+    let rz; new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(draw, 120); }).observe(box);
+  })();
+</script>
+
+<script>
+  // Gold live: the last 12 one-minute bars, then every live price pulled while Live is on (every 15 s).
+  (() => {
+    const btn = document.getElementById('gd-live'), box = document.getElementById('gd-1m'), note = document.getElementById('gd-live-note'), wkb = document.getElementById('gd-wk');
+    const ticks = []; let timer = null, beats = 0, lastRow = null, paused = false;
+    const pull = (id) => { try { dash.refresh(id); } catch (e) { /* toolbar Refresh still works */ } };
+    const start = () => { if (timer) return; timer = setInterval(() => { pull('gold'); beats++;
+      if (beats % 4 === 0) { pull('gold_1m'); pull('gold_5m'); pull('gold_15m'); } if (beats % 12 === 0) { dash.setParams({ ...gdWin(dash.params().interval || '15m') }); pull('desk'); } if (beats % 20 === 0) pull('technicals'); }, 15000);
+      btn.setAttribute('aria-pressed', 'true'); btn.lastElementChild.textContent = 'Live'; };
+    const stop = () => { clearInterval(timer); timer = null; btn.setAttribute('aria-pressed', 'false'); btn.lastElementChild.textContent = paused ? 'Paused · resume' : 'Live'; };
+    btn.addEventListener('click', () => { if (timer) { paused = true; stop(); } else { paused = false; start(); } });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else if (!paused) start(); });
+    setTimeout(() => { if (!document.hidden) start(); }, 1500);
+    const weekend = (t) => { const d = t.getUTCDay(), h = t.getUTCHours(); return d === 6 || (d === 5 && h >= 21) || (d === 0 && h < 22); };
+    function draw() {
+      wkb.hidden = !weekend(new Date());
+      const d = dash.data('gold_1m');
+      if (d.status === 'loading') return;
+      if (d.status !== 'ok') { gd.fail(box, 'Live bars did not load'); return; }
+      const bars = d.data.map((b) => ({ ...b, t: new Date(b.time) })); if (!bars.length) return;
+      const lastBar = bars[bars.length - 1].t, live = ticks.filter((k) => k.t > lastBar);
+      const line = [...bars.map((b) => ({ t: new Date(+b.t + 59000), p: b.close })), ...live];
+      note.textContent = timer ? `Streaming every 15 s · ${live.length} live tick${live.length === 1 ? '' : 's'}` : 'Paused. Tap Live to resume.';
+      const W = Math.max(260, box.clientWidth), H = 280, lo = d3.min([...bars.map((b) => b.low), ...live.map((k) => k.p)]), hi = d3.max([...bars.map((b) => b.high), ...live.map((k) => k.p)]);
+      const y = d3.scaleLinear([lo, hi], [H - 22, 10]).nice(), svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Live gold price');
+      const ya = svg.append('g').call(d3.axisRight(y).ticks(5).tickSize(0).tickFormat(gd.p1)); ya.select('.domain').remove();
+      ya.selectAll('text').attr('fill', 'var(--dim)').style('font-size', '10px').style('font-family', 'var(--mono)');
+      const yw = d3.max(ya.selectAll('text').nodes(), (n) => n.getComputedTextLength()) || 40, r = W - yw - 12; ya.attr('transform', `translate(${W - yw - 4},0)`).selectAll('text').attr('x', 0);
+      const x = d3.scaleTime([bars[0].t, new Date(Math.max(+lastBar + 6e4, live.length ? +live[live.length - 1].t + 15000 : 0))], [0, r]);
+      svg.append('g').selectAll('text').data(x.ticks(Math.max(2, Math.floor(r / 90)))).join('text').attr('x', x).attr('y', H - 4).attr('text-anchor', 'middle').attr('fill', 'var(--dim)').style('font-size', '10px').style('font-family', 'var(--mono)').text(gd.hm);
+      const bw = Math.max(2, (x(new Date(+bars[0].t + 6e4)) - x(bars[0].t)) * 0.6), col = (b) => (b.close >= b.open ? 'var(--up)' : 'var(--down)');
+      const c = svg.append('g').attr('opacity', .45).selectAll('g').data(bars).join('g').attr('transform', (b) => `translate(${x(new Date(+b.t + 30000))},0)`);
+      c.append('line').attr('y1', (b) => y(b.high)).attr('y2', (b) => y(b.low)).attr('stroke', col);
+      c.append('rect').attr('x', -bw / 2).attr('width', bw).attr('y', (b) => y(Math.max(b.open, b.close))).attr('height', (b) => Math.max(1, Math.abs(y(b.open) - y(b.close)))).attr('fill', col);
+      svg.append('path').datum(line).attr('fill', 'none').attr('stroke', 'var(--cyan)').attr('stroke-width', 2).attr('d', d3.line().x((p) => x(p.t)).y((p) => y(p.p)));
+      const end = line[line.length - 1]; svg.append('circle').attr('cx', x(end.t)).attr('cy', y(end.p)).attr('r', 3.5).attr('fill', 'var(--cyan)');
+      box.replaceChildren(svg.node());
+    }
+    dash.onData(() => { const g = dash.data('gold'), row = g.status === 'ok' ? g.data[0] : null; if (row && row !== lastRow) { lastRow = row; ticks.push({ t: new Date(), p: row.mark }); if (ticks.length > 400) ticks.shift(); } draw(); });
+  })();
+</script>
+
+<script>
+  // News bar: today's high-impact windows from the desk, then the past day's headlines.
+  (() => {
+    const list = document.getElementById('gd-news'), topics = document.getElementById('gd-topic'); let key = null;
+    topics.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) dash.setParams({ news_q: b.dataset.q }); });
+    dash.onData(() => {
+      const q = dash.params().news_q || 'gold price XAUUSD';
+      topics.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.q === q)));
+      const d = dash.data('news'), ev = gd.rows('desk').filter((r) => r.kind === 'event'), seen = new Set();
+      const heads = (d.status === 'ok' ? d.data : []).filter((n) => { const k = String(n.title).toLowerCase().slice(0, 60); if (seen.has(k)) return false; seen.add(k); return true; });
+      const k = JSON.stringify([q, d.status, ev.map((r) => r.id), heads.map((n) => n.title)]); if (k === key) return; key = k;
+      list.replaceChildren(); list.classList.remove('moving');
+      if (!ev.length && !heads.length) { list.append(gd.el('span', d.status === 'loading' ? 'gd-note' : 'gd-note', d.status === 'loading' ? 'Loading news…' : 'No headlines in the past day.')); return; }
+      for (let copy = 0; copy < 2; copy++) {
+        if (copy && list.scrollWidth <= list.parentElement.clientWidth) break;
+        ev.forEach((r) => { const it = gd.el('span', 'gd-tick ev'); if (copy) it.setAttribute('aria-hidden', 'true'); it.append(gd.el('span', 'm', '⏰ ' + gd.hm(r.note) + ' London · high impact'), gd.el('span', 't', r.strategy)); list.append(it); });
+        heads.forEach((n) => { const it = gd.el('span', 'gd-tick'); if (copy) it.setAttribute('aria-hidden', 'true'); const a = gd.el('a', null, n.title);
+          if (/^https?:\/\//i.test(n.url)) { a.href = n.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; } if (copy) a.tabIndex = -1; it.append(gd.el('span', 'm', [n.site, n.age].filter(Boolean).join(' · ')), a); list.append(it); });
+      }
+      if (list.querySelector('[aria-hidden="true"]')) { list.style.setProperty('--dur', `${Math.max(90, list.scrollWidth / 2 / 22)}s`); list.classList.add('moving'); }
+    });
+  })();
+</script>
+
+<script>
+  // Lot sizer: fills from the open trade or the desk's dip level until the reader edits it.
+  (() => {
+    const $ = (id) => document.getElementById(id); let touched = false, seeded = null;
+    ['ps-entry', 'ps-stop'].forEach((id) => $(id).addEventListener('input', () => { touched = true; }));
+    ['ps-bal', 'ps-risk', 'ps-entry', 'ps-stop'].forEach((id) => $(id).addEventListener('input', calc));
+    const src = () => { const rows = gd.rows('desk'), o = rows.find((r) => r.kind === 'trade' && r.status === 'Open'); if (o) return ['Open trade · ' + o.side, o.entry, o.stop];
+      const b = rows.find((r) => r.kind === 'best'); return b && b.entry != null ? ['Dip level · ' + b.side, b.entry, b.stop] : null; };
+    const seed = (force) => { const a = gd.rows('desk').find((r) => r.kind === 'account'); if (a && !$('ps-bal').value) $('ps-bal').value = a.entry.toFixed(2);
+      const s = src(); if (!s || (touched && !force)) return calc(); const k = s.join(); if (!force && k === seeded) return; seeded = k; touched = false;
+      $('ps-entry').value = s[1]; $('ps-stop').value = s[2]; $('ps-src').textContent = 'From: ' + s[0]; calc(); };
+    $('ps-reload').addEventListener('click', () => seed(true));
+    function calc() {
+      const bal = +$('ps-bal').value, risk = +$('ps-risk').value / 100, e = +$('ps-entry').value, s = +$('ps-stop').value, dist = Math.abs(e - s);
+      const out = (id, t, c) => { $(id).textContent = t; $(id).className = c || ''; };
+      if (!(bal > 0 && risk > 0 && e > 0 && s > 0 && dist > 0)) { ['ps-side', 'ps-lots', 'ps-usd', 'ps-dist'].forEach((id) => out(id, '—')); $('ps-warn').textContent = 'Enter a balance, risk, entry and a stop away from the entry.'; return; }
+      const lots = Math.floor((bal * risk) / (dist * 100) * 100 + 1e-9) / 100;
+      out('ps-side', s < e ? 'BUY' : 'SELL', s < e ? 'gd-up' : 'gd-down'); out('ps-dist', '$' + dist.toFixed(2));
+      if (lots >= 0.01) { out('ps-lots', lots.toFixed(2), 'gd-up'); out('ps-usd', gd.usd(lots * dist * 100)); $('ps-warn').textContent = dist > 10 ? 'Over the desk’s $10 stop limit at 0.01 lot: the desk would skip this.' : ''; }
+      else { out('ps-lots', '0.01', dist <= bal * risk * 2 ? 'gd-up' : 'gd-down'); out('ps-usd', gd.usd(dist)); $('ps-warn').textContent = `Your target risk ($${(bal * risk).toFixed(2)}) is below the smallest size; 0.01 lot risks $${dist.toFixed(2)}.`; }
+    }
+    dash.onData(() => seed(false));
+  })();
+</script>
+
+<script>
+  // Crown: the dashboard cannot use the microphone or open the live voice connection, so this button reads Crown's
+  // latest desk briefing (from the desk file) aloud with the device's own voice, plus the live price now.
+  // The "Talk to Crown live" link opens the ElevenLabs agent in a new tab for a two-way voice conversation.
+  (() => {
+    const btn = document.getElementById('gd-crown'), msg = document.getElementById('gd-crown-msg');
+    const synth = window.speechSynthesis;
+    const glow = (on) => { const d = document.getElementById('gd-dial'), r = document.querySelector('.gd'), sy = document.getElementById('gd-crown-say');
+      if (d) d.classList.toggle('speaking', on); if (r) r.classList.toggle('speaking', on); if (sy) sy.textContent = on ? 'CROWN SPEAKING' : 'TAP CROWN'; };
+    const idle = () => { btn.dataset.state = 'idle'; btn.setAttribute('aria-pressed', 'false'); btn.textContent = "🔊 HEAR CROWN'S UPDATE"; glow(false); };
+    const pickVoice = () => { const vs = synth ? synth.getVoices() : []; return vs.find((v) => /en-GB/i.test(v.lang) && /daniel|male|george|arthur/i.test(v.name)) || vs.find((v) => /en-GB/i.test(v.lang)) || vs.find((v) => /^en/i.test(v.lang)) || null; };
+    const spoken = (t) => t.replace(/(\d)\.(\d)/g, '$1 point $2').replace(/\bEMA(\d+)/g, 'E M A $1').replace(/\b5m\b/g, '5 minute').replace(/\b1H\b/g, 'one hour').replace(/\b4H\b/g, 'four hour');
+    // Crown's own voice (Ian, ElevenLabs): the desk records the briefing and uploads it; play that when it is under 2 hours old.
+    let audio = null;
+    const stopAll = () => { if (audio) { audio.pause(); audio = null; } if (synth) synth.cancel(); idle(); };
+    btn.addEventListener('click', () => {
+      if (btn.dataset.state === 'live') { stopAll(); msg.textContent = 'Stopped.'; return; }
+      const b = gd.rows('desk').find((r) => r.kind === 'brief'), g = gd.rows('gold')[0];
+      if (!b || !b.note) { msg.textContent = 'Crown’s briefing has not loaded yet. Try again in a moment.'; return; }
+      const vAge = b.status ? (Date.now() - Date.parse(b.status)) / 6e4 : Infinity;
+      const playRec = (note) => {
+        audio = new Audio(b.last); audio.preload = 'auto';
+        btn.dataset.state = 'live'; btn.setAttribute('aria-pressed', 'true'); btn.textContent = '■ STOP'; glow(true);
+        msg.textContent = `▶ Playing Crown’s update (Ian’s voice), recorded ${gd.hm(b.status)} London.`;
+        audio.onplaying = () => glow(true); audio.onpause = () => { if (audio && !audio.ended) glow(false); }; audio.onended = idle; audio.onerror = () => { audio = null; idle(); msg.textContent = 'Crown’s recording would not play here; tap again to hear it in your device’s voice.'; b.last = null; };
+        if (note) msg.textContent = note;
+        audio.play().catch(() => { audio = null; idle(); msg.textContent = 'Tap again to play Crown’s recording (your browser blocked autoplay).'; });
+      };
+      const hasRec = b.last && /^\/_blob\//.test(b.last);
+      if (hasRec && vAge < 120) { playRec(); return; }
+      // Device voice. Many phones and in-app browsers stay silent here, so if it has not started within 2.5 s,
+      // play Crown's latest recording instead (with its time), or point to the live link.
+      if (synth) setTimeout(() => {
+        if (btn.dataset.state !== 'live' || synth.speaking || audio) return;
+        synth.cancel();
+        if (hasRec) playRec(`▶ Your device voice stayed silent, so this is Crown’s last recording (Ian’s voice) from ${gd.hm(b.status)} London.`);
+        else { idle(); msg.textContent = 'Your device did not read it aloud. Use “Talk to Crown live” to hear Crown.'; }
+      }, 2500);
+      if (!synth) { if (hasRec) { playRec(`▶ Crown’s last recording (Ian’s voice), from ${gd.hm(b.status)} London.`); return; } msg.textContent = 'This browser cannot read aloud. Use “Talk to Crown live” instead.'; return; }
+      const age = Math.round((Date.now() - Date.parse(b.at)) / 6e4);
+      const now = g ? ` Right now, at ${gd.hm(new Date())}, gold is ${Math.round(g.mark)}.` : '';
+      const text = b.note + now;
+      msg.textContent = `▶ Reading Crown’s update aloud (briefing from ${gd.hm(b.at)} London${age > 20 ? ', ' + age + ' minutes ago' : ''}).`;
+      synth.cancel();
+      const parts = spoken(text).split(/(?<=[.!?])\s+/).filter(Boolean), v = pickVoice();
+      parts.forEach((p, i) => { const u = new SpeechSynthesisUtterance(p); u.lang = 'en-GB'; if (v) u.voice = v; u.rate = 0.98;
+        if (i === parts.length - 1) { u.onend = idle; u.onerror = idle; } synth.speak(u); });
+      btn.dataset.state = 'live'; btn.setAttribute('aria-pressed', 'true'); btn.textContent = '■ STOP'; glow(true);
+    });
+    if (synth) synth.onvoiceschanged = () => {};
+    window.addEventListener('pagehide', () => { if (synth) synth.cancel(); });
+  })();
+</script>
+
+<script>
+  // Neon skin: mirror desk values into the tiles and turn the dial.
+  (() => {
+    const tx = (el) => (el ? (el.querySelector('span') && el.classList.contains('gd-dot') ? el.querySelector('span') : el).textContent.trim() : '');
+    const tick = () => {
+      const dir = document.querySelector('#gd-now .gd-dir');
+      const sig = dir ? (dir.querySelector('b') || dir).textContent.trim() : '—';
+      const cls = dir ? (dir.classList.contains('sell') ? 'sell' : dir.classList.contains('buy') ? 'buy' : '') : '';
+      const s = document.getElementById('gd-dial-sig'); if (s) { s.textContent = sig || '—'; s.className = 'sig ' + cls; }
+      document.querySelectorAll('[data-mirror]').forEach((t) => {
+        const id = t.dataset.mirror; const v = id === 'gd-now-sig' ? sig : tx(document.getElementById(id));
+        if (v && t.textContent !== v) t.textContent = v;
+        if (t.dataset.tone) { t.classList.toggle('gd-up', /^\+/.test(v)); t.classList.toggle('gd-down', /^[-−]/.test(v)); }
+      });
+      const r = parseFloat((document.getElementById('gd-dial-rsi') || {}).textContent);
+      const n = document.getElementById('gd-needle'); if (n && isFinite(r)) n.style.setProperty('--a', (-135 + Math.max(0, Math.min(100, r)) * 2.7) + 'deg');
+    };
+    tick(); setInterval(tick, 1500);
+  })();
+</script>
+<script>
+  // Who is in control: fill the +DI / -DI tug of war from the technicals feed.
+  window.gdDMI = (tr) => {
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    const bar = (k, d) => { const p = document.getElementById('ctl' + k + 'p'), m = document.getElementById('ctl' + k + 'm');
+      if (!p || !m) return; if (!d) { set('ctl' + k + 'a', 'ADX —'); return; }
+      const t = (d.pdi + d.mdi) || 1; p.style.flexBasis = (100 * d.pdi / t) + '%'; m.style.flexBasis = (100 * d.mdi / t) + '%';
+      p.textContent = '+DI ' + d.pdi.toFixed(1); m.textContent = '−DI ' + d.mdi.toFixed(1); set('ctl' + k + 'a', 'ADX ' + d.adx.toFixed(1)); };
+    const d = tr && tr.pdi != null ? { pdi: tr.pdi, mdi: tr.mdi, adx: tr.adx, control: tr.ctl, strength: tr.str } : null, d5 = tr && tr.pdi5 != null ? { pdi: tr.pdi5, mdi: tr.mdi5, adx: tr.adx5, control: tr.ctl5 } : null; bar('15', d); bar('5', d5);
+    const d4 = tr && tr.pdi4 != null ? { pdi: tr.pdi4, mdi: tr.mdi4, adx: tr.adx4, control: tr.ctl4, strength: tr.str4 } : null; bar('4', d4);
+    const b = document.getElementById('ctl-side'); if (!b) return;
+    if (!d) { b.textContent = '—'; b.className = ''; set('ctl-sub', 'No DI data yet.'); return; }
+    b.textContent = (d.control === 'sellers' ? '▼ SELLERS' : '▲ BUYERS') + ' IN CONTROL'; b.className = d.control;
+    const agree = d5 ? (d5.control === d.control ? `the 5m agrees (${d5.control})` : `but the 5m leans to ${d5.control}`) : '';
+    const str = { strong: 'strong grip', building: 'grip building', weak: 'weak grip, no clear trend' }[d.strength] || d.strength;
+    const big = d4 ? ` H4: ${d4.control} in control (ADX ${d4.adx.toFixed(1)}, ${d4.strength})${d4.control === d.control ? ', same side as the 15m' : ', against the 15m'}.` : '';
+    set('ctl-sub', `15m: −DI ${d.mdi.toFixed(1)} vs +DI ${d.pdi.toFixed(1)}, ADX ${d.adx.toFixed(1)} (${str}); ${agree}.${big}`);
+  };
+</script>
+<script>
+  // Crown glows in the dial while speaking; tapping the crown plays or stops the update.
+  (() => {
+    const btn = document.getElementById('gd-crown'), dial = document.getElementById('gd-dial'), orb = document.getElementById('gd-crownorb'), say = document.getElementById('gd-crown-say'), root = document.querySelector('.gd');
+    if (!btn || !dial) return;
+    const sync = () => { const on = btn.dataset.state === 'live'; dial.classList.toggle('speaking', on); if (root) root.classList.toggle('speaking', on);
+      if (say) say.textContent = on ? 'CROWN SPEAKING' : 'TAP CROWN'; if (orb) orb.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+    new MutationObserver(sync).observe(btn, { attributes: true, attributeFilter: ['data-state'] });
+    setInterval(() => { const on = btn.dataset.state === 'live'; if (on !== dial.classList.contains('speaking')) sync(); }, 400);
+    if (orb) orb.addEventListener('click', () => btn.click());
+    sync();
+  })();
+</script>

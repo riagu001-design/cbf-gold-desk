@@ -46,7 +46,7 @@ def main():
     hours = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380 or mins < 360)
     rows.append(dict(kind='status', id='checker', status='running' if running else 'stopped', note=last, at=iso(now),
                      side=None, entry=mark, stop=None, target=None, result=None,
-                     strategy='Rules v3.9 trend-day dip, sells only, 24h Sun 23:00-Fri 20:00 London', last='in hours' if hours else 'outside hours'))
+                     strategy='Neural Brain v1: H1, M15, 4H and swing engines propose; the brain scores and sends 85+ only', last='in hours' if hours else 'outside hours'))
 
     # trend and the dip level, as the checker sees them
     hi, lo = a.swings(h1)
@@ -148,6 +148,16 @@ def main():
                          target=None, result=None, status=v.get('at'), strategy='Ian', last=v.get('url')))
     except (OSError, ValueError):
         pass
+    # CrownBearer Neural Brain: learning review, then the decision status (score, verdicts, registry, recommendations)
+    try:
+        import sys; sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'brain'))
+        import learn, core
+        learn.review(); bs = core.status()
+        rows.append(dict(kind='brain', id='brain', status='operational', at=iso(now), side=bs.get('now', {}).get('best', {}).get('side'),
+                         entry=None, stop=None, target=None, result=None, strategy='CrownBearer Neural Brain', note='', last='', brain=bs))
+    except Exception as ex:
+        rows.append(dict(kind='brain', id='brain', status=f'error {type(ex).__name__}: {ex}', at=iso(now), side=None, entry=None, stop=None,
+                         target=None, result=None, strategy='CrownBearer Neural Brain', note='', last='', brain={}))
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(rows, open(OUT, 'w'), indent=0)
     print(f'{len(rows)} rows -> {OUT}; best {best["status"]} {best["side"]} {best["entry"]}; why: {best["last"]}')

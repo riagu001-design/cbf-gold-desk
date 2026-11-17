@@ -16,7 +16,8 @@ Modes:  daily   (run by the session once a day after 22:00 London, after refresh
         status  (run by loop.sh every 5 min): one log line with the live price against the setup levels. Never orders."""
 import json, os, sys, datetime as dt
 sys.path.insert(0, os.path.dirname(__file__))
-from auto_scan import send_telegram, L, API, LINE
+from auto_scan import L, API, LINE
+from brain_link import propose, finish  # 17 Nov: the Neural Brain decides and publishes; this engine only proposes
 import requests
 G = '/home/user/gold-desk'; DAILY, MACRO, ST, LOG = f'{G}/gold_daily.json', f'{G}/macro_weekly.json', f'{G}/swing_state.json', f'{G}/swing_log.csv'
 MSG, RES = f'{G}/scan_msg.txt', f'{G}/scan_result.txt'
@@ -43,10 +44,7 @@ def mark():
     m = requests.post(API, json={'type': 'metaAndAssetCtxs', 'dex': 'xyz'}, timeout=20).json()
     return [float(x['markPx']) for u, x in zip(m[0]['universe'], m[1]) if u['name'] == 'xyz:GOLD'][0]
 def send(text, fb):
-    if os.environ.get('SCAN_TEST') == '1': print('MESSAGE (test, not sent):\n' + text); return 'test'
-    r = send_telegram(text)
-    if not r.startswith('ok'): open(fb, 'w').write(text)
-    return r
+    raise PermissionError("17 Nov 2026: strategy engines may not publish; propose to the Neural Brain (brain_link.propose)")
 def logrow(row):
     new = not os.path.exists(LOG)
     with open(LOG, 'a') as f:
@@ -68,9 +66,8 @@ def daily():
         if how:
             R = round((sg * (ex - pos['entry']) - 0.4) / pos['risk'], 2)
             logrow(dict(pos, closed=pos['last_day'], exit=ex, R=R, how=how)); st['open'] = None
-            r = send('\n'.join([f'🧪 PAPER TEST · GOLD SWING CLOSED ({how})', LINE, f'{pos["side"]} from {pos["entry"]:.1f} (futures prices; opened {pos["opened"]})',
-                                f'🏁 Exit {ex:.1f} · result {R:+.2f}R = {"+" if R >= 0 else "−"}${abs(R) * BALANCE * RISK:.2f} at 1% risk', 'Not a real trade: nothing to do in MT5.']), RES)
-            json.dump(st, open(ST, 'w'), indent=1); print(f'swing daily {x["d"]}: paper {pos["side"]} closed {how} {R:+.2f}R; Telegram {r}'); return
+            r = finish(pos, ex - basis, how, now)  # brain works in desk (spot) prices
+            json.dump(st, open(ST, 'w'), indent=1); print(f'swing daily {x["d"]}: paper {pos["side"]} closed {how} {R:+.2f}R; {r}'); return
         json.dump(st, open(ST, 'w'), indent=1); print(f'swing daily {x["d"]}: paper {pos["side"]} open, day {pos["days"]}'); return
     up, dn = e50[i] > e200[i], e50[i] < e200[i]
     buy = up and x['l'] <= e21[i] and x['c'] > e21[i] and x['c'] > x['o']
@@ -87,12 +84,9 @@ def daily():
     oz = round(BALANCE * RISK / R, 4)
     st['open'] = dict(opened=x['d'], side=side, entry=en, stop=stop, target=tgt, risk=R, days=0, last_day=x['d'])
     logrow(dict(opened=x['d'], side=side, entry=en, stop=stop, target=tgt))
-    r = send('\n'.join([f'🧪 PAPER TEST · GOLD SWING {side} {"🟢" if buy else "🔴"}', 'Not a real trade: watch only, nothing to do in MT5.', LINE,
-                        f'📍 Entry ~{px:.1f} now (futures close {en:.1f}; spot is about ${basis:+.0f} away)',
-                        f'🛑 Stop {stop - basis:.1f} spot (−${R:.0f} per oz) · 🎯 Target {tgt - basis:.1f} spot (2R)',
-                        f'⚖️ 1% risk of ${BALANCE:.0f} = {oz} oz. At 0.01 lot (1 oz) the risk would be ${R:.0f}.',
-                        f'📊 Daily trend {"up" if buy else "down"}, pullback to the 21-day EMA, confirmation candle; macro {mb}', '⏰ Out at the stop, the target or after 30 trading days']), MSG)
-    json.dump(st, open(ST, 'w'), indent=1); print(f'swing daily {x["d"]}: PAPER {side} {en:.1f} stop {stop} target {tgt}; Telegram {r}')
+    dec, r = propose('SWING', side, px, stop - basis, 'the 2R target, the stop, or 30 trading days', f'macro bias {mb}; daily setup, prices converted from futures (basis {basis:+.0f})', target=tgt - basis)
+    st['open']['brain_id'] = dec.get('id')
+    json.dump(st, open(ST, 'w'), indent=1); print(f'swing daily {x["d"]}: PAPER {side} {en:.1f} stop {stop} target {tgt}; {r}')
 def status():
     now = dt.datetime.now(L); tag = now.strftime('%H:%M')
     st = json.load(open(ST)) if os.path.exists(ST) else {}; lv = st.get('levels'); px = mark()

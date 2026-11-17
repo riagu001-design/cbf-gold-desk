@@ -3,6 +3,8 @@
   python3 weekly_live.py [YYYY-MM-DD any day of the week]  -> writes /home/user/gold-desk/weekly_msg.txt and sends it."""
 import csv, datetime as dt, sys
 import auto_scan as a
+sys.path.insert(0, __import__('os').path.dirname(__file__) + '/brain')
+import publisher  # the brain's single Telegram channel
 
 START = 194.74  # balance at the 30 Oct weekly report
 day = dt.date.fromisoformat(sys.argv[1]) if len(sys.argv) > 1 else dt.datetime.now(a.L).date()
@@ -29,4 +31,4 @@ msg = (f"📊 GOLD DESK · WEEKLY REPORT\nWeek {mon:%d %b}–{fri:%d %b %Y} · 0
        f"💰 Result: {pl:+.2f}$\n💼 Account: about ${START + before + pl:.2f} (from ${START + before:.2f} at the start of the week)\n{L}\n"
        "ℹ️ Spread not included; MT5 prices run about $3–4 below the desk feed.")
 open('/home/user/gold-desk/weekly_msg.txt', 'w').write(msg)
-print(msg); print('Telegram:', a.send_telegram(msg) if '--dry' not in sys.argv else 'dry run')
+print(msg); print('Telegram:', publisher.publish(msg, 'report') if '--dry' not in sys.argv else 'dry run')

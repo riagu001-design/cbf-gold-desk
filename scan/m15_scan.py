@@ -13,7 +13,8 @@ Run every 5 minutes by loop.sh. Never places orders."""
 import csv, datetime as dt, json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from auto_scan import candles, ema, news_block, ldn, L, LINE
-from ema_scan import atr_s, mark, send, BALANCE, RISK
+from ema_scan import atr_s, mark, BALANCE, RISK
+from brain_link import propose, finish  # 17 Nov: the Neural Brain decides and publishes; this engine only proposes
 G = '/home/user/gold-desk'; ST, LOG = f'{G}/m15_state.json', f'{G}/m15_log.csv'; MSG, RES = f'{G}/scan_msg.txt', f'{G}/scan_result.txt'
 FIELDS = ['opened', 'side', 'entry', 'stop', 'risk', 'closed', 'exit', 'usd_001', 'R', 'how', 'h4']
 def rows():
@@ -45,10 +46,8 @@ def main():
                 if r['opened'] == pos['opened'] and not r['closed']:
                     r.update(closed=xt.strftime('%Y-%m-%d %H:%M'), exit=f'{ex:.1f}', usd_001=f'{pl:+.2f}', R=f'{R:+.2f}', how=how)
             save(rs); st['open'] = None; done_ = [float(r['R']) for r in rs if r['R']]
-            r = send('\n'.join([f'🧪 PAPER TEST · M15 ENTRY TRADE CLOSED ({how})', LINE, f'{"🟢" if buy else "🔴"} {pos["side"]} from {pos["entry"]:.1f} (opened {pos["opened"][5:]} London)',
-                                f'🏁 Exit {ex:.1f} at {xt.strftime("%a %H:%M")} London', f'💰 {R:+.2f}R = {"+" if R >= 0 else "−"}${abs(R) * BALANCE * RISK:.2f} at 1% risk ({"+" if pl >= 0 else "−"}${abs(pl):.2f} per oz)',
-                                LINE, f'📒 M15 paper test so far: {len(done_)} trades, {sum(done_):+.1f}R', 'Not a real trade: nothing to do in MT5.']), RES)
-            return out(f'M15 paper {pos["side"]} closed ({how}) at {ex:.1f}: {R:+.2f}R; Telegram {r}')
+            r = finish(pos, ex, how, xt)
+            return out(f'M15 paper {pos["side"]} closed ({how}) at {ex:.1f}: {R:+.2f}R; {r}')
         st['open'] = pos; return out(f'M15 paper {pos["side"]} open from {pos["entry"]:.1f}, stop {pos["stop"]:.1f}')
     closed = wd == 5 or (wd == 6 and mins < 1380) or (wd == 4 and mins >= 19 * 60) or 1320 <= mins < 1380
     if not (wd < 5 and 7 <= now.hour < 17): return out(f'M15 test: no new entries outside 07:00-17:00 London (H1 {h1s.lower()})')
@@ -61,12 +60,9 @@ def main():
     if blocked: return out(f'M15 test: cross but news block ({note})')
     buy = d == 'UP'; sg = 1 if buy else -1; side = 'BUY' if buy else 'SELL'; stop = round(px - sg * 2 * A[-1], 1); risk = round(abs(px - stop), 2)
     oz = round(BALANCE * RISK / risk, 4); opened = now.strftime('%Y-%m-%d %H:%M'); h4w = 'with' if t4 == d else 'against'
-    r = send('\n'.join([f'🧪 PAPER TEST · GOLD M15 ENTRY {side} {"🟢" if buy else "🔴"}', 'Not a real trade: watch only, nothing to do in MT5.', LINE,
-                        f'📍 Entry {px:.1f} (15m EMA9 crossed {"above" if buy else "below"} EMA21; H1 confirms; H4 {t4.lower()}: {h4w} it)',
-                        f'🛑 Stop {stop:.1f} (2 x 1H ATR, −${risk:.0f} per oz) · exit when the H1 EMA9/21 flips',
-                        f'⚖️ 1% risk of ${BALANCE:.0f} = {oz} oz. At 0.01 lot (1 oz) the risk would be ${risk:.0f}.', f'🕐 Signal {tag} London'] + ([f'📰 {note}'] if note else [])), MSG)
+    dec, r = propose('M15', side, px, stop, 'the 1H EMA 9/21 flipping against it (or Friday 21:00)', note)
     rs.append(dict(opened=opened, side=side, entry=f'{px:.1f}', stop=f'{stop:.1f}', risk=f'{risk:.2f}', h4=h4w)); save(rs)
-    st['open'] = dict(opened=opened, side=side, entry=px, stop=stop, risk=risk, checked_ms=m15[-1]['T'] + 1)
-    return out(f'M15 PAPER {side} {px:.1f} stop {stop:.1f}; Telegram {r}')
+    st['open'] = dict(opened=opened, side=side, entry=px, stop=stop, risk=risk, brain_id=dec.get('id'), checked_ms=m15[-1]['T'] + 1)
+    return out(f'M15 PAPER {side} {px:.1f} stop {stop:.1f}; {r}')
 if __name__ == '__main__':
     main()
