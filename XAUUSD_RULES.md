@@ -1,3 +1,11 @@
+# NEWS RULE (18 Nov 2026, Woody) — applies to every engine and every grade
+⚠️ No new trades 5 min before / 5 min after high-impact news.
+- High-impact = USD releases such as CPI, NFP, PCE, FOMC (rate decision and Minutes), GDP, Fed chair, jobless claims, ISM, retail sales.
+- Enforced centrally by the Neural Brain's news gate (scan/brain/core.py, auto_scan.news_block): any setup proposed in that window is REJECTED, never sent. Times are London time.
+- When there is news that day, the Telegram market updates show it in this form:
+  ⏰ High-impact today (London): / <time> <release> / ⚠️ No new trades 5 min before / 5 min after these.
+- Setups 6-15 min either side are still allowed but carry a ⚠️ NEWS WINDOW warning (wide spreads, fast spikes).
+
 # 18 Nov 2026 (Woody: "going days without a setup ... fix that", then "do it"): THREE LEVELS ON TELEGRAM
 1. 🟢 A-GRADE signal: brain score 85+ and every check passed. Full size ($50 risk). About 1 a week (unseen half: +0.79R per trade).
 2. 🟡 B-GRADE signal: score 75-84 and every check passed. HALF size ($25 risk), marked "take smaller or skip". About 1-2 a week (unseen half: about +0.05R per trade, close to break-even). An A-grade setup may replace an active same-side B-grade signal.
@@ -150,7 +158,7 @@ worst drop $44 (first half -$3, second half +$47). Unproven: small sample, uneve
 - No new trades 21:00-01:00 London, at weekends, or after 19:00 London on Fridays.
 
 ## 8. News
-- News rule from 16 Nov (Woody's call): no new entries from 5 min before to 5 min after high-impact USD news (CPI, NFP, PCE, FOMC, GDP, Fed chair, jobless claims, ISM, retail sales). Setups 6-15 min either side are still sent, with a ⚠️ NEWS WINDOW warning (wide spreads, fast spikes). (6-15 Nov: no block, warning only.)
+- News rule (16 Nov, confirmed 18 Nov, Woody): ⚠️ No new trades 5 min before / 5 min after high-impact USD news (CPI, NFP, PCE, FOMC, GDP, Fed chair, jobless claims, ISM, retail sales). Setups 6-15 min either side are still sent, with a ⚠️ NEWS WINDOW warning (wide spreads, fast spikes). (6-15 Nov: no block, warning only.)
 
 ## 9. Risk limits
 - One open trade at a time, 0.01 lot.
