@@ -69,7 +69,7 @@ def review():
                                       action='candidate for the score: run the backtest below before applying'))
     # 3. strategy health: last 20 live outcomes per strategy against its evidence
     m, ev = S.load_model()
-    for s in ('H1', 'M15', '4H', 'SWING'):
+    for s in ('H1', 'M15', '4H', 'ASIA', 'SWING'):
         rs = [r['R'] for r in out if r['strategy'] == s][-20:]
         exp = m['base'].get(s) if s != 'SWING' else None
         if rs:

@@ -1,3 +1,8 @@
+# 18 Nov 2026 (Woody: "add Asia low / Asia high to the M15 entry, H1 bias, 2am to 9am, high quality entry before London"): A4 ASIA RANGE BREAKOUT paper engine (scan/asia_scan.py)
+Asia high/low = 15m candles 23:00-04:00 London. Entry 04:00-09:00 London weekdays: a 15m candle closes beyond the Asia high (buy) or low (sell), the previous close inside, the 1H EMA9/21 bias AND the 4H EMA50/200 trend agree. Market order at the close, one a day. Stop 1 x 1H ATR, target 2R, out 16:00.
+Research (backtest/research_2026-11-18/): train 45 trades +27.5R PF 2.34, unseen 34 trades +10.8R PF 1.58; neighbouring settings profitable in both halves. A 02:00 start (range 23:00-02:00), sweep-and-reclaim entries, and breakouts without the H4 trend all LOST on the unseen half, so they are not used.
+Brain: scored from its own record (it already contains the H4 and session filters): about 53 today, so it is proposed and paper-tracked but NOT sent to Telegram unless its score reaches 85 (its unseen +0.28R per trade is below the 85+ band's +0.79R).
+
 # 18 Nov 2026 (Woody: "Apply all needed improvement"): brain score v2 adds the trading session (passed its backtest: unseen 85+ band +0.79R on 21 vs +0.54R on 22). Effect: with-trend H1/4H setups from 13:00 London onward (and M15 from 17:00) are SENT; London-morning setups become watchlist. Rollback: python3 scan/brain/learn.py rollback.
 
 # 17 Nov 2026 (Woody's MASTER AI BRAIN spec): CROWNBEARER NEURAL BRAIN decides and sends

@@ -104,11 +104,31 @@ def main():
         buy = up; en = h4[i]['c']; risk = 2 * A4[i]; sl = en - (1 if buy else -1) * risk; tp = en + (1 if buy else -1) * 2 * risk
         r = walk(done(T15, ts) - 1, buy, en, sl, lambda t: False, tp)
         if r: f, raw = ctx('BUY' if buy else 'SELL', en, ts); trades.append(dict(strategy='4H', ts=ts, side='BUY' if buy else 'SELL', f=f, raw=raw, **r))
+    # ASIA range breakout (18 Nov 2026): range 23:00-04:00 London, 15m close beyond it 04:00-09:00 weekdays with the 1H EMA9/21
+    # bias and the 4H EMA50/200 trend, stop 1 x 1H ATR, target 2R, out 16:00. One a day.
+    g50, g200 = ema(c4, 50), ema(c4, 200)
+    days = {}
+    for j, x in enumerate(b15): days.setdefault(ldn(x['t']).date(), []).append(j)
+    for d, idx in sorted(days.items()):
+        if d.weekday() > 4: continue
+        rng = [j for j in days.get(d - dt.timedelta(days=1), []) if ldn(b15[j]['t']).hour >= 23] + [j for j in idx if ldn(b15[j]['t']).hour < 4]
+        if len(rng) < 12: continue
+        ah, al = max(b15[j]['h'] for j in rng), min(b15[j]['l'] for j in rng)
+        end_ts = int(dt.datetime.combine(d, dt.time(16), L).timestamp())
+        for j in [j for j in idx if 4 <= ldn(b15[j]['t']).hour < 9]:
+            x = b15[j]; ts = x['T']
+            if done(T1, ts) < 30 or done(T4, ts) < 200: continue
+            up = x['c'] > ah and b15[j - 1]['c'] <= ah; dn = x['c'] < al and b15[j - 1]['c'] >= al
+            if not (up or dn) or h1_up(ts) != up or (g50[done(T4, ts) - 1] > g200[done(T4, ts) - 1]) != up: continue
+            buy = up; en = x['c']; risk = A1[done(T1, ts) - 1]; sl = en - (1 if buy else -1) * risk; tp = en + (1 if buy else -1) * 2 * risk
+            r = walk(j, buy, en, sl, lambda t, e=end_ts: t >= e, tp)
+            if r: f, raw = ctx('BUY' if buy else 'SELL', en, ts); trades.append(dict(strategy='ASIA', ts=ts, side='BUY' if buy else 'SELL', f=f, raw=raw, **r))
+            break
     trades.sort(key=lambda x: x['ts'])
     for t in trades: t['half'] = 'train' if t['ts'] < SPLIT else 'test'
     json.dump(dict(built=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), source=os.path.basename(SRC), split='2026-06-01',
                    swing=SWING, trades=trades), open(OUT, 'w'))
-    for s in ('H1', 'M15', '4H'):
+    for s in ('H1', 'M15', '4H', 'ASIA'):
         for h in ('train', 'test'):
             r = [t['R'] for t in trades if t['strategy'] == s and t['half'] == h]
             print(f'{s:4s} {h:5s} {len(r):4d} trades  {sum(r):+7.1f}R  avg {sum(r)/max(len(r),1):+.3f}R')

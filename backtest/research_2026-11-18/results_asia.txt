@@ -1,0 +1,64 @@
+range 23-02 break          stop 0.5 tgt 2     out 16:00 | train   84  +27.9R avg +0.33 PF 1.58 win 46% | test   81  -24.0R avg -0.30 PF 0.63 win 25%
+range 23-02 break          stop 0.5 tgt 2     out 12:00 | train   84  +27.9R avg +0.33 PF 1.58 win 46% | test   81  -25.2R avg -0.31 PF 0.61 win 25%
+range 23-04 break          stop 1.0 tgt 1.5   out 12:00 | train   71  +27.2R avg +0.38 PF 2.03 win 57% | test   59   +0.2R avg +0.00 PF 1.01 win 40%
+range 23-04 break          stop 1.0 tgt 1.5   out 16:00 | train   71  +26.0R avg +0.37 PF 1.82 win 56% | test   59   +2.5R avg +0.04 PF 1.07 win 42%
+range 23-04 break          stop 1.0 tgt 2     out 16:00 | train   71  +25.6R avg +0.36 PF 1.67 win 47% | test   59   +4.4R avg +0.08 PF 1.12 win 38%
+range 23-04 break          stop 1.0 tgt 2     out 12:00 | train   71  +24.1R avg +0.34 PF 1.75 win 49% | test   59   +1.3R avg +0.02 PF 1.04 win 37%
+range 23-02 break          stop 1.0 tgt 2     out 12:00 | train   84  +20.8R avg +0.25 PF 1.47 win 45% | test   81  -18.9R avg -0.23 PF 0.66 win 28%
+range 23-02 break          stop 1.0 tgt 1.5   out 12:00 | train   84  +20.5R avg +0.24 PF 1.53 win 51% | test   81  -14.3R avg -0.18 PF 0.72 win 35%
+range 23-02 break          stop 1.0 tgt 1.5   out 16:00 | train   84  +20.0R avg +0.24 PF 1.47 win 51% | test   81   -9.2R avg -0.11 PF 0.82 win 37%
+range 23-02 break          stop 0.5 tgt 1.5   out 16:00 | train   84  +18.4R avg +0.22 PF 1.42 win 51% | test   81  -22.0R avg -0.27 PF 0.63 win 32%
+range 23-02 break          stop 0.5 tgt 1.5   out 12:00 | train   84  +18.4R avg +0.22 PF 1.42 win 51% | test   81  -22.7R avg -0.28 PF 0.62 win 32%
+range 23-02 break          stop 1.0 tgt 2     out 16:00 | train   84  +17.7R avg +0.21 PF 1.36 win 42% | test   81  -14.4R avg -0.18 PF 0.75 win 29%
+range 23-04 sweep          stop 0.5 tgt 2     out 12:00 | train   20   +7.1R avg +0.35 PF 1.67 win 50% | test   25   -8.2R avg -0.33 PF 0.56 win 28%
+range 23-04 sweep          stop 0.5 tgt 1.5   out 16:00 | train   20   +6.5R avg +0.32 PF 1.68 win 55% | test   25   -3.9R avg -0.16 PF 0.77 win 36%
+range 23-04 sweep          stop 0.5 tgt 1.5   out 12:00 | train   20   +6.5R avg +0.32 PF 1.68 win 55% | test   25   -0.7R avg -0.03 PF 0.95 win 44%
+range 23-04 sweep          stop 0.5 tgt 2     out 16:00 | train   20   +3.0R avg +0.15 PF 1.24 win 40% | test   25  -11.4R avg -0.46 PF 0.46 win 20%
+range 23-02 cross_discount stop 0.5 tgt 1.5   out 12:00 | train   12   +2.1R avg +0.18 PF 1.62 win 58% | test    7   +0.9R avg +0.13 PF 1.25 win 42%
+range 23-02 cross_discount stop 0.5 tgt range out 12:00 | train    4   +1.5R avg +0.38 PF 9.00 win 100% | test    3   +0.2R avg +0.06 PF 1.13 win 33%
+range 23-02 cross_discount stop 1.0 tgt 2     out 16:00 | train   12   +1.3R avg +0.10 PF 1.35 win 33% | test    7   +2.1R avg +0.30 PF 1.79 win 57%
+range 23-02 cross_discount stop 1.0 tgt range out 12:00 | train    2   +1.1R avg +0.53 PF 9.00 win 100% | test    3   -0.1R avg -0.05 PF 0.89 win 33%
+range 23-02 cross_discount stop 0.5 tgt 2     out 12:00 | train   12   +0.9R avg +0.08 PF 1.27 win 50% | test    7   +0.9R avg +0.13 PF 1.26 win 42%
+range 23-02 cross_discount stop 1.0 tgt range out 16:00 | train    2   +0.9R avg +0.44 PF 7.76 win 50% | test    3   -0.5R avg -0.16 PF 0.71 win 33%
+range 23-04 cross_discount stop 0.5 tgt 2     out 12:00 | train    5   +0.8R avg +0.17 PF 4.61 win 80% | test    3   +0.3R avg +0.11 PF 1.45 win 33%
+range 23-04 cross_discount stop 0.5 tgt 1.5   out 12:00 | train    5   +0.8R avg +0.17 PF 4.61 win 80% | test    3   +0.3R avg +0.11 PF 1.45 win 33%
+range 23-04 cross_discount stop 1.0 tgt 2     out 12:00 | train    5   +0.7R avg +0.13 PF 4.82 win 80% | test    3   +0.3R avg +0.10 PF 1.52 win 33%
+range 23-04 cross_discount stop 1.0 tgt 1.5   out 12:00 | train    5   +0.7R avg +0.13 PF 4.82 win 80% | test    3   +0.3R avg +0.10 PF 1.52 win 33%
+range 23-02 cross_discount stop 0.5 tgt range out 16:00 | train    4   +0.6R avg +0.15 PF 1.51 win 50% | test    3   -0.4R avg -0.13 PF 0.81 win 33%
+range 23-02 cross_discount stop 1.0 tgt 1.5   out 16:00 | train   12   +0.3R avg +0.02 PF 1.07 win 33% | test    7   +2.4R avg +0.34 PF 1.89 win 57%
+range 23-04 cross_discount stop 0.5 tgt range out 12:00 | train    3   +0.2R avg +0.06 PF 9.00 win 100% | test    2   +0.7R avg +0.35 PF 2.95 win 50%
+range 23-04 cross_discount stop 1.0 tgt range out 12:00 | train    1   +0.0R avg +0.05 PF 9.00 win 100% | test    1   -0.3R avg -0.25 PF 0.00 win 0%
+range 23-04 break          stop 1.0 tgt range out 16:00 | train    0 | test    0
+range 23-04 break          stop 1.0 tgt range out 12:00 | train    0 | test    0
+range 23-04 break          stop 0.5 tgt range out 16:00 | train    0 | test    0
+range 23-04 break          stop 0.5 tgt range out 12:00 | train    0 | test    0
+range 23-02 break          stop 1.0 tgt range out 16:00 | train    0 | test    0
+range 23-02 break          stop 1.0 tgt range out 12:00 | train    0 | test    0
+range 23-02 break          stop 0.5 tgt range out 16:00 | train    0 | test    0
+range 23-02 break          stop 0.5 tgt range out 12:00 | train    0 | test    0
+range 23-04 break          stop 0.5 tgt 2     out 16:00 | train   71   -0.1R avg -0.00 PF 1.00 win 35% | test   59  -11.9R avg -0.20 PF 0.74 win 28%
+range 23-04 break          stop 0.5 tgt 2     out 12:00 | train   71   -0.1R avg -0.00 PF 1.00 win 35% | test   59  -11.9R avg -0.20 PF 0.74 win 28%
+range 23-04 cross_discount stop 1.0 tgt range out 16:00 | train    1   -0.1R avg -0.13 PF 0.00 win 0% | test    1   -0.5R avg -0.52 PF 0.00 win 0%
+range 23-02 cross_discount stop 1.0 tgt 2     out 12:00 | train   12   -0.2R avg -0.02 PF 0.92 win 50% | test    7   +0.4R avg +0.06 PF 1.17 win 57%
+range 23-02 cross_discount stop 1.0 tgt 1.5   out 12:00 | train   12   -0.2R avg -0.02 PF 0.92 win 50% | test    7   +1.3R avg +0.18 PF 1.55 win 57%
+range 23-02 cross_discount stop 0.5 tgt 1.5   out 16:00 | train   12   -0.6R avg -0.05 PF 0.89 win 33% | test    7   +0.3R avg +0.04 PF 1.08 win 42%
+range 23-04 cross_discount stop 0.5 tgt range out 16:00 | train    3   -0.7R avg -0.24 PF 0.37 win 33% | test    2   +0.0R avg +0.01 PF 1.02 win 50%
+range 23-02 cross_discount stop 0.5 tgt 2     out 16:00 | train   12   -1.2R avg -0.10 PF 0.79 win 25% | test    7   +0.6R avg +0.09 PF 1.15 win 42%
+range 23-02 sweep          stop 0.5 tgt 1.5   out 16:00 | train   37   -1.3R avg -0.04 PF 0.94 win 40% | test   46  -15.8R avg -0.34 PF 0.54 win 28%
+range 23-02 sweep          stop 0.5 tgt 1.5   out 12:00 | train   37   -1.3R avg -0.04 PF 0.94 win 40% | test   46  -14.5R avg -0.32 PF 0.57 win 30%
+range 23-04 cross_discount stop 0.5 tgt 2     out 16:00 | train    5   -1.9R avg -0.38 PF 0.19 win 20% | test    3   +0.5R avg +0.17 PF 1.49 win 66%
+range 23-04 cross_discount stop 0.5 tgt 1.5   out 16:00 | train    5   -1.9R avg -0.38 PF 0.19 win 20% | test    3   +0.5R avg +0.17 PF 1.49 win 66%
+range 23-04 cross_discount stop 1.0 tgt 2     out 16:00 | train    5   -1.9R avg -0.38 PF 0.16 win 20% | test    3   +0.7R avg +0.23 PF 2.33 win 66%
+range 23-04 cross_discount stop 1.0 tgt 1.5   out 16:00 | train    5   -1.9R avg -0.38 PF 0.16 win 20% | test    3   +0.7R avg +0.23 PF 2.33 win 66%
+range 23-04 break          stop 0.5 tgt 1.5   out 16:00 | train   71   -2.6R avg -0.04 PF 0.94 win 40% | test   59  -17.9R avg -0.30 PF 0.59 win 30%
+range 23-04 break          stop 0.5 tgt 1.5   out 12:00 | train   71   -2.6R avg -0.04 PF 0.94 win 40% | test   59  -17.9R avg -0.30 PF 0.59 win 30%
+range 23-02 sweep          stop 0.5 tgt range out 12:00 | train   35   -3.6R avg -0.10 PF 0.86 win 28% | test   39  -14.7R avg -0.38 PF 0.55 win 20%
+range 23-02 sweep          stop 0.5 tgt 2     out 12:00 | train   37   -5.0R avg -0.13 PF 0.81 win 32% | test   46  -11.0R avg -0.24 PF 0.68 win 28%
+range 23-04 sweep          stop 0.5 tgt range out 12:00 | train   20   -5.0R avg -0.25 PF 0.66 win 30% | test   24  -13.6R avg -0.57 PF 0.30 win 20%
+range 23-02 sweep          stop 0.5 tgt range out 16:00 | train   35   -5.8R avg -0.16 PF 0.80 win 22% | test   39  -13.6R avg -0.35 PF 0.60 win 17%
+range 23-02 sweep          stop 0.5 tgt 2     out 16:00 | train   37   -5.8R avg -0.16 PF 0.79 win 29% | test   46  -12.3R avg -0.27 PF 0.65 win 26%
+range 23-04 sweep          stop 0.5 tgt range out 16:00 | train   20  -13.7R avg -0.68 PF 0.28 win 10% | test   24  -18.3R avg -0.76 PF 0.22 win 8%
+
+NO H1 BIAS (both sides), sweep, range 23-02, tgt 2, out 12:
+with-bias     62   -9.2R avg -0.15 PF 0.80 win 30%
+against      120   +0.3R avg +0.00 PF 1.00 win 35%

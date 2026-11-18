@@ -20,6 +20,10 @@ try:  # the live set is versioned in brain/config.json (learn.py apply / rollbac
 except (OSError, ValueError):
     pass
 EVIDENCE = '/home/user/gold-desk/brain/evidence.json'
+# Engines whose own rules already require the H4 trend and a fixed session (ASIA: 04:00-09:00, H4 trend must agree).
+# They are scored from their own shrunk record only: adding the H4/session effects would count the filter twice,
+# and their trades are kept out of the feature fit so they do not distort it for the other engines.
+OWN_RECORD = {'ASIA'}
 
 
 def fit(trades):
@@ -30,7 +34,9 @@ def fit(trades):
     delta = {}
     for f in SCORE_FEATURES:
         groups = {}
-        for t in trades: groups.setdefault(t['f'].get(f, 'unknown'), []).append(t['R'] - base[t['strategy']])
+        for t in trades:
+            if t['strategy'] in OWN_RECORD: continue
+            groups.setdefault(t['f'].get(f, 'unknown'), []).append(t['R'] - base[t['strategy']])
         delta[f] = {v: {'d': sum(x) / (len(x) + K), 'n': len(x), 'avg': sum(x) / len(x)} for v, x in groups.items()}
     m = dict(base=base, pooled=pooled, delta=delta)
     m['dist'] = sorted(expected(m, t['strategy'], t['f'])[0] for t in trades)
@@ -39,6 +45,7 @@ def fit(trades):
 
 def expected(m, strategy, f):
     e = m['base'].get(strategy, m['pooled']); parts = []
+    if strategy in OWN_RECORD: return e, [('own record', strategy, round(e, 3), None)]
     for k in SCORE_FEATURES:
         d = m['delta'].get(k, {}).get(f.get(k, 'unknown'))
         if d: e += d['d']; parts.append((k, f.get(k), round(d['d'], 3), d['n']))

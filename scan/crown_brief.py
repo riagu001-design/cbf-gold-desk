@@ -125,6 +125,13 @@ def main():
             spoken.append(f"The desk is paper-testing the daily swing pullback. The daily trend is {tr_}, so it waits for a {'dip' if tr_ == 'up' else 'rally'} to the 21-day average, now about {say(e21s)}. The macro bias is {({'UP': 'bullish', 'DN': 'bearish'}).get(sw_.get('macro', {}).get('bias'), 'mixed')}.")
 
     try:
+        as_ = json.load(open(f'{G}/asia_state.json')); rg_ = as_.get('range') or {}
+        if rg_: facts.append(f"Asia range breakout paper test (added 18 Nov, Woody): today's Asia range (23:00 to 04:00 London) high {rg_['high']}, low {rg_['low']}"
+                             + (' (still forming)' if rg_.get('bars', 0) < 20 else '') + '. Entry 04:00 to 09:00 on a 15 minute close beyond it with the 1H bias and 4H trend; stop 1 x 1H ATR, target 2R, out 16:00. Brain score about 53: paper only.'
+                             + (f" Open: {as_['open']['side']} from {as_['open']['entry']:.1f}, stop {as_['open']['stop']:.1f}, target {as_['open']['target']:.1f}." if as_.get('open') else ''))
+    except (OSError, ValueError, KeyError):
+        pass
+    try:
         em_ = json.load(open(f'{G}/ema_state.json'))
     except (OSError, ValueError):
         em_ = {}

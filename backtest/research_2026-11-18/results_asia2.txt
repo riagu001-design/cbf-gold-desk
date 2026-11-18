@@ -1,0 +1,8 @@
+M15 cross 02-09 H1 bias, H4 filter none, out 12:00 | train   70  +17.1R avg +0.24 PF 1.90 win 52% | test   53   +2.0R avg +0.04 PF 1.10 win 50%
+M15 cross 02-09 H1 bias, H4 filter h4  , out 12:00 | train   39  +17.8R avg +0.46 PF 2.78 win 53% | test   30   +3.6R avg +0.12 PF 1.35 win 50%
+M15 cross 02-09 H1 bias, H4 filter none, out 16:00 | train   70  +27.9R avg +0.40 PF 1.99 win 50% | test   53   +0.7R avg +0.01 PF 1.02 win 35%
+M15 cross 02-09 H1 bias, H4 filter h4  , out 16:00 | train   39  +30.6R avg +0.78 PF 3.12 win 58% | test   30   +6.3R avg +0.21 PF 1.42 win 46%
+Asia break 23-04 stop 1.0 tgt 2 + H4 trend | train   45  +27.5R avg +0.61 PF 2.34 win 55% | test   34  +10.8R avg +0.32 PF 1.58 win 44%
+Asia break 23-04 stop 1.0 tgt 1.5 + H4 trend | train   45  +20.5R avg +0.46 PF 2.11 win 60% | test   34   +5.8R avg +0.17 PF 1.33 win 47%
+Asia break 23-02 stop 0.5 tgt 2 + H4 trend | train   53   +3.6R avg +0.07 PF 1.10 win 37% | test   42  -12.0R avg -0.29 PF 0.64 win 26%
+Asia break 23-02 stop 1.0 tgt 1.5 + H4 trend | train   53   +2.2R avg +0.04 PF 1.07 win 43% | test   42  -12.5R avg -0.30 PF 0.58 win 28%

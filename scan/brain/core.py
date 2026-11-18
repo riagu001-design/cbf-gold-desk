@@ -25,7 +25,7 @@ REG, JOURNAL, CONFIG, STATUS = f'{B}/registry.json', f'{B}/journal.jsonl', f'{B}
 LINE = '━━━━━━━━━━━━━━━━'
 DEFAULT = dict(version=2, score_features=['h4', 'session'], send_min=85, watch_min=75, daily_loss_R=-3.0, min_stop_atr=0.3, max_stop_atr=12.0, fresh_s=900,
                balance=182.34, risk=0.01, note='v2 18 Nov 2026 (Woody: apply all needed improvements): score = strategy base + H4 trend + session evidence; see scan/brain/README.md')
-NAMES = {'H1': 'H1 EMA 9/21 cross', 'M15': 'M15 entry with H1 confirmation', '4H': '4H EMA 9/21 cross', 'SWING': 'Daily swing pullback'}
+NAMES = {'H1': 'H1 EMA 9/21 cross', 'M15': 'M15 entry with H1 confirmation', '4H': '4H EMA 9/21 cross', 'SWING': 'Daily swing pullback', 'ASIA': 'Asia range breakout (04:00-09:00)'}
 
 
 def cfg():
@@ -72,7 +72,7 @@ def market_open(t):
 
 
 def submit(p, ctx=None):
-    """p: strategy ('H1'|'M15'|'4H'|'SWING'), side, entry, stop, exit_rule, ts (epoch s of the signal), optional
+    """p: strategy ('H1'|'M15'|'4H'|'ASIA'|'SWING'), side, entry, stop, exit_rule, ts (epoch s of the signal), optional
     target (fixed take-profit) and note. Returns the decision record."""
     c = cfg(); reg = load_reg(); now = time.time(); t = ldn(p['ts']); buy = p['side'] == 'BUY'
     risk = abs(p['entry'] - p['stop']); sg = 1 if buy else -1
@@ -201,7 +201,7 @@ def now_view():
     ctx = {}
     for side in ('BUY', 'SELL'):
         f, raw = features(side, px, ts, h1, h4, d1); ctx[side] = (f, raw)
-        for s in ('H1', 'M15', '4H', 'SWING'):
+        for s in ('H1', 'M15', '4H', 'ASIA', 'SWING'):
             e = ev['swing'][side]['R'] if s == 'SWING' else S.expected(m, s, f)[0]; sc = S.score(m, e)
             rows.append(dict(strategy=s, side=side, score=sc, expected_R=round(e, 3),
                              band='SEND' if sc >= c['send_min'] else 'WATCHLIST' if sc >= c['watch_min'] else 'REJECT'))
