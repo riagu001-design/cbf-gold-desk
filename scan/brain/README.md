@@ -15,6 +15,9 @@ swing_daily   daily pullback      ─┘ (brain_ 4 verdict      daily loss, dup,
 - Verdict: score >= 85 and every gate passes -> **SENT** immediately; 75-84 -> **WATCHLIST**; otherwise **REJECTED** with the reason.
 - Message: instrument, side, entry, stop, TP1 (1R), TP2 (2R), runner rule, R:R, score with explanation, context, session.
 
+## Telegram levels (18 Nov)
+A-grade 85+ full size; B-grade 75-84 half size (`config.send_b`, default true; set false to stop B-grade sends); market updates from scan/updates.py (Asia range 04:00, London plan 07:45, New York plan 12:45, Market flips).
+
 ## Engines added later
 - ASIA (18 Nov, scan/asia_scan.py): Asia range 23:00-04:00 London, 15m close beyond it 04:00-09:00 with the H1 bias and H4 trend, stop 1 x 1H ATR, 2R, out 16:00. Unseen half +10.8R on 34 (PF 1.58). Scored from its own record only (`score.OWN_RECORD`) because its rules already contain the H4 trend and session: about 53, so paper only until live results lift it.
 

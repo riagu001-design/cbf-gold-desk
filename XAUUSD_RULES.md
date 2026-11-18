@@ -1,3 +1,9 @@
+# 18 Nov 2026 (Woody: "going days without a setup ... fix that", then "do it"): THREE LEVELS ON TELEGRAM
+1. 🟢 A-GRADE signal: brain score 85+ and every check passed. Full size ($50 risk). About 1 a week (unseen half: +0.79R per trade).
+2. 🟡 B-GRADE signal: score 75-84 and every check passed. HALF size ($25 risk), marked "take smaller or skip". About 1-2 a week (unseen half: about +0.05R per trade, close to break-even). An A-grade setup may replace an active same-side B-grade signal.
+3. 📡 MARKET UPDATES (scan/updates.py), weekdays: 04:00 Asia range set, 07:45 London open plan, 12:45 New York open plan, and a Market flip message when SELL/BUY/WAIT changes (held two checks, at most one an hour, 04:00-21:00). Information only, never a trade.
+Research for the decision (backtest/research_2026-11-18/results_freq.txt): every engine together gives only 1.6 setups a day at about break-even; a higher-frequency M15 engine lost on the unseen half; 5 setups a day with an edge is not available in the tests.
+
 # 18 Nov 2026 (Woody: "add Asia low / Asia high to the M15 entry, H1 bias, 2am to 9am, high quality entry before London"): A4 ASIA RANGE BREAKOUT paper engine (scan/asia_scan.py)
 Asia high/low = 15m candles 23:00-04:00 London. Entry 04:00-09:00 London weekdays: a 15m candle closes beyond the Asia high (buy) or low (sell), the previous close inside, the 1H EMA9/21 bias AND the 4H EMA50/200 trend agree. Market order at the close, one a day. Stop 1 x 1H ATR, target 2R, out 16:00.
 Research (backtest/research_2026-11-18/): train 45 trades +27.5R PF 2.34, unseen 34 trades +10.8R PF 1.58; neighbouring settings profitable in both halves. A 02:00 start (range 23:00-02:00), sweep-and-reclaim entries, and breakouts without the H4 trend all LOST on the unseen half, so they are not used.

@@ -50,5 +50,11 @@ import learn; learn.REC = os.path.join(tmp, 'rec.json'); rec = learn.review()
 check('the learning review runs and backtests improvements without applying them', all(t['feature'] not in learn.S.SCORE_FEATURES for t in rec['tests']))
 st = Bm.status()
 check('status for the dashboard and Crown is written', os.path.exists(os.path.join(tmp, 'status.json')) and st['counts']['proposals'] == 5)
+# 18 Nov 2026: B-grade signals (75-84) are sent at half size; an A-grade setup may replace a same-side B-grade signal.
+r6 = Bm.submit(p('M15', 'SELL', 4000, 4030, now - 1), ctx('with'))
+check('a 75-84 setup is sent as a B-GRADE half-size signal', r6['verdict'] == 'WATCHLIST' and r6.get('grade') == 'B' and r6.get('telegram') == 'test'
+      and 'B-GRADE' in Bm.signal_text(r6, Bm.cfg()) and Bm.lots_for(12, Bm.cfg(), 'B')[1] <= Bm.cfg()['risk_usd'] / 2, f"score {r6['score']}")
+r7 = Bm.submit(p('H1', 'SELL', 4000, 4030, now - 2), ctx('with'))
+check('an A-grade setup is not blocked by an active same-side B-grade signal', r7['verdict'] == 'SENT' and r7.get('grade') == 'A', f"{r7['verdict']} {r7['reasons']}")
 print(f"\n{sum(ok)}/{len(ok)} acceptance tests passed (temp brain folder {tmp})")
 sys.exit(0 if all(ok) else 1)

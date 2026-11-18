@@ -8,7 +8,8 @@ too). The brain alone decides:
   2. evidence score      score.py (0-100, percentile of expected R from 396 historical setups; see calibration)
   3. mandatory gates     market open, high-impact news (+-5 min), freshness, stop sanity, daily loss limit,
                          duplicate and conflicting signals (Signal Registry)
-  4. verdict             score >= 85 and all gates pass -> SENT to Telegram now; 75-84 -> WATCHLIST; else REJECTED
+  4. verdict             score >= 85 and all gates pass -> SENT to Telegram now as A-GRADE (full size);
+                         75-84 -> WATCHLIST, also sent as B-GRADE (half size) since 18 Nov 2026 (Woody); else REJECTED
   5. journal             every proposal, decision, reason, outcome, MFE/MAE, TP1/TP2 and post-trade review is
                          appended to /home/user/gold-desk/brain/journal.jsonl (persists across restarts)
 No order is ever placed: signals only.
@@ -103,7 +104,8 @@ def submit(p, ctx=None):
     today = ldn(now).strftime('%Y-%m-%d')
     lost = sum(r.get('R', 0) for r in read_journal() if r.get('type') == 'outcome' and r.get('sent') and r.get('closed', '').startswith(today))
     gates.append(('daily loss limit', lost > c['daily_loss_R'], f'{lost:+.2f}R today on sent signals (limit {c["daily_loss_R"]}R)'))
-    same = [a for a in reg['active'].values() if a['side'] == p['side']]
+    pre = S.score(m, e)  # an A-grade setup may replace a same-side B-grade signal; anything else is a duplicate
+    same = [a for a in reg['active'].values() if a['side'] == p['side'] and not (a.get('grade') == 'B' and pre >= c['send_min'])]
     opp = [a for a in reg['active'].values() if a['side'] != p['side']]
     gates.append(('no duplicate', not same, f'{p["side"]} signal {same[0]["id"]} already active' if same else 'none active'))
     gates.append(('no conflict', not opp, f'{opp[0]["side"]} signal {opp[0]["id"]} active' if opp else 'none active'))
@@ -121,10 +123,12 @@ def submit(p, ctx=None):
                risk=round(risk, 2), tp1=tp1, tp2=tp2, target=p.get('target'), exit_rule=p.get('exit_rule'), session=f['session'],
                features=f, raw=raw, expected_R=round(e, 3), score=sc, evidence=parts, gates=[dict(name=g[0], ok=g[1], detail=g[2]) for g in gates],
                verdict=verdict, reasons=reasons, model=dict(version=c['version'], evidence_built=m['built']), note=p.get('note'))
-    if verdict == 'SENT':
-        rec['telegram'] = publisher.publish(signal_text(rec, c, note), 'signal')
+    grade = 'A' if verdict == 'SENT' else 'B' if verdict == 'WATCHLIST' and c.get('send_b', True) else None
+    if grade:
+        rec['grade'] = grade
+        rec['telegram'] = publisher.publish(signal_text(rec, c, p.get('note')), 'signal')
         reg['active'][rec['id']] = rec
-    reg['open'][rec['id']] = {k: rec[k] for k in ('id', 'pid', 'ts', 'strategy', 'side', 'entry', 'stop', 'risk', 'verdict')}
+    reg['open'][rec['id']] = dict({k: rec[k] for k in ('id', 'pid', 'ts', 'strategy', 'side', 'entry', 'stop', 'risk', 'verdict')}, grade=grade)
     save_reg(reg); journal(rec)
     return rec
 
@@ -140,9 +144,9 @@ STYLE = {'H1': ('H1', 'EMA 9/21 Trend Cross', '1H EMA 9/21 cross · Market Entry
 SESS = {'asia': 'Asia', 'london': 'London', 'newyork': 'New York', 'late': 'late US'}
 
 
-def lots_for(risk_per_oz, c):
+def lots_for(risk_per_oz, c, grade='A'):
     """0.01 lot = 1 oz. Lots that risk at most the risk budget, never below the 0.01 minimum."""
-    budget = c.get('risk_usd') or c['balance'] * c['risk']
+    budget = (c.get('risk_usd') or c['balance'] * c['risk']) * (0.5 if grade == 'B' else 1)
     lots = max(0.01, int(budget / (risk_per_oz * 100) * 100) / 100) if risk_per_oz else 0.01
     return lots, round(lots * 100 * risk_per_oz, 2), budget
 
@@ -150,7 +154,7 @@ def lots_for(risk_per_oz, c):
 def signal_text(r, c, note=None):
     buy = r['side'] == 'BUY'; tf, name, timing = STYLE.get(r['strategy'], ('', r['strategy'], ''))
     tp = r.get('target') or r['tp2']; rr = abs(tp - r['entry']) / r['risk'] if r['risk'] else 2
-    lots, risk_usd, budget = lots_for(r['risk'], c)
+    lots, risk_usd, budget = lots_for(r['risk'], c, r.get('grade', 'A'))
     f, raw = r['features'], r['raw']
     trend = {'with': f"{'Bullish' if buy else 'Bearish'} H4 trend confirmed", 'against': f"Counter to the H4 trend", 'unknown': 'H4 trend unclear'}.get(f['h4'], '')
     why = (f"{r['side']} {name.upper()} SETUP: {trend}; brain confidence {r['score']}/100 "
@@ -158,7 +162,8 @@ def signal_text(r, c, note=None):
            f"Context: H4 ADX {raw.get('adx4')}, {f['vol']} volatility, price {f['stretch']} the 1H EMA21, "
            f"{raw.get('room_atr')} ATR of room to the opposing 24h extreme, {SESS.get(r['session'], r['session'])} session.")
     if note: why += f' {note}.'
-    lines = ['👑 CBFX | TRADE SETUP', f"{'🟢 BUY' if buy else '🔴 SELL'} XAUUSD ({tf})", f'Strategy: {name}', f"Timing: {r['side']}  ({timing})", '',
+    gl = '🟢 A-GRADE · full size' if r.get('grade', 'A') == 'A' else '🟡 B-GRADE · HALF SIZE (lower confidence: take smaller or skip)'
+    lines = ['👑 CBFX | TRADE SETUP', gl, f"{'🟢 BUY' if buy else '🔴 SELL'} XAUUSD ({tf})", f'Strategy: {name}', f"Timing: {r['side']}  ({timing})", '',
              f"📍 Planned Entry: {r['entry']:.2f}  (market · enter now)", f"🛑 Stop Loss: {r['stop']:.2f}", f"🎯 Take Profit ({rr:.1f}R): {tp:.2f}"]
     if not r.get('target'): lines.append(f"🏃 Runner: TP1 {r['tp1']:.2f} (1R) · or exit on {r['exit_rule']}")
     lines += ['', f'📊 Lots: {lots:.2f} | R:R 1:{rr:.1f}', f'💰 Risk: ${risk_usd:,.2f} | Target: ${risk_usd * rr:,.2f}']
@@ -201,16 +206,16 @@ def close(rid, exit_price, how, close_ts):
     if o is None: return None
     dec = next((r for r in reversed(read_journal()) if r.get('type') == 'decision' and r['id'] == rid), o)
     sg = 1 if o['side'] == 'BUY' else -1; pl = sg * (exit_price - o['entry']); R = round((pl - 0.4) / o['risk'], 2) if o['risk'] else 0
-    out = dict(type='outcome', id=rid, pid=o['pid'], strategy=o['strategy'], side=o['side'], sent=o['verdict'] == 'SENT', verdict=o['verdict'],
+    out = dict(type='outcome', id=rid, pid=o['pid'], strategy=o['strategy'], side=o['side'], sent=rid in reg['active'], grade=o.get('grade'), verdict=o['verdict'],
                score=dec.get('score'), features=dec.get('features', {}), entry=o['entry'], exit=exit_price, how=how, R=R, usd_per_oz=round(pl, 2),
                opened=ldn(o['ts']).strftime('%Y-%m-%d %H:%M'), closed=ldn(close_ts).strftime('%Y-%m-%d %H:%M'))
     out.update(path_stats(dec, close_ts)); out['review'] = review(out)
     if rid in reg['active']:
         c = cfg(); reg['active'].pop(rid)
         done = [r['R'] for r in read_journal() if r.get('type') == 'outcome' and r.get('sent')] + [R]
-        lots, risk_usd, _ = lots_for(o['risk'], c)
+        lots, risk_usd, _ = lots_for(o['risk'], c, o.get('grade', 'A'))
         txt = '\n'.join(['👑 CBFX | TRADE RESULT', f"{'🟢 BUY' if o['side'] == 'BUY' else '🔴 SELL'} XAUUSD · {STYLE.get(o['strategy'], ('', o['strategy']))[1]}",
-                         f"{'✅ WIN' if R > 0 else '❌ LOSS'} · {how}", '',
+                         f"{'✅ WIN' if R > 0 else '❌ LOSS'} · {how} · {o.get('grade', 'A')}-grade", '',
                          f"📍 Entry: {o['entry']:.2f}  (sent {out['opened'][5:]} London)", f"🏁 Exit: {exit_price:.2f}  ({out['closed'][11:]} London)",
                          f"💰 Result: {R:+.2f}R = {'+' if R >= 0 else '−'}${abs(R) * risk_usd:,.2f} at {lots:.2f} lots",
                          f"📈 Best +{out['mfe']}R · worst −{out['mae']}R · TP1 {'hit' if out['tp1'] else 'missed'} · TP2 {'hit' if out['tp2'] else 'missed'}", '',

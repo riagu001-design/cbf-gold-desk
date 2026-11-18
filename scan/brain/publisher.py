@@ -25,7 +25,7 @@ def _post(text):
 def publish(text, kind):
     """kind 'signal' or 'result' (from brain.py) or 'report' (weekly account report). On failure, signals and
     results are left in scan_msg.txt / scan_result.txt for the watchdog to send (scan/SEND.md)."""
-    assert kind in ('signal', 'result', 'report')
+    assert kind in ('signal', 'result', 'report', 'update')  # update: daily market updates (scan/updates.py), no fallback
     r = _post(text)
     if not r.startswith(('ok', 'test')) and kind in FALLBACK:
         with open(FALLBACK[kind], 'a') as f: f.write(text + ('\n\n' if kind == 'result' else ''))
