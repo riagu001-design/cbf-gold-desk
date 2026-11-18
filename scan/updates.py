@@ -45,13 +45,15 @@ def brain_now():
 
 
 def news_line(now):
+    """Woody's layout (18 Nov): the list of today's high-impact releases, then the no-trade rule, only when there is news."""
     try:
         n = json.load(open(f'{G}/news_today.json'))
-        ev = [f'{t} {name}' for t, name in n.get('events', [])] if n.get('date') == now.strftime('%Y-%m-%d') else []
-        later = [e for e in ev if e[:5] > now.strftime('%H:%M')]
-        return '📰 News today: ' + ('; '.join(later) + ' London (no entries 5 min either side)' if later else 'no more high-impact US news')
     except (OSError, ValueError):
-        return '📰 News: calendar not checked'
+        return '⏰ News calendar not checked today'
+    ev = n.get('events', []) if n.get('date') == now.strftime('%Y-%m-%d') else []
+    later = [(t, name) for t, name in ev if t > now.strftime('%H:%M')]
+    if not later: return '⏰ No more high-impact news today'
+    return '\n'.join(['⏰ High-impact today (London):'] + [f'{t} {name}' for t, name in later] + ['⚠️ No new trades 5 min before / 5 min after these.'])
 
 
 def main():
