@@ -28,7 +28,9 @@ A model using all eight features failed this check at 85 (-0.08R), so only the H
 
 ## Learning (learn.py)
 `python3 scan/brain/learn.py review` -> `brain/recommendations.json`: mistake patterns (need 20+ cases and a 0.25R gap), live feature effects (t >= 2), strategy health (last 20), and a backtest of every feature not yet in the score. Nothing is applied automatically. `learn.py apply <feature>` works only after a passed backtest and saves `brain/history/config_v<n>.json`; `learn.py rollback` restores the previous version.
-On 17 Nov only `session` passed (85+ band 0.79R on 21 vs 0.54R on 22). It is NOT applied: the unseen half was already used to choose H4, so it needs live confirmation first.
+On 17 Nov only `session` passed (85+ band 0.79R on 21 vs 0.54R on 22). APPLIED 18 Nov as config v2 (Woody: "Apply all needed improvement"); the other six features failed their backtest and stay out. Caveat: the unseen half was also used to choose H4, so watch the live 85+ results; `learn.py rollback` returns to v1.
+
+v2 scores (H4 with / against): H1 London 76/18, New York 93/38, late 100/45; 4H Asia 72, London 74, New York 93, late 98; M15 London 62, New York 82, late 93. So 85+ now means: a with-trend H1 or 4H setup from 13:00 London onward, or M15 from 17:00. London-morning setups become watchlist. Unseen check v2: 85+ 21 setups +0.79R, 75-84 28 setups +0.15R, below 75 112 setups -0.15R.
 
 ## Files (/home/user/gold-desk/brain)
 config.json (versioned rules), evidence.json, registry.json (active signals + tracked ideas), journal.jsonl (every decision and outcome with MFE/MAE, TP1/TP2, review), status.json (dashboard + Crown), recommendations.json, history/.

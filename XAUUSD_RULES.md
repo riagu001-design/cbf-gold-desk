@@ -1,3 +1,5 @@
+# 18 Nov 2026 (Woody: "Apply all needed improvement"): brain score v2 adds the trading session (passed its backtest: unseen 85+ band +0.79R on 21 vs +0.54R on 22). Effect: with-trend H1/4H setups from 13:00 London onward (and M15 from 17:00) are SENT; London-morning setups become watchlist. Rollback: python3 scan/brain/learn.py rollback.
+
 # 17 Nov 2026 (Woody's MASTER AI BRAIN spec): CROWNBEARER NEURAL BRAIN decides and sends
 All engines below (A, A2, A3, B) are intelligence providers only: they propose and paper-track. The Neural Brain (scan/brain/, see its README) scores each proposal 0-100 from the evidence and checks market open, news, freshness, stop size, daily loss limit (-3R) and duplicate/conflicting signals. Only score 85+ with every check passed goes to Telegram, immediately (75-84 watchlist, below 75 rejected). Today only an H1 cross with the H4 trend reaches 85 (89), so the H4 trend effectively decides what is SENT again (engines still propose and track everything). Signals only, no orders, no MT5 connection.
 

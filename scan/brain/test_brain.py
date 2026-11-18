@@ -12,7 +12,7 @@ ok = []
 def check(name, cond, detail=''):
     ok.append(cond); print(('PASS ' if cond else 'FAIL ') + name + (f'  [{detail}]' if detail else ''))
 def ctx(h4):
-    return ({'h4': h4, 'd1': 'with', 'adx4': 'strong', 'vol': 'normal', 'stretch': 'near', 'room': 'open', 'rsi': 'ok', 'session': 'london'},
+    return ({'h4': h4, 'd1': 'with', 'adx4': 'strong', 'vol': 'normal', 'stretch': 'near', 'room': 'open', 'rsi': 'ok', 'session': 'newyork'},
             {'atr1h': 15.0, 'adx4': 35.0, 'room_atr': 2.0})
 now = time.time()
 p = lambda s, side, e, st, ts=None: dict(strategy=s, side=side, entry=e, stop=st, exit_rule='test exit', ts=ts or now)

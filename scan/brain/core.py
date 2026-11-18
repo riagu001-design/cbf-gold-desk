@@ -23,8 +23,8 @@ import publisher
 B = os.environ.get('BRAIN_DIR', '/home/user/gold-desk/brain')
 REG, JOURNAL, CONFIG, STATUS = f'{B}/registry.json', f'{B}/journal.jsonl', f'{B}/config.json', f'{B}/status.json'
 LINE = '━━━━━━━━━━━━━━━━'
-DEFAULT = dict(version=1, score_features=['h4'], send_min=85, watch_min=75, daily_loss_R=-3.0, min_stop_atr=0.3, max_stop_atr=12.0, fresh_s=900,
-               balance=182.34, risk=0.01, note='v1 17 Nov 2026: score = strategy base + H4-trend evidence; see scan/brain/README.md')
+DEFAULT = dict(version=2, score_features=['h4', 'session'], send_min=85, watch_min=75, daily_loss_R=-3.0, min_stop_atr=0.3, max_stop_atr=12.0, fresh_s=900,
+               balance=182.34, risk=0.01, note='v2 18 Nov 2026 (Woody: apply all needed improvements): score = strategy base + H4 trend + session evidence; see scan/brain/README.md')
 NAMES = {'H1': 'H1 EMA 9/21 cross', 'M15': 'M15 entry with H1 confirmation', '4H': '4H EMA 9/21 cross', 'SWING': 'Daily swing pullback'}
 
 

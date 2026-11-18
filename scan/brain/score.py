@@ -14,7 +14,7 @@ K = 30.0
 # Features that move the score. Chosen 17 Nov 2026: only the H4 trend held up on the unseen half (85+ band +0.54R,
 # 75-84 +0.30R, below 75 -0.11R); the other features are recorded for learning but do not move the score until
 # the learning engine shows they hold up on live results.
-SCORE_FEATURES = ['h4']
+SCORE_FEATURES = ['h4', 'session']  # v2 18 Nov 2026: session added after it passed learn.py's backtest (85+ 0.79R on 21 vs 0.54R on 22)
 try:  # the live set is versioned in brain/config.json (learn.py apply / rollback)
     SCORE_FEATURES = json.load(open('/home/user/gold-desk/brain/config.json')).get('score_features', SCORE_FEATURES)
 except (OSError, ValueError):
