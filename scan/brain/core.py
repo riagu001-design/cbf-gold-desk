@@ -24,7 +24,7 @@ B = os.environ.get('BRAIN_DIR', '/home/user/gold-desk/brain')
 REG, JOURNAL, CONFIG, STATUS = f'{B}/registry.json', f'{B}/journal.jsonl', f'{B}/config.json', f'{B}/status.json'
 LINE = '━━━━━━━━━━━━━━━━'
 DEFAULT = dict(version=2, score_features=['h4', 'session'], send_min=85, watch_min=75, daily_loss_R=-3.0, min_stop_atr=0.3, max_stop_atr=12.0, fresh_s=900,
-               balance=182.34, risk=0.01, note='v2 18 Nov 2026 (Woody: apply all needed improvements): score = strategy base + H4 trend + session evidence; see scan/brain/README.md')
+               balance=182.34, risk=0.01, risk_usd=50.0, note='v2 18 Nov 2026 (Woody: apply all needed improvements): score = strategy base + H4 trend + session evidence; see scan/brain/README.md')
 NAMES = {'H1': 'H1 EMA 9/21 cross', 'M15': 'M15 entry with H1 confirmation', '4H': '4H EMA 9/21 cross', 'SWING': 'Daily swing pullback', 'ASIA': 'Asia range breakout (04:00-09:00)'}
 
 
@@ -163,7 +163,7 @@ def signal_text(r, c, note=None):
     if not r.get('target'): lines.append(f"🏃 Runner: TP1 {r['tp1']:.2f} (1R) · or exit on {r['exit_rule']}")
     lines += ['', f'📊 Lots: {lots:.2f} | R:R 1:{rr:.1f}', f'💰 Risk: ${risk_usd:,.2f} | Target: ${risk_usd * rr:,.2f}']
     if risk_usd > budget * 1.5:
-        lines.append(f'❗ The 0.01 lot minimum risks ${risk_usd:,.2f}, more than the ${budget:,.2f} budget ({c["risk"] * 100:.0f}% of ${c["balance"]:,.0f}).')
+        lines.append(f'❗ The 0.01 lot minimum risks ${risk_usd:,.2f}, more than the ${budget:,.2f} per-trade budget.')
     lines += ['', f'📝 Why: {why}', f"🆔 {r['id']} · {r['london'][11:]} London · signal only, no order placed",
               '⚠️ Risk Caution: Manage risk responsibly — size your position safely, adhere to your Stop Loss, and never risk more than you can afford to lose.']
     return '\n'.join(lines)
