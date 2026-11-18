@@ -129,19 +129,43 @@ def submit(p, ctx=None):
     return rec
 
 
+# Woody's Telegram layout (18 Nov 2026). Per engine: chart label, strategy name, timing note.
+STYLE = {'H1': ('H1', 'EMA 9/21 Trend Cross', '1H EMA 9/21 cross · Market Entry · No Chasing'),
+         'M15': ('M15', 'Trend Pullback Entry', '15m entry with 1H confirmation · No Chasing'),
+         '4H': ('H4', 'H4 Trend Cross', '4H EMA 9/21 cross · Market Entry'),
+         'ASIA': ('M15', 'Asia Range Breakout', 'Pre-London breakout of the Asia high/low · No Chasing'),
+         'SWING': ('D1', 'Daily Swing Pullback', 'Daily pullback to the 21 EMA · enter at the open')}
+
+
+SESS = {'asia': 'Asia', 'london': 'London', 'newyork': 'New York', 'late': 'late US'}
+
+
+def lots_for(risk_per_oz, c):
+    """0.01 lot = 1 oz. Lots that risk at most the risk budget, never below the 0.01 minimum."""
+    budget = c.get('risk_usd') or c['balance'] * c['risk']
+    lots = max(0.01, int(budget / (risk_per_oz * 100) * 100) / 100) if risk_per_oz else 0.01
+    return lots, round(lots * 100 * risk_per_oz, 2), budget
+
+
 def signal_text(r, c, note=None):
-    buy = r['side'] == 'BUY'; oz = round(c['balance'] * c['risk'] / r['risk'], 4) if r['risk'] else 0
-    why = {'with': 'with the H4 trend', 'against': 'against the H4 trend', 'unknown': 'H4 trend unknown'}.get(r['features']['h4'], '')
-    run = f"Runner: {r['exit_rule']}" if not r.get('target') else f"Target {r['target']:.1f} (strategy exit)"
-    lines = [f'👑 CROWNBEARER NEURAL BRAIN · SIGNAL {r["id"]}', f'GOLD (XAUUSD) {r["side"]} {"🟢" if buy else "🔴"}  ·  paper signal, no order placed', LINE,
-             f'📍 Entry {r["entry"]:.1f} (market, now)', f'🛑 Stop {r["stop"]:.1f}  (risk ${r["risk"]:.1f}/oz)',
-             f'🎯 TP1 {r["tp1"]:.1f} (1R) · TP2 {r["tp2"]:.1f} (2R) · {run}',
-             f'⚖️ R:R 1:2 to TP2 · 1% of ${c["balance"]:.0f} = {oz} oz', LINE,
-             f'🧠 AI confidence {r["score"]}/100: {NAMES.get(r["strategy"], r["strategy"])} {why}.',
-             f'   This setup type averaged {r["expected_R"]:+.2f}R per trade in the 12-month evidence.',
-             f'   Context: ADX4 {r["raw"].get("adx4")}, volatility {r["features"]["vol"]}, {r["features"]["stretch"]} the 1H EMA21, liquidity room {r["raw"].get("room_atr")} ATR.',
-             f'🕐 {r["session"].title()} session · {r["london"][11:]} London']
-    if note: lines.append(f'📰 {note}')
+    buy = r['side'] == 'BUY'; tf, name, timing = STYLE.get(r['strategy'], ('', r['strategy'], ''))
+    tp = r.get('target') or r['tp2']; rr = abs(tp - r['entry']) / r['risk'] if r['risk'] else 2
+    lots, risk_usd, budget = lots_for(r['risk'], c)
+    f, raw = r['features'], r['raw']
+    trend = {'with': f"{'Bullish' if buy else 'Bearish'} H4 trend confirmed", 'against': f"Counter to the H4 trend", 'unknown': 'H4 trend unclear'}.get(f['h4'], '')
+    why = (f"{r['side']} {name.upper()} SETUP: {trend}; brain confidence {r['score']}/100 "
+           f"(this setup type averaged {r['expected_R']:+.2f}R per trade in the 12-month evidence). "
+           f"Context: H4 ADX {raw.get('adx4')}, {f['vol']} volatility, price {f['stretch']} the 1H EMA21, "
+           f"{raw.get('room_atr')} ATR of room to the opposing 24h extreme, {SESS.get(r['session'], r['session'])} session.")
+    if note: why += f' {note}.'
+    lines = ['👑 CBFX | TRADE SETUP', f"{'🟢 BUY' if buy else '🔴 SELL'} XAUUSD ({tf})", f'Strategy: {name}', f"Timing: {r['side']}  ({timing})", '',
+             f"📍 Planned Entry: {r['entry']:.2f}  (market · enter now)", f"🛑 Stop Loss: {r['stop']:.2f}", f"🎯 Take Profit ({rr:.1f}R): {tp:.2f}"]
+    if not r.get('target'): lines.append(f"🏃 Runner: TP1 {r['tp1']:.2f} (1R) · or exit on {r['exit_rule']}")
+    lines += ['', f'📊 Lots: {lots:.2f} | R:R 1:{rr:.1f}', f'💰 Risk: ${risk_usd:,.2f} | Target: ${risk_usd * rr:,.2f}']
+    if risk_usd > budget * 1.5:
+        lines.append(f'❗ The 0.01 lot minimum risks ${risk_usd:,.2f}, more than the ${budget:,.2f} budget ({c["risk"] * 100:.0f}% of ${c["balance"]:,.0f}).')
+    lines += ['', f'📝 Why: {why}', f"🆔 {r['id']} · {r['london'][11:]} London · signal only, no order placed",
+              '⚠️ Risk Caution: Manage risk responsibly — size your position safely, adhere to your Stop Loss, and never risk more than you can afford to lose.']
     return '\n'.join(lines)
 
 
@@ -184,11 +208,14 @@ def close(rid, exit_price, how, close_ts):
     if rid in reg['active']:
         c = cfg(); reg['active'].pop(rid)
         done = [r['R'] for r in read_journal() if r.get('type') == 'outcome' and r.get('sent')] + [R]
-        txt = '\n'.join([f'👑 CROWNBEARER NEURAL BRAIN · SIGNAL {rid} CLOSED ({how})', LINE,
-                         f'{"🟢" if o["side"] == "BUY" else "🔴"} {o["side"]} from {o["entry"]:.1f} (sent {out["opened"][5:]} London)',
-                         f'🏁 Exit {exit_price:.1f} at {out["closed"][11:]} London', f'💰 {R:+.2f}R = {"+" if R >= 0 else "−"}${abs(R) * c["balance"] * c["risk"]:.2f} at 1% risk',
-                         f'📈 Best +{out["mfe"]}R · worst −{out["mae"]}R · TP1 {"hit" if out["tp1"] else "missed"} · TP2 {"hit" if out["tp2"] else "missed"}',
-                         f'🧠 Review: {"; ".join(out["review"])}', LINE, f'📒 Brain signals so far: {len(done)}, {sum(done):+.1f}R. Paper signal, no order placed.'])
+        lots, risk_usd, _ = lots_for(o['risk'], c)
+        txt = '\n'.join(['👑 CBFX | TRADE RESULT', f"{'🟢 BUY' if o['side'] == 'BUY' else '🔴 SELL'} XAUUSD · {STYLE.get(o['strategy'], ('', o['strategy']))[1]}",
+                         f"{'✅ WIN' if R > 0 else '❌ LOSS'} · {how}", '',
+                         f"📍 Entry: {o['entry']:.2f}  (sent {out['opened'][5:]} London)", f"🏁 Exit: {exit_price:.2f}  ({out['closed'][11:]} London)",
+                         f"💰 Result: {R:+.2f}R = {'+' if R >= 0 else '−'}${abs(R) * risk_usd:,.2f} at {lots:.2f} lots",
+                         f"📈 Best +{out['mfe']}R · worst −{out['mae']}R · TP1 {'hit' if out['tp1'] else 'missed'} · TP2 {'hit' if out['tp2'] else 'missed'}", '',
+                         f"📝 Review: {'; '.join(out['review'])}",
+                         f"📒 Brain signals so far: {len(done)}, {sum(done):+.1f}R · 🆔 {rid} · signal only, no order placed"])
         out['telegram'] = publisher.publish(txt, 'result')
     save_reg(reg); journal(out)
     return out
