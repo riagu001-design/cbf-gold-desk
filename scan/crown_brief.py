@@ -93,7 +93,7 @@ def main():
         elif n.get('best'):
             b_ = n['best']
             spoken.append(f"The brain's H4 bias is {str(n.get('bias')).lower()}. The best setup right now would be a {b_['side'].lower()} from the {b_['strategy']} engine, scoring {b_['score']}"
-                          + (", which is enough to send the moment it fires." if b_['band'] == 'SEND' else ", below the 85 needed, so nothing will be sent yet."))
+                          + (", an A-grade score: it goes to Telegram at full size the moment it fires." if b_['band'] == 'SEND' else ", a B-grade score: it goes to Telegram at half size the moment it fires." if b_['band'] == 'WATCHLIST' else ", below 75, so it would not be sent."))
     except (OSError, ValueError, KeyError):
         pass
 
@@ -129,6 +129,9 @@ def main():
         if rg_: facts.append(f"Asia range breakout paper test (added 18 Nov, Woody): today's Asia range (23:00 to 04:00 London) high {rg_['high']}, low {rg_['low']}"
                              + (' (still forming)' if rg_.get('bars', 0) < 20 else '') + '. Entry 04:00 to 09:00 on a 15 minute close beyond it with the 1H bias and 4H trend; stop 1 x 1H ATR, target 2R, out 16:00. Brain score about 53: paper only.'
                              + (f" Open: {as_['open']['side']} from {as_['open']['entry']:.1f}, stop {as_['open']['stop']:.1f}, target {as_['open']['target']:.1f}." if as_.get('open') else ''))
+        if as_.get('open'):
+            o_ = as_['open']; lv_ = (mark - o_['entry']) * (1 if o_['side'] == 'BUY' else -1)
+            spoken.append(f"The Asia breakout paper {o_['side'].lower()} from {say(o_['entry'])} is open, stop {say(o_['stop'])}, target {say(o_['target'])}, {'up' if lv_ >= 0 else 'down'} {abs(lv_):.0f} dollars per ounce.")
     except (OSError, ValueError, KeyError):
         pass
     try:
@@ -218,7 +221,7 @@ def main():
     facts.append(f'Live log since the new rules: {len(rows)} setups, {len(closed)} closed, {pl:+.2f} dollars. Account about {BALANCE_START + pl:.2f} dollars (194.74 at the 30 Oct weekly report plus live results). Review after 20 trades.')
     import csv as _csv
     paper_today = 0
-    for _f in ('ema_log.csv', 'm15_log.csv', 'h4_log.csv', 'swing_log.csv'):
+    for _f in ('ema_log.csv', 'm15_log.csv', 'h4_log.csv', 'swing_log.csv', 'asia_log.csv'):
         try:
             paper_today += sum(1 for r in _csv.DictReader(open(f'{G}/{_f}')) if (r.get('opened') or '').startswith(now.strftime('%Y-%m-%d')))
         except (OSError, ValueError):
