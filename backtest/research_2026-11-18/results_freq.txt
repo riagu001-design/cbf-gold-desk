@@ -1,0 +1,8 @@
+test-half trading days 121
+A 85+      21 setups 0.17/day avg +0.79R | cumulative down to here 0.17/day avg +0.79R total +16.6R
+B 75-84    34 setups 0.28/day avg +0.05R | cumulative down to here 0.45/day avg +0.33R total +18.3R
+C 60-74    26 setups 0.21/day avg -0.08R | cumulative down to here 0.67/day avg +0.20R total +16.2R
+D <60     115 setups 0.95/day avg -0.02R | cumulative down to here 1.62/day avg +0.07R total +13.4R
+M15 cross + H1 + H4, all hours, 2R     test 0.76/day | train  123  +19.1R avg +0.16 PF 1.29 win 44% | test   92   -5.2R avg -0.06 PF 0.91 win 33%
+M15 cross + H1 + H4, 07-20, 2R         test 0.40/day | train   75  +13.3R avg +0.18 PF 1.35 win 48% | test   48   -5.4R avg -0.11 PF 0.83 win 33%
+M15 cross + H1 + H4, all hours, 1R     test 0.76/day | train  123   +7.9R avg +0.06 PF 1.14 win 55% | test   92   -6.1R avg -0.07 PF 0.87 win 47%
