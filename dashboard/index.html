@@ -462,8 +462,8 @@
     <div class="gd-ctl-head"><b id="ctl-side">—</b><span id="ctl-sub">Waiting for the desk data…</span></div>
     <div class="gd-tug">
       <div class="gd-tug-row"><span>H4</span><div class="gd-bar"><i class="p" id="ctl4p" style="flex-basis:50%">+DI</i><i class="m" id="ctl4m" style="flex-basis:50%">−DI</i></div><span id="ctl4a">ADX —</span></div>
-      <div class="gd-tug-row"><span>15m</span><div class="gd-bar"><i class="p" id="ctl15p" style="flex-basis:50%">+DI</i><i class="m" id="ctl15m" style="flex-basis:50%">−DI</i></div><span id="ctl15a">ADX —</span></div>
-      <div class="gd-tug-row"><span>5m</span><div class="gd-bar"><i class="p" id="ctl5p" style="flex-basis:50%">+DI</i><i class="m" id="ctl5m" style="flex-basis:50%">−DI</i></div><span id="ctl5a">ADX —</span></div>
+      <div class="gd-tug-row"><span>H1</span><div class="gd-bar"><i class="p" id="ctl1p" style="flex-basis:50%">+DI</i><i class="m" id="ctl1m" style="flex-basis:50%">−DI</i></div><span id="ctl1a">ADX —</span></div>
+      <div class="gd-tug-row"><span>M15</span><div class="gd-bar"><i class="p" id="ctl15p" style="flex-basis:50%">+DI</i><i class="m" id="ctl15m" style="flex-basis:50%">−DI</i></div><span id="ctl15a">ADX —</span></div>
     </div>
     <p class="gd-note">Buyers on the left (green, +DI), sellers on the right (red, −DI). The bigger side is in control; ADX under 20 means neither side has a real grip, 20–25 building, 25+ strong.</p>
   </article>
@@ -614,10 +614,10 @@
     fn: ({ answer }) => {
       const a0 = typeof answer === 'string' ? JSON.parse(answer) : answer, a = (a0 && a0.technicals) || a0;
       if (!a || !a.indicators) throw new Error((a && (a.error || a.message)) || 'No indicators in the answer');
-      const D = a.indicators.dmi || {}, D5 = a.indicators.dmi5 || {}, D4 = a.indicators.dmi4h || {};
+      const D = a.indicators.dmi || {}, D1 = a.indicators.dmi1h || {}, D4 = a.indicators.dmi4h || {};
       return [{ interval: a.interval, asOf: a.asOf, close: a.last && a.last.close, rsi14: a.indicators.rsi14, read: a.read,
         pdi: D.pdi ?? null, mdi: D.mdi ?? null, adx: D.adx ?? null, ctl: D.control ?? null, str: D.strength ?? null,
-        pdi5: D5.pdi ?? null, mdi5: D5.mdi ?? null, adx5: D5.adx ?? null, ctl5: D5.control ?? null,
+        pdi1: D1.pdi ?? null, mdi1: D1.mdi ?? null, adx1: D1.adx ?? null, ctl1: D1.control ?? null, str1: D1.strength ?? null,
         pdi4: D4.pdi ?? null, mdi4: D4.mdi ?? null, adx4: D4.adx ?? null, ctl4: D4.control ?? null, str4: D4.strength ?? null }];
     },
   });
@@ -1170,15 +1170,17 @@
       if (!p || !m) return; if (!d) { set('ctl' + k + 'a', 'ADX —'); return; }
       const t = (d.pdi + d.mdi) || 1; p.style.flexBasis = (100 * d.pdi / t) + '%'; m.style.flexBasis = (100 * d.mdi / t) + '%';
       p.textContent = '+DI ' + d.pdi.toFixed(1); m.textContent = '−DI ' + d.mdi.toFixed(1); set('ctl' + k + 'a', 'ADX ' + d.adx.toFixed(1)); };
-    const d = tr && tr.pdi != null ? { pdi: tr.pdi, mdi: tr.mdi, adx: tr.adx, control: tr.ctl, strength: tr.str } : null, d5 = tr && tr.pdi5 != null ? { pdi: tr.pdi5, mdi: tr.mdi5, adx: tr.adx5, control: tr.ctl5 } : null; bar('15', d); bar('5', d5);
-    const d4 = tr && tr.pdi4 != null ? { pdi: tr.pdi4, mdi: tr.mdi4, adx: tr.adx4, control: tr.ctl4, strength: tr.str4 } : null; bar('4', d4);
+    const pick = (k) => tr && tr['pdi' + k] != null ? { pdi: tr['pdi' + k], mdi: tr['mdi' + k], adx: tr['adx' + k], control: tr['ctl' + k], strength: tr['str' + k] } : null;
+    const d = pick(''), d1 = pick('1'), d4 = pick('4'); bar('15', d); bar('1', d1); bar('4', d4);
     const b = document.getElementById('ctl-side'); if (!b) return;
-    if (!d) { b.textContent = '—'; b.className = ''; set('ctl-sub', 'No DI data yet.'); return; }
-    b.textContent = (d.control === 'sellers' ? '▼ SELLERS' : '▲ BUYERS') + ' IN CONTROL'; b.className = d.control;
-    const agree = d5 ? (d5.control === d.control ? `the 5m agrees (${d5.control})` : `but the 5m leans to ${d5.control}`) : '';
-    const str = { strong: 'strong grip', building: 'grip building', weak: 'weak grip, no clear trend' }[d.strength] || d.strength;
-    const big = d4 ? ` H4: ${d4.control} in control (ADX ${d4.adx.toFixed(1)}, ${d4.strength})${d4.control === d.control ? ', same side as the 15m' : ', against the 15m'}.` : '';
-    set('ctl-sub', `15m: −DI ${d.mdi.toFixed(1)} vs +DI ${d.pdi.toFixed(1)}, ADX ${d.adx.toFixed(1)} (${str}); ${agree}.${big}`);
+    const all = [['H4', d4], ['H1', d1], ['M15', d]].filter(([, x]) => x);
+    if (!all.length) { b.textContent = '—'; b.className = ''; set('ctl-sub', 'No DI data yet.'); return; }
+    const sellers = all.filter(([, x]) => x.control === 'sellers').length, side = sellers * 2 > all.length ? 'sellers' : 'buyers';
+    const unanimous = all.every(([, x]) => x.control === side);
+    b.textContent = (side === 'sellers' ? '▼ SELLERS' : '▲ BUYERS') + ' IN CONTROL'; b.className = side;
+    const grip = { strong: 'strong', building: 'building', weak: 'weak' };
+    set('ctl-sub', all.map(([n, x]) => `${n} ${x.control} (ADX ${x.adx.toFixed(1)}, ${grip[x.strength] || x.strength})`).join(' · ')
+      + (unanimous ? ` — all ${all.length} timeframes agree.` : ' — timeframes are mixed, no clean control.'));
   };
 </script>
 <script>
