@@ -570,7 +570,7 @@
     day: (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: '2-digit', month: 'short' }).format(new Date(d)),
     fail: (box, t) => { const f = document.createElement('div'); f.className = 'gd-fail'; f.textContent = t || 'Did not load'; box.replaceChildren(f); },
     el: (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; },
-    rows: (id) => { const d = dash.data(id); return d.status === 'ok' && Array.isArray(d.data) ? d.data : []; },
+    rows: (id) => { const d = dash.data(id); return d && d.status !== 'loading' && Array.isArray(d.data) ? d.data : []; },  // keep showing the last data even if the runtime marks it stale
   };
 
   dash.loader('gold', {
@@ -825,7 +825,9 @@
       const row = gd.rows('desk').find((r) => r.kind === 'brain'); const d = dash.data('desk');
       if (!row) { $('nb-explain').textContent = d.status === 'loading' ? 'Waiting for the brain status…' : 'Brain status not in the desk feed yet.'; return; }
       const b = row.brain || {}, n = b.now || {};
-      $('nb-at').textContent = 'updated ' + (b.updated || '—') + ' London · config v' + (b.version ?? '—');
+      const ageMin = row.at ? Math.round((Date.now() - Date.parse(row.at)) / 6e4) : null;
+      $('nb-at').textContent = (ageMin != null && ageMin > 30 ? `⚠ ${ageMin >= 120 ? Math.round(ageMin / 60) + ' h' : ageMin + ' min'} old · ` : '') + 'updated ' + (b.updated || '—') + ' London · config v' + (b.version ?? '—');
+      $('nb-at').style.color = ageMin != null && ageMin > 30 ? 'var(--amber)' : '';
       $('nb-status').textContent = row.status === 'operational' ? 'Operational' : row.status;
       const act = (b.active || [])[0];
       $('nb-verdict').textContent = act ? `ACTIVE ${act.side} · ${act.strategy} · score ${act.score}` : (n.best ? (n.best.band === 'SEND' ? `READY: next ${n.best.side} ${n.best.strategy} setup sends` : 'NO 85+ SETUP POSSIBLE NOW') : '—');

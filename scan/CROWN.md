@@ -6,11 +6,11 @@ Crown's text is stored directly (no dynamic variables): the ElevenLabs talk-to p
    dynamic_variables {"dynamic_variable_placeholders": {}}. Change nothing else.
 4. If ElevenLabs fails, say so in the reply and carry on.
 
-Dashboard refresh (same run, after Crown; trader asked on 6 Nov for the dashboard to show the live desk):
+Dashboard refresh — MANDATORY ON EVERY WATCHDOG RUN, even when the ElevenLabs push is skipped (19 Nov, Woody: "Desk is not updating live information, brain is empty" — the desk.json and bars.json files go stale within an hour if this is skipped):
 5. python3 /home/user/cbf-gold-desk/scan/desk_json.py (it also runs the Neural Brain learning review and status for the dashboard panel and Crown), then cp /home/user/gold-desk/crown/desk.json /tmp/claude-0/-home-user-cbf-gold-desk/d2f16d0e-dc9e-567e-bf61-47dec9735a7a/scratchpad/dash/desk.json
 6. Artifact publish with url https://claude.ai/artifact/3GSRaPMgJGLq3Vg7MJ733x, file_path that scratchpad desk.json, asset: true. Note the returned /_blob/<id> url.
 7. ArtifactData get datasets/desk on that url, then update datasets/desk (if_version = its version) with source.url = the new /_blob url (keep kind file, name desk.json, format json), updated {at: now UTC ISO, by: "Claude (gold desk)"}, edit {via: "claude", at: now}.
-8. Delete the previous desk.json asset (Artifact delete with url and path = the old blob id) only if it was uploaded by this desk.
+8. Delete the previous desk.json asset (its id is in /home/user/gold-desk/crown/desk_blob.txt), then write the new id there.
 
 Bars and indicators (since 11 Nov: Coinversa's candle tool needs a paid plan, so these come from the checker's own Hyperliquid feed):
 8b. python3 /home/user/cbf-gold-desk/scan/bars_json.py, then cp /home/user/gold-desk/crown/bars.json to the scratchpad dash/bars.json.
