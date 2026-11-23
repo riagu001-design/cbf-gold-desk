@@ -46,7 +46,7 @@ def main():
     hours = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380 or mins < 360)
     rows.append(dict(kind='status', id='checker', status='running' if running else 'stopped', note=last, at=iso(now),
                      side=None, entry=mark, stop=None, target=None, result=None,
-                     strategy='Neural Brain v1: H1, M15, 4H and swing engines propose; the brain scores and sends 85+ only', last='in hours' if hours else 'outside hours'))
+                     strategy='ALL ENGINES OFF (23 Nov, Woody: "Delete all of them"). New setups tested; none live until Woody picks', last='in hours' if hours else 'outside hours'))
 
     # trend and the dip level, as the checker sees them
     hi, lo = a.swings(h1)
@@ -99,6 +99,7 @@ def main():
     reason = last.split('no setup (', 1)[1].rsplit(')', 1)[0] if 'no setup (' in last else ''
     best['note'] = f'15m trend {"up" if side == "BUY" else "down"} (EMA20 {e20:.1f} vs EMA50 {e50:.1f}); 1H trend {bias.lower()} (close {c1:.1f} vs EMA50 {e50h:.1f}), 4H {bias4.lower()}; 15m EMA20 {e20:.1f} / EMA50 {e50:.1f}; 5m EMA20 dip level {E5:.1f}'
     best['last'] = '; '.join(why) or (f'waiting for a 5m candle to dip to {E5:.1f} and close strongly' + (f' (last check: {reason})' if reason else ''))
+    best.update(status='OFF', entry=None, stop=None, target=None, strategy='No live strategy', last="All engines are switched off (23 Nov, Woody). Only London breakout-and-retest was positive in both halves of the 12-month test; it waits for Woody's go")  # 23 Nov 2026
     rows.append(best)
 
     # trades and account
@@ -151,7 +152,7 @@ def main():
         import sys; sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'brain'))
         import learn, core
         learn.review(); bs = core.status()
-        rows.append(dict(kind='brain', id='brain', status='operational', at=iso(now), side=bs.get('now', {}).get('best', {}).get('side'),
+        rows.append(dict(kind='brain', id='brain', status='off: no engine is proposing (23 Nov, Woody)', at=iso(now), side=None,
                          entry=None, stop=None, target=None, result=None, strategy='CrownBearer Neural Brain', note='', last='', brain=bs))
     except Exception as ex:
         rows.append(dict(kind='brain', id='brain', status=f'error {type(ex).__name__}: {ex}', at=iso(now), side=None, entry=None, stop=None,

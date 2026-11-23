@@ -56,6 +56,10 @@ def say(p):
     return f'{p:.0f}'
 
 
+# 23 Nov 2026 (Woody: "Delete all of them"): every strategy engine is switched off until a new setup passes its test.
+ENGINES_OFF = True
+
+
 def main():
     now = dt.datetime.now(L)
     tag = now.strftime('%H:%M')
@@ -79,7 +83,7 @@ def main():
 
     # CrownBearer Neural Brain: the only signal authority; Crown speaks from its status
     try:
-        bs = json.load(open(f'{G}/brain/status.json')); n = bs.get('now', {}); act = bs.get('active') or []
+        bs = {} if ENGINES_OFF else json.load(open(f'{G}/brain/status.json')); n = bs.get('now', {}); act = bs.get('active') or []
         top = sorted(n.get('scores', []), key=lambda r: -r['score'])[:3]
         facts.append('NEURAL BRAIN (the only thing that sends Telegram signals; engines only propose): sends only setups scoring 85+ with all checks passed (market open, news, fresh, stop size, daily loss limit -3R, no duplicate or conflicting signal); 75-84 watchlist; below 75 rejected. '
                      f"Now: H4 bias {n.get('bias')}, regime {n.get('regime')}, session {n.get('session')}. Scores a setup would get now: " + ', '.join(f"{r['side']} {r['strategy']} {r['score']}" for r in top) + '. '
@@ -115,7 +119,7 @@ def main():
         gap = abs(mark - e5)
         where = 'right at the price' if gap < 1.5 else f'{gap:.0f} dollars {"below" if mark >= e5 else "above"} the price'
         try:
-            sw_ = json.load(open(f'{G}/swing_state.json'))
+            sw_ = {} if ENGINES_OFF else json.load(open(f'{G}/swing_state.json'))
         except (OSError, ValueError):
             sw_ = {}
         lv_ = sw_.get('levels') or {}
@@ -125,7 +129,7 @@ def main():
             spoken.append(f"The desk is paper-testing the daily swing pullback. The daily trend is {tr_}, so it waits for a {'dip' if tr_ == 'up' else 'rally'} to the 21-day average, now about {say(e21s)}. The macro bias is {({'UP': 'bullish', 'DN': 'bearish'}).get(sw_.get('macro', {}).get('bias'), 'mixed')}.")
 
     try:
-        as_ = json.load(open(f'{G}/asia_state.json')); rg_ = as_.get('range') or {}
+        as_ = {} if ENGINES_OFF else json.load(open(f'{G}/asia_state.json')); rg_ = as_.get('range') or {}
         if rg_: facts.append(f"Asia range breakout paper test (added 18 Nov, Woody): today's Asia range (23:00 to 04:00 London) high {rg_['high']}, low {rg_['low']}"
                              + (' (still forming)' if rg_.get('bars', 0) < 20 else '') + '. Entry 04:00 to 09:00 on a 15 minute close beyond it with the 1H bias and 4H trend; stop 1 x 1H ATR, target 2R, out 16:00. Brain score about 53: paper only.'
                              + (f" Open: {as_['open']['side']} from {as_['open']['entry']:.1f}, stop {as_['open']['stop']:.1f}, target {as_['open']['target']:.1f}." if as_.get('open') else ''))
@@ -135,7 +139,7 @@ def main():
     except (OSError, ValueError, KeyError):
         pass
     try:
-        em_ = json.load(open(f'{G}/ema_state.json'))
+        em_ = {} if ENGINES_OFF else json.load(open(f'{G}/ema_state.json'))
     except (OSError, ValueError):
         em_ = {}
     if em_.get('h4'):
@@ -151,7 +155,7 @@ def main():
 
     # 4H EMA 9/21 paper test (16 Nov 17:00, Woody)
     try:
-        h4p = json.load(open(f'{G}/h4_state.json'))
+        h4p = {} if ENGINES_OFF else json.load(open(f'{G}/h4_state.json'))
     except (OSError, ValueError):
         h4p = {}
     if h4p.get('h4'):
@@ -221,12 +225,12 @@ def main():
     facts.append(f'Live log since the new rules: {len(rows)} setups, {len(closed)} closed, {pl:+.2f} dollars. Account about {BALANCE_START + pl:.2f} dollars (194.74 at the 30 Oct weekly report plus live results). Review after 20 trades.')
     import csv as _csv
     paper_today = 0
-    for _f in ('ema_log.csv', 'm15_log.csv', 'h4_log.csv', 'swing_log.csv', 'asia_log.csv'):
+    for _f in (() if ENGINES_OFF else ('ema_log.csv', 'm15_log.csv', 'h4_log.csv', 'swing_log.csv', 'asia_log.csv')):
         try:
             paper_today += sum(1 for r in _csv.DictReader(open(f'{G}/{_f}')) if (r.get('opened') or '').startswith(now.strftime('%Y-%m-%d')))
         except (OSError, ValueError):
             pass
-    spoken.append(f'{"Paper test setups today: " + str(paper_today) if paper_today else "No paper test setups yet today"}, and the account is about {BALANCE_START + pl:.0f} dollars.')
+    spoken.append(f'{"No strategy is live after Woody deleted them all; the new setups are tested and wait for his pick" if ENGINES_OFF else ("Paper test setups today: " + str(paper_today) if paper_today else "No paper test setups yet today")}, and the account is about {BALANCE_START + pl:.0f} dollars.')
 
     # news
     try:
@@ -244,7 +248,10 @@ def main():
         else:
             spoken.append('There is no more high-impact US news today.')
 
-    facts.append('Desk mode from 16 Nov 2026 (Woody): all earlier strategies are deleted (5 minute dip and 1 hour breakout: no edge in the 12-month and 20-year tests). Four PAPER TESTS run (the 4H EMA 9/21 cross with a 2R target was added at 17:00 on 16 Nov, Woody, for about one more setup a week at any hour). (0) M15 entry with H1 confirmation (Woody design, 16 Nov; since 15:20 the H4 trend no longer blocks, entries 07:00 to 17:00 London; without H4 it was break-even in the unseen test): 15m EMA9/21 cross in the direction of the 1H EMA9/21, stop 2 x 1H ATR, exit when the 1H EMA9/21 flips; the weakest of the tests. (1) Frequent: H1 EMA 9/21 cross either way (H4 no longer blocks since 16 Nov 15:20; entries 07:00 to 17:00 London; without H4 that test made +8.8R PF 1.5 on the unseen half, about 1 to 2 trades a week), stop 2 x 1H ATR, exit on the opposite cross or Friday 21:00; at all hours without H4 it lost in the test, which is why entries are limited to 07:00 to 17:00. The earlier H4 version made profit factor about 1.4 to 2.0 in both halves. (2) Slow: the daily swing pullback with the macro filter (Woody strategies 1 and 4): daily EMA50 above EMA200 = buys only, below = sells only; the day touches the 21-day EMA and closes back beyond it as a confirmation candle; stop beyond the 5-day swing plus 0.2 daily ATR; target 2R; out after 30 trading days; a trade against a clear macro bias (real yields and dollar both moving) is skipped. 20-year test: about 6 trades a year, both decades profitable (profit factor about 1.4 to 1.5), worst losing run about 12R. Risk 1 percent per trade. With daily stops of about 190 dollars per ounce, 1 percent of a 182 dollar account is about 0.01 ounce, so it cannot be traded at the broker 0.01 lot (1 ounce): that would risk about 190 dollars. Messages are marked PAPER TEST.')
+    if ENGINES_OFF:
+        facts.append('Desk mode from 23 Nov 2026, 17:40 London (Woody: "Delete all of them"): ALL strategy engines are switched off and no signals are sent. Woody asked for four new setups: (1) H4 trend pullback to an H1 level with an M15 break of the last minor swing, (2) breakout and retest of the previous day or London session high/low, (3) failed breakout reversal, (4) range trading. 12-month backtest (costs 0.40/oz): only breakout and retest in the London session (07:00-13:00) was positive in both halves (38 trades, about +0.18R a trade, unseen half +3.9R, worst losing run about 2R) with thirds at 0.5R/1R/1.5R and the stop to breakeven after TP1; the H4 trend pullback in New York lost in the unseen half; New York lost for every setup; range trading hardly fired (5 trades, all losers). Nothing goes live until Woody picks. If asked for a setup, say no engine is live and give only levels, clearly as a desk read, not a signal.')
+    else:
+        facts.append('Desk mode from 16 Nov 2026 (Woody): all earlier strategies are deleted (5 minute dip and 1 hour breakout: no edge in the 12-month and 20-year tests). Four PAPER TESTS run (the 4H EMA 9/21 cross with a 2R target was added at 17:00 on 16 Nov, Woody, for about one more setup a week at any hour). (0) M15 entry with H1 confirmation (Woody design, 16 Nov; since 15:20 the H4 trend no longer blocks, entries 07:00 to 17:00 London; without H4 it was break-even in the unseen test): 15m EMA9/21 cross in the direction of the 1H EMA9/21, stop 2 x 1H ATR, exit when the 1H EMA9/21 flips; the weakest of the tests. (1) Frequent: H1 EMA 9/21 cross either way (H4 no longer blocks since 16 Nov 15:20; entries 07:00 to 17:00 London; without H4 that test made +8.8R PF 1.5 on the unseen half, about 1 to 2 trades a week), stop 2 x 1H ATR, exit on the opposite cross or Friday 21:00; at all hours without H4 it lost in the test, which is why entries are limited to 07:00 to 17:00. The earlier H4 version made profit factor about 1.4 to 2.0 in both halves. (2) Slow: the daily swing pullback with the macro filter (Woody strategies 1 and 4): daily EMA50 above EMA200 = buys only, below = sells only; the day touches the 21-day EMA and closes back beyond it as a confirmation candle; stop beyond the 5-day swing plus 0.2 daily ATR; target 2R; out after 30 trading days; a trade against a clear macro bias (real yields and dollar both moving) is skipped. 20-year test: about 6 trades a year, both decades profitable (profit factor about 1.4 to 1.5), worst losing run about 12R. Risk 1 percent per trade. With daily stops of about 190 dollars per ounce, 1 percent of a 182 dollar account is about 0.01 ounce, so it cannot be traded at the broker 0.01 lot (1 ounce): that would risk about 190 dollars. Messages are marked PAPER TEST.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; the broker price has been about 3 to 4 dollars lower, so use the same distances from the broker entry.')
     spoken.append('Ask me for any detail: levels, the rules, the account or the scanner.')
 
