@@ -13,4 +13,4 @@ auto_scan.py blocks new entries from 5 min before to 5 min after each listed tim
 news warning to setups 6-15 min either side. FMP has no economic calendar on this plan, so do not use it.
 If the calendar cannot be read, do not write the file (setups then carry "News calendar not checked").
 
-Also on every watchdog run: if it is after 22:00 London (not Saturday) and swing_state.json levels.day is not today, follow scan/SWING.md.
+Daily swing check (SWING.md): SWITCHED OFF 23 Nov 2026 (Woody: "Delete all of them"). Do not run it.

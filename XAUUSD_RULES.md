@@ -200,3 +200,9 @@ scan/pb_scan.py, run every 5 min by loop.sh, sent by the Neural Brain as a B-GRA
 - Entries 07:00-20:00 London weekdays, one trade at a time, max 3 a day; brain news/fresh/stop/daily-loss/conflict checks apply.
 Evidence: backtest/research_2026-11-23 (12 months: +27.4R, 321 trades, PF 1.14, unseen half +10.5R; live feed 16-23 Nov +7.6R on 8).
 Review after 20 live trades: keep, promote to full size, or switch off.
+
+## All six old engines switched off (23 Nov 2026, 17:40 London; Woody: "Delete all of them")
+H1 EMA cross, M15 pullback, 4H cross, Asia breakout, trend pullback PB and daily swing are out of scan/loop.sh (code kept
+in git history). Only the market updates (updates.py) still run. The four new setups (trend pullback, breakout-retest,
+failed breakout, range) were tested in backtest/research_2026-11-23/four_setups.py (results_four_setups.txt).
+None is live yet: nothing goes live until the trader picks one from the test results.
