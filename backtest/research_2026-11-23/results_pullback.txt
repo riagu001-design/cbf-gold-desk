@@ -1,0 +1,18 @@
+data 2025-11-06 to 2026-11-16, 34972 15m bars; unseen half from 2026-05-17; ~267 trading days
+variant                                      trades  /day  win%       R    PF  maxDD | in-sample R    PF | UNSEEN R    PF  win%
+ADX25, 2R, both sides                           261  0.98    37     4.9  1.03   27.2 |        17.6  1.24 |    -12.7  0.87    34
+ADX20, 2R                                       321  1.20    39    27.4  1.14   13.8 |        16.9  1.18 |     10.5   1.1    38
+ADX30, 2R                                       208  0.78    39    18.2  1.14   20.0 |        20.1  1.39 |     -1.9  0.98    36
+ADX25, 1.5R                                     280  1.05    42     1.2  1.01   19.0 |         4.6  1.06 |     -3.4  0.96    42
+ADX25, 3R                                       236  0.88    30    10.1  1.06   25.7 |        15.4  1.21 |     -5.3  0.94    27
+ADX25, 2R, + 4H agrees                          168  0.63    35    -4.9  0.96   20.9 |        10.4  1.22 |    -15.3  0.75    31
+ADX25, 2R, no M15 DI check                      288  1.08    38    12.7  1.07   19.5 |        16.9  1.21 |     -4.2  0.96    35
+ADX25, trail (BE at 2R, exit on EMA20 loss)     229  0.86    23    15.6   1.1   24.7 |        16.1  1.25 |     -0.5  0.99    22
+ADX25, 2R, BUYS only                            121  0.45    39     6.3  1.08   11.5 |        10.8   1.3 |     -4.5  0.89    35
+ADX25, 2R, SELLS only                           140  0.52    35    -1.4  0.99   21.9 |         6.8  1.18 |     -8.2  0.85    32
+ADX25, 2R, max 1 a day                          157  0.59    37     6.0  1.06   23.5 |        14.3  1.32 |     -8.2  0.86    33
+
+Stability (12 months, R per quarter): ADX16-20 positive in all four quarters at 1.5-2.5R (about +26 to +32R a year, PF 1.12-1.14);
+ADX22+ has a losing quarter. Live-feed check (Hyperliquid xyz:GOLD 15m, 16-23 Nov, not in the 12-month file):
+ADX20 2R: 8 trades, 62% wins, +7.6R, PF 4.3; today 09:00 BUY 3616.2 -> 3647.6 = +1.97R.
+Verdict: small but steady edge (about +0.08R a trade over the year, ~1.2 trades a day, worst drawdown ~14R). Not yet live.
