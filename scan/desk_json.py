@@ -84,8 +84,6 @@ def main():
         best.update(entry=round(E5, 1), stop=round(stop, 1), target=round(E5 + sg * R * min(2, max(rr, 1)), 1))
         if R > 10:
             why.append(f'a stop now would be ${R:.1f} away, over the $10 limit')
-    if side == 'BUY':
-        why.append('15m trend is up; v3.9 is sells only, so no buys')
     if not hours:
         why.append('market closed or night pause (trading Sun 23:00-Fri 20:00 London; no new trades 22:00-23:00 or 00:00-06:00)')
     if bias != ('UP' if side == 'BUY' else 'DOWN'):

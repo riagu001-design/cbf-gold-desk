@@ -291,8 +291,7 @@ def main():
     # v3.9 (10 Nov, trader's call 'use the best'): sells only. Live-matched backtest 13 Oct-10 Nov: buys lost $34 over
     # 36 trades (37% wins) while sells made +$189; sells only with the forming-4H filter: 53 trades, 72% wins, +$193,
     # PF 4.86, worst drop $25, both halves positive. Buys come back only after a re-test shows them paying.
-    if buy:
-        return done('15m UP: v3.9 is sells only (buys off until a re-test shows them paying)')
+    # 23 Nov 2026 (Woody): "Forget the sell only rule" -> buys are back on; the 1H and 4H trends must still agree.
     # v3.7 (9 Nov, edge review): the 4H trend must agree too. Backtest: +$116 PF 1.62 vs +$92 PF 1.30 without it.
     if bias4 != ('UP' if buy else 'DN'):
         return done(f'15m and 1H {"UP" if buy else "DN"} but 4H {bias4.lower()}: no trade')

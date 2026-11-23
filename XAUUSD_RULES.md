@@ -185,3 +185,9 @@ Why: the backtest was rebuilt to match the live 4H filter exactly (it agreed wit
 - v3.9 (sells only + forming 4H): 53 trades (2.5/day), 72% wins, +$193, PF 4.86, worst drop $25, both halves positive
 Risk: gold fell over most of the test month. In a rising market v3.9 sends nothing. Buys were roughly break-even in the one rising week (+$9 over 17 trades) and lost $45 in a flat week.
 Review: after 20 closed v3.9 trades, and re-test buys on new data then.
+
+## Sells-only rule removed (23 Nov 2026, 01:58 London; Woody: "Forget the sell only rule")
+v3.9's SELLS ONLY is gone: buys and sells are both allowed again. Every other filter stays: the 1H trend must agree, the 4H
+trend must agree where a strategy uses it, entries 07:00-17:00 London (Asia breakout 04:00-09:00), news blackout 5 min
+either side, and the Neural Brain still sends only setups scoring 85+. Risk note from v3.9: buys lost money in the
+13 Oct-10 Nov test (gold falling); they have not been re-tested on new data.
