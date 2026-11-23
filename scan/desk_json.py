@@ -157,6 +157,12 @@ def main():
     except Exception as ex:
         rows.append(dict(kind='brain', id='brain', status=f'error {type(ex).__name__}: {ex}', at=iso(now), side=None, entry=None, stop=None,
                          target=None, result=None, strategy='CrownBearer Neural Brain', note='', last='', brain={}))
+    # 23 Nov 2026: every row carries every field (the dashboard's file reader keeps only the fields it sees in the first
+    # row, so the brain field, present only in the last row, was dropped and the brain panel showed dashes)
+    keys = []
+    for r in rows:
+        keys += [k for k in r if k not in keys]
+    rows = [{k: r.get(k) for k in keys} for r in rows]
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(rows, open(OUT, 'w'), indent=0)
     print(f'{len(rows)} rows -> {OUT}; best {best["status"]} {best["side"]} {best["entry"]}; why: {best["last"]}')
