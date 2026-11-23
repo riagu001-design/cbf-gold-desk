@@ -46,7 +46,7 @@ def main():
     hours = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380 or mins < 360)
     rows.append(dict(kind='status', id='checker', status='running' if running else 'stopped', note=last, at=iso(now),
                      side=None, entry=mark, stop=None, target=None, result=None,
-                     strategy='ALL ENGINES OFF (23 Nov, Woody: "Delete all of them"). New setups tested; none live until Woody picks', last='in hours' if hours else 'outside hours'))
+                     strategy='Live: Trend Pullback (H1 control) with H4 structure filter, B-grade half size. Paper: London breakout and retest', last='in hours' if hours else 'outside hours'))
 
     # trend and the dip level, as the checker sees them
     hi, lo = a.swings(h1)
@@ -99,7 +99,51 @@ def main():
     reason = last.split('no setup (', 1)[1].rsplit(')', 1)[0] if 'no setup (' in last else ''
     best['note'] = f'15m trend {"up" if side == "BUY" else "down"} (EMA20 {e20:.1f} vs EMA50 {e50:.1f}); 1H trend {bias.lower()} (close {c1:.1f} vs EMA50 {e50h:.1f}), 4H {bias4.lower()}; 15m EMA20 {e20:.1f} / EMA50 {e50:.1f}; 5m EMA20 dip level {E5:.1f}'
     best['last'] = '; '.join(why) or (f'waiting for a 5m candle to dip to {E5:.1f} and close strongly' + (f' (last check: {reason})' if reason else ''))
-    best.update(status='WATCH', entry=None, stop=None, target=None, strategy='Trend Pullback (H1 control)', last='Live engine: waiting for a 15m dip to the EMA20 in the 1H trend (see the scanner log). Paper: London breakout and retest')  # 23 Nov 2026
+    # 23 Nov 2026: the live engine is the Trend Pullback (pb_scan.py); the 'best' row now describes ITS read, not v3.5.
+    best.pop('seed', None)
+    try:
+        import sys as _s; _s.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'backtest', 'research_2026-11-23'))
+        from bars_json import dmi
+        from four_setups import pivots
+        d1h = dmi(h1); c1h = [b['c'] for b in h1]; e20h, e50h1 = a.ema(c1h, 20)[-1], a.ema(c1h, 50)[-1]
+        hb = e20h > e50h1 and d1h['pdi'] > d1h['mdi']; hs = e20h < e50h1 and d1h['mdi'] > d1h['pdi']; ctl = d1h['adx'] >= 20 and (hb or hs)
+        ph, pl = pivots(h4, 2); up4 = ph[-1][1] > ph[-2][1] and pl[-1][1] > pl[-2][1]; dn4 = ph[-1][1] < ph[-2][1] and pl[-1][1] < pl[-2][1]
+        s4 = 'UP (higher highs and lows)' if up4 else 'DOWN (lower highs and lows)' if dn4 else 'MIXED'
+        d15 = dmi(m15); A15 = a.atr(m15); pside = 'BUY' if hb else 'SELL' if hs else None
+        if pside is None: pside = 'BUY' if e20 > e50 else 'SELL'
+        sg = 1 if pside == 'BUY' else -1
+        di15 = (d15['pdi'] > d15['mdi']) if sg > 0 else (d15['mdi'] > d15['pdi'])
+        h4ok = up4 if sg > 0 else dn4
+        ext = min(b['l'] for b in m15[-3:]) if sg > 0 else max(b['h'] for b in m15[-3:])
+        pst = ext - sg * 0.3 * A15
+        if sg * (e20 - pst) < A15: pst = e20 - sg * A15
+        pR = abs(e20 - pst); pin_h = 7 <= now.hour < 20 and now.weekday() < 5
+        chk = [('ok' if ctl else 'no', f"1H control: {'buyers' if hb else 'sellers' if hs else 'none'} (ADX {d1h['adx']}, +DI {d1h['pdi']} / -DI {d1h['mdi']}; needs ADX 20+ with EMA20/50 and DI agreeing)"),
+               ('ok' if h4ok else 'no', f"H4 structure {s4}: highs {ph[-2][1]:.1f} -> {ph[-1][1]:.1f}, lows {pl[-2][1]:.1f} -> {pl[-1][1]:.1f} (must agree with the {pside.lower()})"),
+               ('ok' if di15 else 'no', f"15m DI {'agrees' if di15 else 'disagrees'} (+DI {d15['pdi']} / -DI {d15['mdi']})"),
+               ('ok' if (e20 > e50) == (sg > 0) else 'no', f"15m EMA20 {e20:.1f} {'above' if e20 > e50 else 'below'} EMA50 {e50:.1f}"),
+               ('ok' if pin_h else 'wait', 'Entry window open (07:00-20:00 London weekdays)' if pin_h else 'Outside the entry window: entries 07:00-20:00 London weekdays'),
+               ('wait', f"Trigger: a closed 15m candle {'dips to' if sg > 0 else 'rallies to'} the 15m EMA20 ({e20:.1f}) and closes back {'above' if sg > 0 else 'below'} it, {'bullish' if sg > 0 else 'bearish'}")]
+        blocked = [t for st_, t in chk if st_ == 'no']
+        try:
+            pbl = [l for l in open(f'{G}/scan_loop.log').read().splitlines() if ': PB ' in l][-1]
+        except (OSError, IndexError):
+            pbl = ''
+        best.update(side=pside, status='WATCH' if not blocked else 'BLOCKED', entry=round(e20, 1), stop=round(pst, 1), target=round(e20 + sg * 2 * pR, 1),
+                    strategy='Trend Pullback (H1 control) + H4 filter', note='\n'.join(f'{st_}|{t}' for st_, t in chk),
+                    last=('Blocked: ' + blocked[0].split(' (')[0] if blocked else f"All filters agree: waiting for the 15m dip to {e20:.1f}") + (f'. Engine log {pbl}' if pbl else ''))
+        if pbl and 'SETUP' in pbl:
+            tl = now.replace(hour=int(pbl[:2]), minute=int(pbl[3:5]), second=0, microsecond=0)
+            if 0 <= (now - tl).total_seconds() <= 900: best['status'] = 'VALID'
+    except Exception as ex:  # never break the feed
+        best.update(status='WATCH', entry=None, stop=None, target=None, strategy='Trend Pullback (H1 control) + H4 filter', note='', last=f'engine read failed: {type(ex).__name__}')
+    try:
+        po = json.load(open(f'{G}/pb_state.json')).get('open')
+        if po:
+            rows.append(dict(kind='trade', id='PB' + po['opened'], side=po['side'], entry=po['entry'], stop=po['stop'], target=po['target'], status='Open',
+                             result=None, note='Trend pullback, B-grade half size', strategy='Trend Pullback', last='', at=ldn_to_utc(po['opened'])))
+    except (OSError, ValueError, KeyError):
+        pass
     rows.append(best)
 
     # trades and account
