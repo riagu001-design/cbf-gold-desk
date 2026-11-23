@@ -191,3 +191,12 @@ v3.9's SELLS ONLY is gone: buys and sells are both allowed again. Every other fi
 trend must agree where a strategy uses it, entries 07:00-17:00 London (Asia breakout 04:00-09:00), news blackout 5 min
 either side, and the Neural Brain still sends only setups scoring 85+. Risk note from v3.9: buys lost money in the
 13 Oct-10 Nov test (gold falling); they have not been re-tested on new data.
+
+## Trend pullback engine LIVE (23 Nov 2026, 17:15 London; Woody: "Yes switch it on")
+scan/pb_scan.py, run every 5 min by loop.sh, sent by the Neural Brain as a B-GRADE (half size, ~$25 risk) signal (fixed score 80).
+- Control: completed 1H candles EMA20 vs EMA50 and +DI vs -DI agree, 1H ADX >= 20; the 15m DI must agree.
+- Entry: a closed 15m candle tags the 15m EMA20 (within 0.1 ATR) and closes back on the trend side, in the trend direction, beyond the 15m EMA50. Market order.
+- Stop: beyond the last three 15m candles + 0.3 x 15m ATR (at least 1 x ATR). Target 2R. Friday 21:00 exit.
+- Entries 07:00-20:00 London weekdays, one trade at a time, max 3 a day; brain news/fresh/stop/daily-loss/conflict checks apply.
+Evidence: backtest/research_2026-11-23 (12 months: +27.4R, 321 trades, PF 1.14, unseen half +10.5R; live feed 16-23 Nov +7.6R on 8).
+Review after 20 live trades: keep, promote to full size, or switch off.

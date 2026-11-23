@@ -12,6 +12,7 @@ while true; do
   python3 "$D/ema_scan.py" >> "$G/scan_loop.log" 2>&1
   python3 "$D/m15_scan.py" >> "$G/scan_loop.log" 2>&1  # 16 Nov (Woody): M15 entry, H1 confirmation, H4 bias
   python3 "$D/h4_scan.py" >> "$G/scan_loop.log" 2>&1   # 16 Nov 17:00 (Woody): 4H EMA 9/21 cross, 2R target
-  python3 "$D/asia_scan.py" >> "$G/scan_loop.log" 2>&1 # 18 Nov (Woody): Asia range breakout 04:00-09:00, H1 bias + H4 trend
+  python3 "$D/asia_scan.py" >> "$G/scan_loop.log" 2>&1
+  python3 "$D/pb_scan.py" >> "$G/scan_loop.log" 2>&1    # 23 Nov (Woody): trend pullback, H1 control + 15m EMA20 dip, B-grade # 18 Nov (Woody): Asia range breakout 04:00-09:00, H1 bias + H4 trend
   python3 "$D/updates.py" >> "$G/scan_loop.log" 2>&1   # 18 Nov (Woody): daily market updates (Asia range, London/NY plans, Market flips)
 done

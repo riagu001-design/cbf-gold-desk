@@ -29,6 +29,8 @@ DEFAULT = dict(version=2, score_features=['h4', 'session'], send_min=85, watch_m
 NAMES = {'H1': 'H1 EMA 9/21 cross', 'M15': 'M15 entry with H1 confirmation', '4H': '4H EMA 9/21 cross', 'SWING': 'Daily swing pullback', 'ASIA': 'Asia range breakout (04:00-09:00)'}
 
 
+PB_SCORE = 80  # B-grade (75-84): sent at half size. Review after 20 live PB trades.
+
 def cfg():
     os.makedirs(B, exist_ok=True)
     if not os.path.exists(CONFIG):
@@ -85,9 +87,11 @@ def submit(p, ctx=None):
     m, ev = S.load_model()
     if p['strategy'] == 'SWING':
         e = ev['swing'][p['side']]['R']; parts = [('swing 20-year evidence', p['side'], round(e, 3), ev['swing'][p['side']]['n'])]
+    elif p['strategy'] == 'PB':  # 23 Nov 2026 (Woody: "Yes switch it on"): trend pullback, B-grade half size until 20 live trades
+        e = 0.085; parts = [('pullback 12-month test: 321 trades, PF 1.14, unseen half +10.5R', p['side'], e, 321)]
     else:
         e, parts = S.expected(m, p['strategy'], f)
-    sc = S.score(m, e)
+    sc = PB_SCORE if p['strategy'] == 'PB' else S.score(m, e)
     gates = []  # (name, passed, detail)
     if p['strategy'] == 'SWING': gates.append(('market open', True, 'daily setup: enter at the next open'))
     else: gates.append(('market open', market_open(ldn(now)), t.strftime('%a %H:%M London')))
@@ -138,7 +142,8 @@ STYLE = {'H1': ('H1', 'EMA 9/21 Trend Cross', '1H EMA 9/21 cross · Market Entry
          'M15': ('M15', 'Trend Pullback Entry', '15m entry with 1H confirmation · No Chasing'),
          '4H': ('H4', 'H4 Trend Cross', '4H EMA 9/21 cross · Market Entry'),
          'ASIA': ('M15', 'Asia Range Breakout', 'Pre-London breakout of the Asia high/low · No Chasing'),
-         'SWING': ('D1', 'Daily Swing Pullback', 'Daily pullback to the 21 EMA · enter at the open')}
+         'SWING': ('D1', 'Daily Swing Pullback', 'Daily pullback to the 21 EMA · enter at the open'),
+         'PB': ('M15', 'Trend Pullback (H1 control)', '15m dip to the EMA20 in the 1H trend · Market Entry · 2R')}
 
 
 SESS = {'asia': 'Asia', 'london': 'London', 'newyork': 'New York', 'late': 'late US'}
