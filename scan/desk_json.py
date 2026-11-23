@@ -152,6 +152,18 @@ def main():
         import sys; sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'brain'))
         import learn, core
         learn.review(); bs = core.status()
+        # 23 Nov 2026: only the trend pullback engine (PB) is live; show its fixed B-grade score, not the deleted engines'
+        nw = bs.get('now') or {}
+        nw['scores'] = [dict(strategy='PB', side=sd, score=80, expected_R=0.23, band='WATCHLIST') for sd in ('BUY', 'SELL')]
+        nw['best'] = dict(strategy='PB', side='BUY' if nw.get('bias') == 'UP' else 'SELL', score=80, expected_R=0.23, band='WATCHLIST')
+        nw['support'] = {}; nw['conflict'] = False
+        try:
+            pbl = open(f'{G}/scan_loop.log').read().splitlines(); pbl = [l for l in pbl if ': PB ' in l][-1:]
+        except OSError:
+            pbl = []
+        nw['explain'] = ('Live engine: Trend Pullback (H1 control) with the H4 structure filter, B-grade score 80, sent to Telegram at half size. '
+                         'Latest check: ' + (pbl[0].split(': PB ', 1)[1] if pbl else 'none yet') + '. Paper only: London breakout and retest.')
+        bs['now'] = nw
         rows.append(dict(kind='brain', id='brain', status='operational: trend pullback engine only (23 Nov, Woody)', at=iso(now), side=None,
                          entry=None, stop=None, target=None, result=None, strategy='CrownBearer Neural Brain', note='', last='', brain=bs))
     except Exception as ex:
