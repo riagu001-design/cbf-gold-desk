@@ -206,3 +206,11 @@ H1 EMA cross, M15 pullback, 4H cross, Asia breakout, trend pullback PB and daily
 in git history). Only the market updates (updates.py) still run. The four new setups (trend pullback, breakout-retest,
 failed breakout, range) were tested in backtest/research_2026-11-23/four_setups.py (results_four_setups.txt).
 None is live yet: nothing goes live until the trader picks one from the test results.
+
+## Desk set-up from 23 Nov 2026, 19:00 London (Woody: "Do want is best for the system")
+- LIVE (B-grade, half size, through the Neural Brain): Trend Pullback (H1 control), scan/pb_scan.py. Best evidence on file:
+  321 test trades, +27.4R, unseen half +10.5R. Review after 20 live trades.
+- PAPER (logged, not sent): London breakout and retest, scan/br_scan.py (same signal code as four_setups.py), thirds at
+  0.5R/1R/1.5R with the stop to breakeven after TP1, entries 07:00-13:00. Goes live only if 20 paper trades hold up.
+- OFF: H4 trend pullback, failed breakout and range (lost in the test), and all six older engines except PB.
+- Not yet tested: news (needs a year of the release calendar) and the broker's real spread/commission.

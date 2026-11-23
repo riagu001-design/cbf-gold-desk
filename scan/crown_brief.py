@@ -224,13 +224,24 @@ def main():
     facts.append(f'Setups sent today: {len(today)}' + (': ' + '; '.join(f'{r["given_at_london"][11:]} {r["side"]} {r["entry"]} SL {r["stop"]} TP {r["target"]} {r["result"] or "open"}' for r in today) if today else '') + '.')
     facts.append(f'Live log since the new rules: {len(rows)} setups, {len(closed)} closed, {pl:+.2f} dollars. Account about {BALANCE_START + pl:.2f} dollars (194.74 at the 30 Oct weekly report plus live results). Review after 20 trades.')
     import csv as _csv
+    pb_txt = ''
+    try:
+        _p = json.load(open(f'{G}/pb_state.json')).get('open')
+        if _p:
+            _lv = (mark - _p['entry']) * (1 if _p['side'] == 'BUY' else -1)
+            facts.append(f"OPEN LIVE SIGNAL (trend pullback, half size): {_p['side']} from {_p['entry']:.1f}, stop {_p['stop']:.1f}, target {_p['target']:.1f}, opened {_p['opened']} London; {_lv:+.2f} dollars per ounce now.")
+            pb_txt = f". The trend pullback {_p['side'].lower()} from {say(_p['entry'])} is open, stop {say(_p['stop'])}, target {say(_p['target'])}"
+        _b = json.load(open(f'{G}/br_state.json')).get('open')
+        if _b: facts.append(f"Paper breakout-retest trade (not sent): {_b['side']} from {_b['entry']:.1f}, stop {_b['stop']:.1f}, targets {_b['tps']}, {_b['legs_hit']} of 3 hit.")
+    except (OSError, ValueError, KeyError):
+        pass
     paper_today = 0
     for _f in (() if ENGINES_OFF else ('ema_log.csv', 'm15_log.csv', 'h4_log.csv', 'swing_log.csv', 'asia_log.csv')):
         try:
             paper_today += sum(1 for r in _csv.DictReader(open(f'{G}/{_f}')) if (r.get('opened') or '').startswith(now.strftime('%Y-%m-%d')))
         except (OSError, ValueError):
             pass
-    spoken.append(f'{"No strategy is live after Woody deleted them all; the new setups are tested and wait for his pick" if ENGINES_OFF else ("Paper test setups today: " + str(paper_today) if paper_today else "No paper test setups yet today")}, and the account is about {BALANCE_START + pl:.0f} dollars.')
+    spoken.append(f'{"One engine is live, the trend pullback at half size, and the London breakout retest is paper-tracked" + (pb_txt or "") if ENGINES_OFF else ("Paper test setups today: " + str(paper_today) if paper_today else "No paper test setups yet today")}, and the account is about {BALANCE_START + pl:.0f} dollars.')
 
     # news
     try:
@@ -249,7 +260,7 @@ def main():
             spoken.append('There is no more high-impact US news today.')
 
     if ENGINES_OFF:
-        facts.append('Desk mode from 23 Nov 2026, 17:40 London (Woody: "Delete all of them"): ALL strategy engines are switched off and no signals are sent. Woody asked for four new setups: (1) H4 trend pullback to an H1 level with an M15 break of the last minor swing, (2) breakout and retest of the previous day or London session high/low, (3) failed breakout reversal, (4) range trading. 12-month backtest (costs 0.40/oz): only breakout and retest in the London session (07:00-13:00) was positive in both halves (38 trades, about +0.18R a trade, unseen half +3.9R, worst losing run about 2R) with thirds at 0.5R/1R/1.5R and the stop to breakeven after TP1; the H4 trend pullback in New York lost in the unseen half; New York lost for every setup; range trading hardly fired (5 trades, all losers). Nothing goes live until Woody picks. If asked for a setup, say no engine is live and give only levels, clearly as a desk read, not a signal.')
+        facts.append('Desk mode from 23 Nov 2026, 19:00 London (Woody deleted the old engines, then said "Do want is best for the system"): ONE LIVE ENGINE, the Trend Pullback (H1 control): 1H EMA20 above EMA50, +DI above -DI and ADX 20 or more = buyers (sellers mirrored), the 15m DI agrees; a closed 15m candle dips to the 15m EMA20 and closes back beyond it; stop beyond the last three 15m candles plus 0.3 ATR (at least 1 ATR); target 2R; entries 07:00 to 20:00 London, at most 3 a day; 12-month test 321 trades, +27.4R, unseen half +10.5R. The brain sends it to Telegram as a B-grade signal at HALF size; reviewed after 20 live trades. ONE PAPER TEST (not sent): London breakout and retest (previous day or London session high/low; M15 close beyond, retest and close back in the breakout direction; 07:00 to 13:00; thirds at 0.5R, 1R and 1.5R with the stop to breakeven after the first): 12-month test 38 trades, +0.18R a trade, positive in both halves. Woody\'s other new setups (H4 trend pullback, failed breakout, range) lost in the test and are off.')
     else:
         facts.append('Desk mode from 16 Nov 2026 (Woody): all earlier strategies are deleted (5 minute dip and 1 hour breakout: no edge in the 12-month and 20-year tests). Four PAPER TESTS run (the 4H EMA 9/21 cross with a 2R target was added at 17:00 on 16 Nov, Woody, for about one more setup a week at any hour). (0) M15 entry with H1 confirmation (Woody design, 16 Nov; since 15:20 the H4 trend no longer blocks, entries 07:00 to 17:00 London; without H4 it was break-even in the unseen test): 15m EMA9/21 cross in the direction of the 1H EMA9/21, stop 2 x 1H ATR, exit when the 1H EMA9/21 flips; the weakest of the tests. (1) Frequent: H1 EMA 9/21 cross either way (H4 no longer blocks since 16 Nov 15:20; entries 07:00 to 17:00 London; without H4 that test made +8.8R PF 1.5 on the unseen half, about 1 to 2 trades a week), stop 2 x 1H ATR, exit on the opposite cross or Friday 21:00; at all hours without H4 it lost in the test, which is why entries are limited to 07:00 to 17:00. The earlier H4 version made profit factor about 1.4 to 2.0 in both halves. (2) Slow: the daily swing pullback with the macro filter (Woody strategies 1 and 4): daily EMA50 above EMA200 = buys only, below = sells only; the day touches the 21-day EMA and closes back beyond it as a confirmation candle; stop beyond the 5-day swing plus 0.2 daily ATR; target 2R; out after 30 trading days; a trade against a clear macro bias (real yields and dollar both moving) is skipped. 20-year test: about 6 trades a year, both decades profitable (profit factor about 1.4 to 1.5), worst losing run about 12R. Risk 1 percent per trade. With daily stops of about 190 dollars per ounce, 1 percent of a 182 dollar account is about 0.01 ounce, so it cannot be traded at the broker 0.01 lot (1 ounce): that would risk about 190 dollars. Messages are marked PAPER TEST.')
     facts.append('Dashboard: live price and chart, the desk scan, the open trade and account. Prices are the Hyperliquid desk feed; the broker price has been about 3 to 4 dollars lower, so use the same distances from the broker entry.')

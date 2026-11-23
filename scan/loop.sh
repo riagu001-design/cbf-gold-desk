@@ -11,5 +11,9 @@ while true; do
   # trend pullback PB, daily swing) are switched off. Their code stays in git history. The four new setups (H4 trend
   # pullback, breakout-retest, failed breakout, range) go live here only after they pass the backtest
   # (backtest/research_2026-11-23/four_setups.py).
+  # 23 Nov 2026 19:00 (Woody: "Do want is best for the system"): the best-tested engine runs live at half size,
+  # the best of the four new setups is paper-tracked (not sent) until 20 paper trades.
+  python3 "$D/pb_scan.py" >> "$G/scan_loop.log" 2>&1    # LIVE B-grade: trend pullback, H1 control + 15m EMA20 dip, 2R
+  python3 "$D/br_scan.py" >> "$G/scan_loop.log" 2>&1    # PAPER: London breakout and retest, thirds + breakeven
   python3 "$D/updates.py" >> "$G/scan_loop.log" 2>&1   # 18 Nov (Woody): daily market updates (Asia range, London/NY plans, Market flips)
 done
