@@ -1,0 +1,6 @@
+data 2025-11-06 to 2026-11-16; unseen half from 2026-05-17; costs 0.4/oz; live PB rules (ADX 20, 2R)
+filter                    n  win%   avgR       R    PF  maxDD | IS n   IS R IS PF | UN n   UN R UN PF | buys R  sells R
+none (live today)       321    39   0.09    27.4  1.14   13.8 |  148   16.9  1.18 |  173   10.5   1.1 |   11.9    15.5
+H4 structure agrees     140    45   0.23    31.9   1.4    7.6 |   67   23.3  1.64 |   73    8.6   1.2 |   18.8    13.1
+H4 not against          258    39   0.08    19.8  1.12   16.7 |  123   12.4  1.16 |  135    7.4  1.09 |   14.1     5.6
+H4 EMA20/50 agrees      208    38   0.05    10.8  1.08   13.3 |  101    9.8  1.16 |  107    1.0  1.01 |   -3.3    14.0
