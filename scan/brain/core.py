@@ -88,7 +88,7 @@ def submit(p, ctx=None):
     if p['strategy'] == 'SWING':
         e = ev['swing'][p['side']]['R']; parts = [('swing 20-year evidence', p['side'], round(e, 3), ev['swing'][p['side']]['n'])]
     elif p['strategy'] == 'PB':  # 23 Nov 2026 (Woody: "Yes switch it on"): trend pullback, B-grade half size until 20 live trades
-        e = 0.23; parts = [('pullback + H4 structure 12-month test: 140 trades, PF 1.40, unseen half +8.6R', p['side'], e, 321)]
+        e = 0.23; parts = [('pullback + H4 structure 12-month test: 140 trades, PF 1.40, unseen half +8.6R', p['side'], e, 140)]
     else:
         e, parts = S.expected(m, p['strategy'], f)
     sc = PB_SCORE if p['strategy'] == 'PB' else S.score(m, e)
@@ -143,7 +143,7 @@ STYLE = {'H1': ('H1', 'EMA 9/21 Trend Cross', '1H EMA 9/21 cross · Market Entry
          '4H': ('H4', 'H4 Trend Cross', '4H EMA 9/21 cross · Market Entry'),
          'ASIA': ('M15', 'Asia Range Breakout', 'Pre-London breakout of the Asia high/low · No Chasing'),
          'SWING': ('D1', 'Daily Swing Pullback', 'Daily pullback to the 21 EMA · enter at the open'),
-         'PB': ('M15', 'Trend Pullback (H1 control)', '15m dip to the EMA20 in the 1H trend · Market Entry · 2R')}
+         'PB': ('M15', 'Trend Pullback (H1 control)', '15m dip to the EMA20 in the 1H trend, H4 structure agrees · Market Entry · 2R')}
 
 
 SESS = {'asia': 'Asia', 'london': 'London', 'newyork': 'New York', 'late': 'late US'}
