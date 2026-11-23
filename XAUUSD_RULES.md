@@ -214,3 +214,9 @@ None is live yet: nothing goes live until the trader picks one from the test res
   0.5R/1R/1.5R with the stop to breakeven after TP1, entries 07:00-13:00. Goes live only if 20 paper trades hold up.
 - OFF: H4 trend pullback, failed breakout and range (lost in the test), and all six older engines except PB.
 - Not yet tested: news (needs a year of the release calendar) and the broker's real spread/commission.
+
+## H4 structure filter ON for the trend pullback engine (23 Nov 2026, 20:05 London; Woody: "Yes switch it on")
+Buys only when the last two confirmed H4 swing highs AND lows are both higher; sells only when both lower; a mixed H4
+takes nothing. Test (backtest/research_2026-11-23/h4_filter.py): 321 -> 140 trades, avg +0.09R -> +0.23R, PF 1.14 -> 1.40,
+worst losing run 13.8R -> 7.6R; unseen half +10.5R (173 trades) -> +8.6R (73 trades, PF 1.20). Expect about one signal
+every 2-3 trading days. Still B-grade, half size; review after 20 live trades.

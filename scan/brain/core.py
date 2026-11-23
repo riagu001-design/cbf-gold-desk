@@ -88,7 +88,7 @@ def submit(p, ctx=None):
     if p['strategy'] == 'SWING':
         e = ev['swing'][p['side']]['R']; parts = [('swing 20-year evidence', p['side'], round(e, 3), ev['swing'][p['side']]['n'])]
     elif p['strategy'] == 'PB':  # 23 Nov 2026 (Woody: "Yes switch it on"): trend pullback, B-grade half size until 20 live trades
-        e = 0.085; parts = [('pullback 12-month test: 321 trades, PF 1.14, unseen half +10.5R', p['side'], e, 321)]
+        e = 0.23; parts = [('pullback + H4 structure 12-month test: 140 trades, PF 1.40, unseen half +8.6R', p['side'], e, 321)]
     else:
         e, parts = S.expected(m, p['strategy'], f)
     sc = PB_SCORE if p['strategy'] == 'PB' else S.score(m, e)

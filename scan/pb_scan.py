@@ -8,6 +8,8 @@ Rules (backtest/research_2026-11-23/pullback.py, the version positive in all fou
   ENTRY    a closed 15m candle tags the 15m EMA20 (low within 0.1 ATR of it) and closes back above it, bullish and above
            the 15m EMA50 (sells mirrored). Market order at that close.
   STOP     beyond the last three 15m candles plus 0.3 x 15m ATR, at least 1 x 15m ATR.  TARGET  2R.  Friday 21:00 exit.
+  H4       (from 23 Nov 20:00) buys only when the last two confirmed H4 swing highs and lows are both higher, sells
+           only when both lower (h4_filter.py).
   LIMITS   entries 07:00-20:00 London weekdays, one trade at a time, at most 3 a day; the brain's news, freshness,
            stop-size, daily-loss and conflict checks apply.
 Run every 5 minutes by loop.sh. Never places orders."""
@@ -17,6 +19,8 @@ from auto_scan import candles, ema, atr, ldn, L
 from bars_json import dmi
 from ema_scan import mark
 from brain_link import propose, finish
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'backtest', 'research_2026-11-23'))
+from four_setups import pivots
 G = '/home/user/gold-desk'; ST, LOG = f'{G}/pb_state.json', f'{G}/pb_log.csv'
 FIELDS = ['opened', 'side', 'entry', 'stop', 'target', 'risk', 'closed', 'exit', 'usd_001', 'R', 'how', 'brain']
 ADX_MIN, RR, MAX_DAY = 20, 2.0, 3
@@ -61,6 +65,15 @@ def main():
     if not d1 or d1['adx'] < ADX_MIN: return out(f'1H ADX {d1["adx"] if d1 else "?"} under {ADX_MIN}: no clear control')
     buy = e20h > e50h and d1['pdi'] > d1['mdi']; sell = e20h < e50h and d1['mdi'] > d1['pdi']
     if not (buy or sell): return out(f'1H EMA20/50 and DI disagree (+DI {d1["pdi"]}, -DI {d1["mdi"]})')
+    # H4 STRUCTURE FILTER (23 Nov 2026 20:00, Woody: "Yes switch it on"; backtest h4_filter.py: trades 321 -> 140,
+    # avg +0.09R -> +0.23R, worst run 13.8R -> 7.6R; unseen half +10.5R on 173 trades -> +8.6R on 73).
+    # Buys only when the last two confirmed H4 swing highs AND lows are both higher; sells only when both lower.
+    h4 = candles('4h', 40); ph, pl = pivots(h4, 2)
+    if len(ph) < 2 or len(pl) < 2: return out('not enough H4 swings yet')
+    up = ph[-1][1] > ph[-2][1] and pl[-1][1] > pl[-2][1]; dn = ph[-1][1] < ph[-2][1] and pl[-1][1] < pl[-2][1]
+    h4txt = f'H4 highs {ph[-2][1]:.1f} -> {ph[-1][1]:.1f}, lows {pl[-2][1]:.1f} -> {pl[-1][1]:.1f}'
+    if (buy and not up) or (sell and not dn):
+        return out(f'1H {"buyers" if buy else "sellers"} (ADX {d1["adx"]}) but the H4 structure does not agree ({h4txt})')
     d15 = dmi(m15)
     if not d15 or (buy and d15['pdi'] <= d15['mdi']) or (sell and d15['mdi'] <= d15['pdi']):
         return out(f'1H {"buyers" if buy else "sellers"} (ADX {d1["adx"]}) but the 15m DI disagrees')
@@ -76,7 +89,7 @@ def main():
     stop = ext - sg * 0.3 * A
     if sg * (e - stop) < A: stop = e - sg * A
     stop = round(stop, 1); risk = round(abs(e - stop), 2); target = round(e + sg * RR * risk, 1)
-    dec, r = propose('PB', side, e, stop, 'the 2R target or the stop', f'1H ADX {d1["adx"]}, 15m dip to EMA20 held', target=target)
+    dec, r = propose('PB', side, e, stop, 'the 2R target or the stop', f'1H ADX {d1["adx"]}, H4 structure agrees, 15m dip to EMA20 held', target=target)
     opened = now.strftime('%Y-%m-%d %H:%M')
     rs.append(dict(opened=opened, side=side, entry=f'{e:.1f}', stop=f'{stop:.1f}', target=f'{target:.1f}', risk=f'{risk:.2f}', brain=dec.get('verdict'))); save(rs)
     st['open'] = dict(opened=opened, side=side, entry=e, stop=stop, target=target, risk=risk, brain_id=dec.get('id'), checked_ms=x['T'] + 1)
