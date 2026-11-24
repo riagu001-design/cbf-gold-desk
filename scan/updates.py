@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Daily MARKET UPDATES to Telegram (Woody 18 Nov 2026: no more days of silence). These are information, not trades.
 Sent through the brain's one channel (brain/publisher.py), weekdays only, at most once per slot:
-  04:00  Asia range set (high / low for the Asia breakout engine)
+  04:00  Asia range set (high / low, information only since 23 Nov)
   07:45  London open plan     12:45  New York open plan
   any time 04:00-21:00: Market flip (SELL / BUY / WAIT changed and held for two checks, at most one flip message an hour)
 Market = SELL when the 4H EMA50/200 trend is down AND sellers lead the DI on most of H4/H1/M15; BUY mirrored; else WAIT
@@ -44,6 +44,19 @@ def brain_now():
         return []
 
 
+def engine_now():
+    """The live trend pullback engine's read from the desk feed (refreshed every 15 minutes)."""
+    try:
+        b = [r for r in json.load(open(f'{G}/crown/desk.json')) if r.get('kind') == 'best'][0]
+    except (OSError, ValueError, IndexError):
+        return ''
+    if b.get('entry') is None: return ''
+    head = {'VALID': 'SETUP SENT', 'BLOCKED': 'blocked', 'WATCH': 'all filters agree, waiting for the dip'}.get(b.get('status'), b.get('status'))
+    why = (b.get('last') or '').split('. Engine log')[0]
+    return (f"🎯 Live engine (trend pullback + H4 filter, entries 07:00-20:00): {b['side']} lean, {head}. "
+            f"Dip level {b['entry']:.2f}, stop if it fired {b['stop']:.2f}, target {b['target']:.2f}.\n   {why}")
+
+
 def news_line(now):
     """Woody's layout (18 Nov): the list of today's high-impact releases, then the no-trade rule, only when there is news."""
     try:
@@ -70,10 +83,8 @@ def main():
         if key == 'asia' and not ah: continue
         lines = [f'👑 CBFX | {title} · {tag} London', f'💲 Gold {px:.2f}', f'📈 Market: {icon}', f'   {why}']
         if ah: lines.append(f'🌏 Asia range: high {ah:.2f} · low {al:.2f} (width {ah - al:.2f})')
-        if key == 'asia' and ah:
-            lines.append(f"🎯 Asia breakout engine, 04:00-09:00: {'buy a 15m close above ' + format(ah, '.2f') if m == 'BUY' else 'sell a 15m close below ' + format(al, '.2f') if m == 'SELL' else 'needs the 1H bias and 4H trend to agree first'}")
-        b = brain_now()
-        if b: lines.append('🧠 Best setups if they fire now: ' + ' · '.join(b))
+        e = engine_now()  # 24 Nov 2026: the only live engine is the trend pullback (old engines deleted 23 Nov)
+        if e: lines.append(e)
         lines += [news_line(now), FOOT]
         r = publisher.publish('\n'.join(lines), 'update'); st['sent'].append(key); sent.append(f'{key} {r}')
         st['last_market'] = m; st['last_flip_ts'] = now.timestamp()
