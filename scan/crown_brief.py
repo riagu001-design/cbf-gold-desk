@@ -241,7 +241,7 @@ def main():
             paper_today += sum(1 for r in _csv.DictReader(open(f'{G}/{_f}')) if (r.get('opened') or '').startswith(now.strftime('%Y-%m-%d')))
         except (OSError, ValueError):
             pass
-    spoken.append(f'{"One engine is live, the trend pullback at half size, and the London breakout retest is paper-tracked" + (pb_txt or "") if ENGINES_OFF else ("Paper test setups today: " + str(paper_today) if paper_today else "No paper test setups yet today")}, and the account is about {BALANCE_START + pl:.0f} dollars.')
+    spoken.append(f'{"One engine is live, the trend pullback: half size when the four hour structure agrees, the 0.01 lot minimum when it does not. The London breakout retest is paper-tracked" + (pb_txt or "") if ENGINES_OFF else ("Paper test setups today: " + str(paper_today) if paper_today else "No paper test setups yet today")}, and the account is about {BALANCE_START + pl:.0f} dollars.')
 
     # news
     try:
