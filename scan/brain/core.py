@@ -192,6 +192,8 @@ def signal_text(r, c, note=None):
              f"📍 Entry: {r['entry']:.2f} (market, enter now)", f"🛑 Stop Loss: {r['stop']:.2f}", f"🎯 Take Profit ({rr:.1f}R): {tp:.2f}"]
     if not r.get('target'): lines.append(f"🏃 TP1: {r['tp1']:.2f} (1R) · or exit on {r['exit_rule']}")
     lines += ['', f'📊 Lots: {lots:.2f} | R:R 1:{rr:.1f}', f'💰 Risk: ${risk_usd:,.0f} | Target: ${risk_usd * rr:,.0f}']
+    news = next((g['detail'] for g in r.get('gates', []) if g.get('name') == 'news' and str(g.get('detail', '')).startswith('⚠️')), None)
+    if news: lines.append(news)  # 25 Nov 2026: the news warning was checked but never printed
     if grade == 'C': lines.append('⚠️ H4 structure NOT confirmed: minimum size only (in the test these lost slightly over a year).')
     elif risk_usd > budget * 1.5:
         lines.append(f'❗ The 0.01 lot minimum risks ${risk_usd:,.0f}, more than the ${budget:,.0f} budget.')
