@@ -198,9 +198,9 @@ def main():
         learn.review(); bs = core.status()
         # 23 Nov 2026: only the trend pullback engine (PB) is live; show its fixed B-grade score, not the deleted engines'
         nw = bs.get('now') or {}
-        nw['scores'] = [dict(strategy='PB', side=sd, score=80, expected_R=0.23, band='WATCHLIST') for sd in ('BUY', 'SELL')]
-        nw['best'] = dict(strategy='PB', side='BUY' if nw.get('bias') == 'UP' else 'SELL', score=80, expected_R=0.23, band='WATCHLIST')
-        nw['support'] = {}; nw['conflict'] = False
+        nw['scores'] = [dict(strategy='PB', side=sd, score=80, expected_R=0.24, band='WATCHLIST') for sd in ('BUY', 'SELL')]
+        nw['best'] = dict(strategy='PB', side='BUY' if nw.get('bias') == 'UP' else 'SELL', score=80, expected_R=0.24, band='WATCHLIST')
+        nw['support'] = {'BUY': [], 'SELL': []}; nw['conflict'] = False  # 25 Nov: the page reads support.BUY and support.SELL; an empty {} crashed it
         try:
             pbl = open(f'{G}/scan_loop.log').read().splitlines(); pbl = [l for l in pbl if ': PB ' in l][-1:]
         except OSError:
