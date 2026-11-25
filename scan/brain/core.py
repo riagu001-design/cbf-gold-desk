@@ -128,6 +128,7 @@ def submit(p, ctx=None):
                features=f, raw=raw, expected_R=round(e, 3), score=sc, evidence=parts, gates=[dict(name=g[0], ok=g[1], detail=g[2]) for g in gates],
                verdict=verdict, reasons=reasons, model=dict(version=c['version'], evidence_built=m['built']), note=p.get('note'))
     grade = 'A' if verdict == 'SENT' else 'B' if verdict == 'WATCHLIST' and c.get('send_b', True) else None
+    if grade and p.get('grade') == 'C': grade = 'C'  # 25 Nov 2026: pullback with the H4 not confirmed, 0.01 lot minimum
     if grade:
         rec['grade'] = grade
         rec['telegram'] = publisher.publish(signal_text(rec, c, p.get('note')), 'signal')
@@ -149,9 +150,12 @@ STYLE = {'H1': ('H1', 'EMA 9/21 Trend Cross', '1H EMA 9/21 cross · Market Entry
 SESS = {'asia': 'Asia', 'london': 'London', 'newyork': 'New York', 'late': 'late US'}
 
 
+GRADE_TXT = {'A': '🟢 A-grade, full size', 'B': '🟡 B-grade, half size', 'C': '⚪ C-grade, minimum 0.01 lot (H4 not confirmed)'}
+
+
 def lots_for(risk_per_oz, c, grade='A'):
     """0.01 lot = 1 oz. Lots that risk at most the risk budget, never below the 0.01 minimum."""
-    budget = (c.get('risk_usd') or c['balance'] * c['risk']) * (0.5 if grade == 'B' else 1)
+    budget = (c.get('risk_usd') or c['balance'] * c['risk']) * {'B': 0.5, 'C': 0.0}.get(grade, 1)
     lots = max(0.01, int(budget / (risk_per_oz * 100) * 100) / 100) if risk_per_oz else 0.01
     return lots, round(lots * 100 * risk_per_oz, 2), budget
 
@@ -183,12 +187,13 @@ def signal_text(r, c, note=None):
         why = f"{name}: H4 trend {f['h4']}, brain {r['score']}/100, {SESS.get(r['session'], r['session'])} session"
     lines = ['👑 CBFX | TRADE SETUP',
              f"{'🟢 BUY' if buy else '🔴 SELL'} XAUUSD ({tf}) · MARKET · ENTER NOW (Pullback · No Chasing)",
-             f"Strategy: {name} · {'🟢 A-grade, full size' if grade == 'A' else '🟡 B-grade, half size'}",
+             f"Strategy: {name} · {GRADE_TXT.get(grade, GRADE_TXT['A'])}",
              control_line(r['side']), '',
              f"📍 Entry: {r['entry']:.2f} (market, enter now)", f"🛑 Stop Loss: {r['stop']:.2f}", f"🎯 Take Profit ({rr:.1f}R): {tp:.2f}"]
     if not r.get('target'): lines.append(f"🏃 TP1: {r['tp1']:.2f} (1R) · or exit on {r['exit_rule']}")
     lines += ['', f'📊 Lots: {lots:.2f} | R:R 1:{rr:.1f}', f'💰 Risk: ${risk_usd:,.0f} | Target: ${risk_usd * rr:,.0f}']
-    if risk_usd > budget * 1.5:
+    if grade == 'C': lines.append('⚠️ H4 structure NOT confirmed: minimum size only (in the test these lost slightly over a year).')
+    elif risk_usd > budget * 1.5:
         lines.append(f'❗ The 0.01 lot minimum risks ${risk_usd:,.0f}, more than the ${budget:,.0f} budget.')
     lines += ['', f'📝 Why: {why}', '',
               '⚠️ Risk Caution: Manage risk responsibly — size your position safely, adhere to your Stop Loss, and never risk more than you can afford to lose.',

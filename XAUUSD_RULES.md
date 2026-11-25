@@ -226,3 +226,9 @@ Woody: "Update all system to get fresh data to work with". The 15m test file (ba
 25 Nov 07:45 (648 Hyperliquid bars in market hours, shifted -1.17 to match; original kept as xau_15m_to_2026-11-16.json).
 Re-run on it: pullback + H4 structure 144 trades, 45% wins, +0.24R a trade, +34.6R, PF 1.43, worst run 7.6R, unseen half +12.3R (76 trades,
 PF 1.29). London breakout-retest unchanged: 38 trades, +0.18R a trade. Rules unchanged; the desk now quotes the fresh figures.
+
+## 25 Nov 2026 13:10 London: H4 is no longer a hard block
+Woody: "H4 should not be a hard blocker". The live pullback engine now sends every setup that passes the 1H control, 15m DI and
+15m EMA20 trigger. The H4 swing structure sets the size: agrees = B-grade half size (unchanged); mixed or against = C-grade at the
+0.01 lot minimum, with a warning line. Test to 25 Nov (h4 split): agrees 135 trades +33.5R PF 1.45; mixed 127 trades -5.0R PF 0.94,
+worst run 24.6R; against 67 trades +6.5R PF 1.16. Review the C-grade results separately after 20 of them.

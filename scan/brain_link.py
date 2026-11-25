@@ -4,8 +4,8 @@ import time
 from brain.core import submit, close
 
 
-def propose(strategy, side, entry, stop, exit_rule, note=None, target=None):
-    d = submit(dict(strategy=strategy, side=side, entry=float(entry), stop=float(stop), exit_rule=exit_rule, ts=time.time(), note=note, target=target))
+def propose(strategy, side, entry, stop, exit_rule, note=None, target=None, grade=None):
+    d = submit(dict(strategy=strategy, side=side, entry=float(entry), stop=float(stop), exit_rule=exit_rule, ts=time.time(), note=note, target=target, grade=grade))
     tg = f", Telegram {d['telegram']}" if d.get('telegram') else ''
     return d, f"brain {d['verdict']} score {d.get('score')} id {d.get('id')}{tg}" + (f" ({'; '.join(d['reasons'])})" if d.get('reasons') else '')
 

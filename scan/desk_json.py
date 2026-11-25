@@ -46,7 +46,7 @@ def main():
     hours = not (now.weekday() == 5 or (now.weekday() == 6 and mins < 1380) or (now.weekday() == 4 and mins >= 1200) or 1320 <= mins < 1380 or mins < 360)
     rows.append(dict(kind='status', id='checker', status='running' if running else 'stopped', note=last, at=iso(now),
                      side=None, entry=mark, stop=None, target=None, result=None,
-                     strategy='Live: Trend Pullback (H1 control) with H4 structure filter, B-grade half size. Paper: London breakout and retest', last='in hours' if hours else 'outside hours'))
+                     strategy='Live: Trend Pullback (H1 control): B-grade half size when the H4 structure agrees, C-grade 0.01 lot when it does not. Paper: London breakout and retest', last='in hours' if hours else 'outside hours'))
 
     # trend and the dip level, as the checker sees them
     hi, lo = a.swings(h1)
@@ -119,7 +119,7 @@ def main():
         if sg * (e20 - pst) < A15: pst = e20 - sg * A15
         pR = abs(e20 - pst); pin_h = 7 <= now.hour < 20 and now.weekday() < 5
         chk = [('ok' if ctl else 'no', f"1H control: {'buyers' if hb else 'sellers' if hs else 'none'} (ADX {d1h['adx']}, +DI {d1h['pdi']} / -DI {d1h['mdi']}; needs ADX 20+ with EMA20/50 and DI agreeing)"),
-               ('ok' if h4ok else 'no', f"H4 structure {s4}: highs {ph[-2][1]:.1f} -> {ph[-1][1]:.1f}, lows {pl[-2][1]:.1f} -> {pl[-1][1]:.1f} (must agree with the {pside.lower()})"),
+               ('ok' if h4ok else 'wait', f"H4 structure {s4}: highs {ph[-2][1]:.1f} -> {ph[-1][1]:.1f}, lows {pl[-2][1]:.1f} -> {pl[-1][1]:.1f}" + ('' if h4ok else ' (not a block since 25 Nov: a setup is sent as C-grade, 0.01 lot)')),
                ('ok' if di15 else 'no', f"15m DI {'agrees' if di15 else 'disagrees'} (+DI {d15['pdi']} / -DI {d15['mdi']})"),
                ('ok' if (e20 > e50) == (sg > 0) else 'no', f"15m EMA20 {e20:.1f} {'above' if e20 > e50 else 'below'} EMA50 {e50:.1f}"),
                ('ok' if pin_h else 'wait', 'Entry window open (07:00-20:00 London weekdays)' if pin_h else 'Outside the entry window: entries 07:00-20:00 London weekdays'),
@@ -130,13 +130,13 @@ def main():
         except (OSError, IndexError):
             pbl = ''
         best.update(side=pside, status='WATCH' if not blocked else 'BLOCKED', entry=round(e20, 1), stop=round(pst, 1), target=round(e20 + sg * 2 * pR, 1),
-                    strategy='Trend Pullback (H1 control) + H4 filter', note='\n'.join(f'{st_}|{t}' for st_, t in chk),
+                    strategy='Trend Pullback (H1 control) · ' + ('B-grade half size (H4 agrees)' if h4ok else 'C-grade 0.01 lot (H4 not confirmed)'), note='\n'.join(f'{st_}|{t}' for st_, t in chk),
                     last=('Blocked: ' + blocked[0].split(' (')[0] if blocked else f"All filters agree: waiting for the 15m dip to {e20:.1f}") + (f'. Engine log {pbl}' if pbl else ''))
         if pbl and 'SETUP' in pbl:
             tl = now.replace(hour=int(pbl[:2]), minute=int(pbl[3:5]), second=0, microsecond=0)
             if 0 <= (now - tl).total_seconds() <= 900: best['status'] = 'VALID'
     except Exception as ex:  # never break the feed
-        best.update(status='WATCH', entry=None, stop=None, target=None, strategy='Trend Pullback (H1 control) + H4 filter', note='', last=f'engine read failed: {type(ex).__name__}')
+        best.update(status='WATCH', entry=None, stop=None, target=None, strategy='Trend Pullback (H1 control) · ' + ('B-grade half size (H4 agrees)' if h4ok else 'C-grade 0.01 lot (H4 not confirmed)'), note='', last=f'engine read failed: {type(ex).__name__}')
     try:
         po = json.load(open(f'{G}/pb_state.json')).get('open')
         if po:

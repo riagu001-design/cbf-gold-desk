@@ -72,8 +72,9 @@ def main():
     if len(ph) < 2 or len(pl) < 2: return out('not enough H4 swings yet')
     up = ph[-1][1] > ph[-2][1] and pl[-1][1] > pl[-2][1]; dn = ph[-1][1] < ph[-2][1] and pl[-1][1] < pl[-2][1]
     h4txt = f'H4 highs {ph[-2][1]:.1f} -> {ph[-1][1]:.1f}, lows {pl[-2][1]:.1f} -> {pl[-1][1]:.1f}'
-    if (buy and not up) or (sell and not dn):
-        return out(f'1H {"buyers" if buy else "sellers"} (ADX {d1["adx"]}) but the H4 structure does not agree ({h4txt})')
+    # 25 Nov 2026 (Woody: "H4 should not be a hard blocker"): H4 agreeing = B-grade half size; mixed or against = C-grade,
+    # sent at the 0.01 lot minimum with a warning (test to 25 Nov: agree +33.5R / 135, mixed -5.0R / 127, against +6.5R / 67).
+    h4ok = up if buy else dn
     d15 = dmi(m15)
     if not d15 or (buy and d15['pdi'] <= d15['mdi']) or (sell and d15['mdi'] <= d15['pdi']):
         return out(f'1H {"buyers" if buy else "sellers"} (ADX {d1["adx"]}) but the 15m DI disagrees')
@@ -89,9 +90,10 @@ def main():
     stop = ext - sg * 0.3 * A
     if sg * (e - stop) < A: stop = e - sg * A
     stop = round(stop, 1); risk = round(abs(e - stop), 2); target = round(e + sg * RR * risk, 1)
+    h4why = ("higher highs and lows" if buy else "lower highs and lows") if h4ok else f'NOT CONFIRMED ({h4txt})'
     dec, r = propose('PB', side, e, stop, 'the 2R target or the stop', (f'Trend Pullback · 1H {"BULLISH" if buy else "BEARISH"} (ADX {d1["adx"]:.1f}) · H4 '
-         f'{"higher highs and lows" if buy else "lower highs and lows"} · M15 EMA 20/50 ({e20:.2f}/{e50:.2f}) · '
-         f'15m candle {"dipped to" if buy else "rallied to"} the EMA20 and closed back {"above" if buy else "below"} it'), target=target)
+         f'{h4why} · M15 EMA 20/50 ({e20:.2f}/{e50:.2f}) · '
+         f'15m candle {"dipped to" if buy else "rallied to"} the EMA20 and closed back {"above" if buy else "below"} it'), target=target, grade=None if h4ok else 'C')
     opened = now.strftime('%Y-%m-%d %H:%M')
     rs.append(dict(opened=opened, side=side, entry=f'{e:.1f}', stop=f'{stop:.1f}', target=f'{target:.1f}', risk=f'{risk:.2f}', brain=dec.get('verdict'))); save(rs)
     st['open'] = dict(opened=opened, side=side, entry=e, stop=stop, target=target, risk=risk, brain_id=dec.get('id'), checked_ms=x['T'] + 1)
