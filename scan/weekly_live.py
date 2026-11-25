@@ -64,7 +64,7 @@ msg = (f"📊 GOLD DESK · WEEKLY REPORT\nWeek {mon:%d %b}–{fri:%d %b %Y}\n{L}
        f"\nPaper total: {brW + brL} closed · {brR:+.2f}R · {brU:+.2f}$ at 0.01 lot\n{L}\n" +
        (("Old rules log:\n" + "\n".join(old_lines) + f"\n{L}\n") if old_lines else "") +
        f"💼 Account: about ${acct_start + week_usd:.2f} (from ${acct_start:.2f} at the start of the week, 0.01 lot basis)\n"
-       f"🎯 Review: after 20 live trades the result is compared with the 12-month test (+0.23R a trade).\n{L}\n"
+       f"🎯 Review: after 20 live trades the result is compared with the test (+0.24R a trade).\n{L}\n"
        "ℹ️ R after a 0.40/oz cost allowance; broker prices run about $3–4 below the desk feed.")
 open(f'{G}/weekly_msg.txt', 'w').write(msg)
 print(msg); print('Telegram:', publisher.publish(msg, 'report') if '--dry' not in sys.argv else 'dry run')

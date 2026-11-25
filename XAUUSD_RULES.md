@@ -220,3 +220,9 @@ Buys only when the last two confirmed H4 swing highs AND lows are both higher; s
 takes nothing. Test (backtest/research_2026-11-23/h4_filter.py): 321 -> 140 trades, avg +0.09R -> +0.23R, PF 1.14 -> 1.40,
 worst losing run 13.8R -> 7.6R; unseen half +10.5R (173 trades) -> +8.6R (73 trades, PF 1.20). Expect about one signal
 every 2-3 trading days. Still B-grade, half size; review after 20 live trades.
+
+## 25 Nov 2026 08:10 London: fresh data
+Woody: "Update all system to get fresh data to work with". The 15m test file (backtest/data/xau_15m.json) ended 16 Nov; it now runs to
+25 Nov 07:45 (648 Hyperliquid bars in market hours, shifted -1.17 to match; original kept as xau_15m_to_2026-11-16.json).
+Re-run on it: pullback + H4 structure 144 trades, 45% wins, +0.24R a trade, +34.6R, PF 1.43, worst run 7.6R, unseen half +12.3R (76 trades,
+PF 1.29). London breakout-retest unchanged: 38 trades, +0.18R a trade. Rules unchanged; the desk now quotes the fresh figures.
