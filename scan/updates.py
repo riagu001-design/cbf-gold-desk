@@ -13,7 +13,7 @@ from bars_json import dmi
 import publisher
 G = '/home/user/gold-desk'; ST = f'{G}/updates_state.json'
 SLOTS = [('asia', 4 * 60, 'ASIA RANGE SET'), ('ldn', 7 * 60 + 45, 'LONDON OPEN PLAN'), ('ny', 12 * 60 + 45, 'NEW YORK OPEN PLAN')]
-FOOT = 'ℹ️ Market update only, not a trade. Trade setups come as 🟢 A-grade or 🟡 B-grade signals.'
+FOOT = 'ℹ️ Market brief only, not a trade. Setups come as separate 👑 TRADE SETUP messages.'
 
 
 def market():
@@ -25,7 +25,7 @@ def market():
     sel = sum(1 for x in d.values() if x and x['control'] == 'sellers'); n = sum(1 for x in d.values() if x)
     m = 'SELL' if down and sel * 2 > n else 'BUY' if not down and (n - sel) * 2 > n else 'WAIT'
     di = ' · '.join(f"{k} {x['control']} (ADX {x['adx']:.0f})" for k, x in d.items() if x)
-    return m, f"4H trend {'down' if down else 'up'} · {di}", m15[-1]['c'], m15
+    return m, f"4H trend {'down' if down else 'up'} · {di}", m15[-1]['c'], m15, d, down
 
 
 def asia_range(m15, day):
@@ -45,16 +45,28 @@ def brain_now():
 
 
 def engine_now():
-    """The live trend pullback engine's read from the desk feed (refreshed every 15 minutes)."""
+    """The live trend pullback engine's read from the desk feed, as short lines (clean layout, Woody 25 Nov 2026)."""
     try:
         b = [r for r in json.load(open(f'{G}/crown/desk.json')) if r.get('kind') == 'best'][0]
     except (OSError, ValueError, IndexError):
-        return ''
-    if b.get('entry') is None: return ''
-    head = {'VALID': 'SETUP SENT', 'BLOCKED': 'blocked', 'WATCH': 'all filters agree, waiting for the dip'}.get(b.get('status'), b.get('status'))
-    why = (b.get('last') or '').split('. Engine log')[0]
-    return (f"🎯 Live engine (trend pullback + H4 filter, entries 07:00-20:00): {b['side']} lean, {head}. "
-            f"Dip level {b['entry']:.2f}, stop if it fired {b['stop']:.2f}, target {b['target']:.2f}.\n   {why}")
+        return []
+    if b.get('entry') is None: return []
+    head = {'VALID': '✅ SETUP SENT', 'BLOCKED': '⛔ BLOCKED', 'WATCH': '👀 READY, waiting for the dip'}.get(b.get('status'), b.get('status'))
+    out = [f"🎯 Live engine (Trend Pullback): {b['side']} lean · {head}"]
+    miss = [ln.split('|', 1)[1].split(' (')[0] for ln in (b.get('note') or '').split('\n') if ln.startswith('no|')]
+    sell = b['side'] == 'SELL'
+    plain = lambda t: (f"H4 {'lower' if sell else 'higher'} highs and {'lower' if sell else 'higher'} lows (now mixed)" if t.startswith('H4 structure')
+                       else f"15m {'sellers' if sell else 'buyers'} to lead the DI" if t.startswith('15m DI') else t)
+    if miss: out.append('   Waiting for: ' + '; '.join(plain(t) for t in miss))
+    out.append(f"   Dip level {b['entry']:.2f} · Stop {b['stop']:.2f} · Target {b['target']:.2f}")
+    return out
+
+
+def control_line(d):
+    sel = sum(1 for x in d.values() if x and x['control'] == 'sellers'); n = sum(1 for x in d.values() if x)
+    head = '🔴 Sellers in Control' if sel * 2 > n else '🟢 Buyers in Control' if (n - sel) * 2 > n else '⚪ Mixed Control'
+    parts = ' | '.join(f"{k}: {x['control'].capitalize()}" for k, x in d.items() if x)
+    return f'🧭 Control: {head} ({parts})'
 
 
 def news_line(now):
@@ -65,8 +77,24 @@ def news_line(now):
         return '⏰ News calendar not checked today'
     ev = n.get('events', []) if n.get('date') == now.strftime('%Y-%m-%d') else []
     later = [(t, name) for t, name in ev if t > now.strftime('%H:%M')]
-    if not later: return '⏰ No more high-impact news today'
-    return '\n'.join(['⏰ High-impact today (London):'] + [f'{t} {name}' for t, name in later] + ['⚠️ No new trades 5 min before / 5 min after these.'])
+    if not later: return '⏰ News: no more high-impact news today'
+    times = sorted({t for t, _ in later})
+    def pm5(t, k):
+        h, m = map(int, t.split(':')); x = h * 60 + m + k; return f'{x // 60:02d}:{x % 60:02d}'
+    return '\n'.join(['⏰ News (London): ' + ' · '.join(f'{t} {name}' for t, name in later),
+                      '   ⚠️ No new trades ' + ', '.join(f'{pm5(t, -5)}-{pm5(t, 5)}' for t in times)])
+
+
+def brief(title, tag, px, m, down, d, ah, al, m15, now):
+    """Clean market brief (Woody 25 Nov 2026): price, bias, control, levels, the live engine, news."""
+    icon = {'SELL': '🔴 SELL', 'BUY': '🟢 BUY', 'WAIT': '🟡 WAIT (trend and DI disagree)'}[m]
+    day = [x for x in m15 if ldn(x['t']).date() == now.date()]
+    lines = [f'👑 CBFX | {title} · {tag} London', f'💲 Gold: {px:.2f}', f"📈 Bias: {icon} · 4H trend {'down' if down else 'up'}", control_line(d), '']
+    if ah: lines.append(f'🌏 Asia range: {ah:.2f} – {al:.2f} ({ah - al:.2f})')
+    if day: lines.append(f"📏 Today: high {max(x['h'] for x in day):.2f} · low {min(x['l'] for x in day):.2f}")
+    e = engine_now()  # 24 Nov 2026: the only live engine is the trend pullback (old engines deleted 23 Nov)
+    if e: lines += [''] + e
+    return lines + ['', news_line(now), '', FOOT]
 
 
 def main():
@@ -75,17 +103,13 @@ def main():
     if st.get('day') != today: st.update(day=today, sent=[])
     say = lambda why: (json.dump(st, open(ST, 'w'), indent=1), print(f'{tag} London: updates: {why}'))
     if now.weekday() > 4 or not (4 * 60 <= mins < 21 * 60): return say('outside update hours (weekdays 04:00-21:00)')
-    m, why, px, m15 = market(); ah, al = asia_range(m15, now.date())
+    m, why, px, m15, d, down = market(); ah, al = asia_range(m15, now.date())
     icon = {'SELL': '🔴 ▼ SELL', 'BUY': '🟢 ▲ BUY', 'WAIT': '🟡 WAIT (trend and DI disagree)'}[m]
     sent = []
     for key, at, title in SLOTS:
         if key in st['sent'] or not (at <= mins < at + 30): continue
         if key == 'asia' and not ah: continue
-        lines = [f'👑 CBFX | {title} · {tag} London', f'💲 Gold {px:.2f}', f'📈 Market: {icon}', f'   {why}']
-        if ah: lines.append(f'🌏 Asia range: high {ah:.2f} · low {al:.2f} (width {ah - al:.2f})')
-        e = engine_now()  # 24 Nov 2026: the only live engine is the trend pullback (old engines deleted 23 Nov)
-        if e: lines.append(e)
-        lines += [news_line(now), FOOT]
+        lines = brief(title, tag, px, m, down, d, ah, al, m15, now)
         r = publisher.publish('\n'.join(lines), 'update'); st['sent'].append(key); sent.append(f'{key} {r}')
         st['last_market'] = m; st['last_flip_ts'] = now.timestamp()
     # market flip: changed from the last announced value, held for two checks, at most one message an hour
@@ -93,7 +117,8 @@ def main():
     if last is None: st['last_market'] = m
     elif m != last:
         if st.get('pending') == m and now.timestamp() - st.get('last_flip_ts', 0) >= 3600:
-            txt = '\n'.join([f'👑 CBFX | MARKET FLIP · {tag} London', f'📈 Market: {icon}  (was {last})', f'   {why}', f'💲 Gold {px:.2f}', FOOT])
+            txt = '\n'.join([f'👑 CBFX | MARKET FLIP · {tag} London', f'📈 Bias: {icon} (was {last}) · 4H trend {"down" if down else "up"}',
+                             control_line(d), f'💲 Gold: {px:.2f}', '', FOOT])
             r = publisher.publish(txt, 'update'); st.update(last_market=m, last_flip_ts=now.timestamp(), pending=None); sent.append(f'flip {last}->{m} {r}')
         else: st['pending'] = m
     else: st['pending'] = None
@@ -101,4 +126,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if '--preview' in sys.argv:  # print a London brief from live data without sending
+        now = dt.datetime.now(L); m, why, px, m15, d, down = market(); ah, al = asia_range(m15, now.date())
+        print('\n'.join(brief('LONDON OPEN PLAN', now.strftime('%H:%M'), px, m, down, d, ah, al, m15, now)))
+    else:
+        main()
