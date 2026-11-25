@@ -221,8 +221,15 @@ def main():
         except ValueError:
             pass
     closed = [r for r in rows if r['result'] and not r['result'].startswith('SKIPPED')]
-    facts.append(f'Setups sent today: {len(today)}' + (': ' + '; '.join(f'{r["given_at_london"][11:]} {r["side"]} {r["entry"]} SL {r["stop"]} TP {r["target"]} {r["result"] or "open"}' for r in today) if today else '') + '.')
-    facts.append(f'Live log since the new rules: {len(rows)} setups, {len(closed)} closed, {pl:+.2f} dollars. Account about {BALANCE_START + pl:.2f} dollars (194.74 at the 30 Oct weekly report plus live results). Review after 20 trades.')
+    # 25 Nov 2026: count the live pullback engine (pb_log.csv), not only the old live log
+    pbr = list(csv.DictReader(open(f'{G}/pb_log.csv'))) if os.path.exists(f'{G}/pb_log.csv') else []
+    pb_today = [r for r in pbr if r['opened'].startswith(now.strftime('%Y-%m-%d'))]
+    pb_closed = [r for r in pbr if r.get('closed')]
+    pb_pl = sum(float(r['usd_001']) for r in pb_closed if r.get('usd_001')); pb_R = sum(float(r['R']) for r in pb_closed if r.get('R'))
+    pl += pb_pl
+    desc = lambda r: f"{r['opened'][11:]} {r['side']} {r['entry']} SL {r['stop']} TP {r['target']} " + (f"closed {r['closed'][11:]} {r['how']} {float(r['R']):+.2f}R, {float(r['usd_001']):+.2f} dollars at 0.01 lot" if r.get('closed') else 'open')
+    facts.append(f'Pullback engine setups sent today: {len(pb_today)}' + (': ' + '; '.join(desc(r) for r in pb_today) if pb_today else '') + '.')
+    facts.append(f'Pullback engine log: {len(pbr)} setups, {len(pb_closed)} closed, {pb_R:+.2f}R, {pb_pl:+.2f} dollars at 0.01 lot (the sized lots scale this). Account about {BALANCE_START + pl:.2f} dollars at 0.01 lot (194.74 at the 30 Oct weekly report plus live results). Review after 20 trades.')
     import csv as _csv
     pb_txt = ''
     try:
@@ -241,7 +248,7 @@ def main():
             paper_today += sum(1 for r in _csv.DictReader(open(f'{G}/{_f}')) if (r.get('opened') or '').startswith(now.strftime('%Y-%m-%d')))
         except (OSError, ValueError):
             pass
-    spoken.append(f'{"One engine is live, the trend pullback: half size when the four hour structure agrees, the 0.01 lot minimum when it does not. The London breakout retest is paper-tracked" + (pb_txt or "") if ENGINES_OFF else ("Paper test setups today: " + str(paper_today) if paper_today else "No paper test setups yet today")}, and the account is about {BALANCE_START + pl:.0f} dollars.')
+    spoken.append(f'{"One engine is live, the trend pullback: half size when the four hour structure agrees, the 0.01 lot minimum when it does not. The London breakout retest is paper-tracked" + (pb_txt or "") if ENGINES_OFF else ("Paper test setups today: " + str(paper_today) if paper_today else "No paper test setups yet today")}, and the account is about {BALANCE_START + pl:.0f} dollars if every signal was taken at 0.01 lot.' + (' Today the pullback engine sent ' + '; '.join(f"a {r['side'].lower()} at {r['opened'][11:]}" + (f" that closed at its {'target' if 'TARGET' in r['how'] else 'stop' if 'STOP' in r['how'] else r['how'].lower()} for {'plus' if float(r['R']) >= 0 else 'minus'} {abs(float(r['R'])):.1f} R" if r.get('closed') else ' that is still open') for r in pb_today) + '.' if pb_today else ''))
 
     # news
     try:
