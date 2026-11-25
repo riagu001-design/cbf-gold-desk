@@ -1,4 +1,5 @@
 # Refreshing Crown (watchdog step; ElevenLabs is not reachable from this machine, so push through the ElevenLabs connector)
+PUSH CROWN ON EVERY WATCHDOG RUN (25 Nov 2026, Woody: "upgrade it if something is not working"): Crown had been spoken from a 3-hour-old snapshot because the push waited for 'content changes' while the price moved $30+. The two agent updates below are config changes and cost no ElevenLabs credits.
 Crown's text is stored directly (no dynamic variables): the ElevenLabs talk-to page and the dashboard do not supply them, and a missing variable stops Crown from starting.
 1. python3 /home/user/cbf-gold-desk/scan/crown_brief.py  -> writes /home/user/gold-desk/crown/crown_vars.json (desk_brief, prompt)
 2. mcp__ElevenLabs__agents_update_prompt_settings, agent_id agent_3401m5j08eqgf6ascsd9ttbf1mgw, prompt = crown_vars "prompt" exactly. Change nothing else.
