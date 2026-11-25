@@ -89,7 +89,9 @@ def main():
     stop = ext - sg * 0.3 * A
     if sg * (e - stop) < A: stop = e - sg * A
     stop = round(stop, 1); risk = round(abs(e - stop), 2); target = round(e + sg * RR * risk, 1)
-    dec, r = propose('PB', side, e, stop, 'the 2R target or the stop', f'1H ADX {d1["adx"]}, H4 structure agrees, 15m dip to EMA20 held', target=target)
+    dec, r = propose('PB', side, e, stop, 'the 2R target or the stop', (f'Trend Pullback · 1H {"BULLISH" if buy else "BEARISH"} (ADX {d1["adx"]:.1f}) · H4 '
+         f'{"higher highs and lows" if buy else "lower highs and lows"} · M15 EMA 20/50 ({e20:.2f}/{e50:.2f}) · '
+         f'15m candle {"dipped to" if buy else "rallied to"} the EMA20 and closed back {"above" if buy else "below"} it'), target=target)
     opened = now.strftime('%Y-%m-%d %H:%M')
     rs.append(dict(opened=opened, side=side, entry=f'{e:.1f}', stop=f'{stop:.1f}', target=f'{target:.1f}', risk=f'{risk:.2f}', brain=dec.get('verdict'))); save(rs)
     st['open'] = dict(opened=opened, side=side, entry=e, stop=stop, target=target, risk=risk, brain_id=dec.get('id'), checked_ms=x['T'] + 1)

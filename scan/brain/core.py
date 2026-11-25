@@ -156,26 +156,43 @@ def lots_for(risk_per_oz, c, grade='A'):
     return lots, round(lots * 100 * risk_per_oz, 2), budget
 
 
+def control_line(side):
+    """🧭 Control line (Woody 25 Nov 2026): who leads the DI on H4 / H1 / M15 from closed candles."""
+    try:
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+        from auto_scan import candles
+        from bars_json import dmi
+        now_ms = time.time() * 1000
+        d = {k: dmi([x for x in candles(iv, days) if x['T'] < now_ms]) for k, iv, days in (('H4', '4h', 60), ('H1', '1h', 8), ('M15', '15m', 3))}
+        sel = sum(1 for x in d.values() if x and x['control'] == 'sellers'); n = sum(1 for x in d.values() if x)
+        head = '🔴 Sellers in Control' if sel * 2 > n else '🟢 Buyers in Control' if (n - sel) * 2 > n else '⚪ Mixed Control'
+        parts = ' | '.join(f"{k}: {x['control'].capitalize()}" for k, x in d.items() if x)
+        return f'🧭 Control: {head} ({parts})'
+    except Exception as ex:
+        return f'🧭 Control: not read ({type(ex).__name__})'
+
+
 def signal_text(r, c, note=None):
+    """Clean Telegram layout (Woody 25 Nov 2026). Market orders only: the entry is ENTER NOW at market, never a limit."""
     buy = r['side'] == 'BUY'; tf, name, timing = STYLE.get(r['strategy'], ('', r['strategy'], ''))
     tp = r.get('target') or r['tp2']; rr = abs(tp - r['entry']) / r['risk'] if r['risk'] else 2
-    lots, risk_usd, budget = lots_for(r['risk'], c, r.get('grade', 'A'))
-    f, raw = r['features'], r['raw']
-    trend = {'with': f"{'Bullish' if buy else 'Bearish'} H4 trend confirmed", 'against': f"Counter to the H4 trend", 'unknown': 'H4 trend unclear'}.get(f['h4'], '')
-    why = (f"{r['side']} {name.upper()} SETUP: {trend}; brain confidence {r['score']}/100 "
-           f"(this setup type averaged {r['expected_R']:+.2f}R per trade in the 12-month evidence). "
-           f"Context: H4 ADX {raw.get('adx4')}, {f['vol']} volatility, price {f['stretch']} the 1H EMA21, "
-           f"{raw.get('room_atr')} ATR of room to the opposing 24h extreme, {SESS.get(r['session'], r['session'])} session.")
-    if note: why += f' {note}.'
-    gl = '🟢 A-GRADE · full size' if r.get('grade', 'A') == 'A' else '🟡 B-GRADE · HALF SIZE (lower confidence: take smaller or skip)'
-    lines = ['👑 CBFX | TRADE SETUP', gl, f"{'🟢 BUY' if buy else '🔴 SELL'} XAUUSD ({tf})", f'Strategy: {name}', f"Timing: {r['side']}  ({timing})", '',
-             f"📍 Planned Entry: {r['entry']:.2f}  (market · enter now)", f"🛑 Stop Loss: {r['stop']:.2f}", f"🎯 Take Profit ({rr:.1f}R): {tp:.2f}"]
-    if not r.get('target'): lines.append(f"🏃 Runner: TP1 {r['tp1']:.2f} (1R) · or exit on {r['exit_rule']}")
-    lines += ['', f'📊 Lots: {lots:.2f} | R:R 1:{rr:.1f}', f'💰 Risk: ${risk_usd:,.2f} | Target: ${risk_usd * rr:,.2f}']
+    grade = r.get('grade', 'A'); lots, risk_usd, budget = lots_for(r['risk'], c, grade)
+    if note: why = note
+    else:
+        f = r['features']
+        why = f"{name}: H4 trend {f['h4']}, brain {r['score']}/100, {SESS.get(r['session'], r['session'])} session"
+    lines = ['👑 CBFX | TRADE SETUP',
+             f"{'🟢 BUY' if buy else '🔴 SELL'} XAUUSD ({tf}) · MARKET · ENTER NOW (Pullback · No Chasing)",
+             f"Strategy: {name} · {'🟢 A-grade, full size' if grade == 'A' else '🟡 B-grade, half size'}",
+             control_line(r['side']), '',
+             f"📍 Entry: {r['entry']:.2f} (market, enter now)", f"🛑 Stop Loss: {r['stop']:.2f}", f"🎯 Take Profit ({rr:.1f}R): {tp:.2f}"]
+    if not r.get('target'): lines.append(f"🏃 TP1: {r['tp1']:.2f} (1R) · or exit on {r['exit_rule']}")
+    lines += ['', f'📊 Lots: {lots:.2f} | R:R 1:{rr:.1f}', f'💰 Risk: ${risk_usd:,.0f} | Target: ${risk_usd * rr:,.0f}']
     if risk_usd > budget * 1.5:
-        lines.append(f'❗ The 0.01 lot minimum risks ${risk_usd:,.2f}, more than the ${budget:,.2f} per-trade budget.')
-    lines += ['', f'📝 Why: {why}', f"🆔 {r['id']} · {r['london'][11:]} London · signal only, no order placed",
-              '⚠️ Risk Caution: Manage risk responsibly — size your position safely, adhere to your Stop Loss, and never risk more than you can afford to lose.']
+        lines.append(f'❗ The 0.01 lot minimum risks ${risk_usd:,.0f}, more than the ${budget:,.0f} budget.')
+    lines += ['', f'📝 Why: {why}', '',
+              '⚠️ Risk Caution: Manage risk responsibly — size your position safely, adhere to your Stop Loss, and never risk more than you can afford to lose.',
+              f"🆔 {r['id']} · {r['london'][11:]} London · signal only, no order placed"]
     return '\n'.join(lines)
 
 
