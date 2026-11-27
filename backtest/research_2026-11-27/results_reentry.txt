@@ -1,0 +1,8 @@
+data 2025-11-06 to 2026-11-25; unseen half from 2026-05-20; costs 0.4/oz; live PB rules (ADX 20, 2R, all grades)
+rule                        n  win%   avgR       R    PF  maxDD | IS n   IS R | UN n   UN R UN PF |  B n    B R |  C n    C R
+none (live today)         329    39   0.11    35.0  1.17   13.8 |  154   13.7 |  175   21.3   1.2 |  135   33.5 |  194    1.5
+no same side after stop   243    37   0.06    15.1   1.1   22.2 |  114    8.1 |  129    7.0  1.08 |   97   18.8 |  146   -3.7
+no trade after a stop     235    37   0.06    14.5   1.1   19.0 |  112    4.2 |  123   10.3  1.13 |   95   17.9 |  140   -3.5
+stop after 2 losses       314    40   0.12    38.4   1.2   12.6 |  146   15.9 |  168   22.5  1.22 |  127   32.8 |  187    5.6
+
+base trades the same-side rule removes: n 90, win% 44, R 21.3  (note: removing a trade can also let a later one in)
