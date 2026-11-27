@@ -1,0 +1,4 @@
+data 2025-11-06 to 2026-11-25; unseen half from 2026-05-20; costs 0.4/oz; 2R, all grades
+entry             n  win%   avgR       R    PF  maxDD | IS n   IS R | UN n   UN R UN PF |  B n    B R |  C n    C R
+close (live)    329    39   0.11    35.0  1.17   13.8 |  154   13.7 |  175   21.3   1.2 |  135   33.5 |  194    1.5
+touch           449    38   0.08    34.7  1.12   16.3 |  221    8.0 |  228   26.7  1.18 |  189   29.6 |  260    5.1

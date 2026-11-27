@@ -36,6 +36,51 @@ def save(rs):
     with open(LOG, 'w', newline='') as f: w = csv.DictWriter(f, fieldnames=FIELDS); w.writeheader(); w.writerows(rs)
 
 
+WATCH_ATR, REARM_ATR = 1.0, 2.0
+
+
+def watch(st, now, px, rs, m15, h1):
+    """EARLY WARNING (27 Nov 2026, Woody: "Can you spot the move early and send the setup earlier", then "Yes do both").
+    Information only, never a trade: a 'get ready' Telegram message when the 1H control and the 15m DI agree, the last
+    15m close is beyond the EMA20 and EMA50, and the live price is within 1 x 15m ATR of the EMA20 on the trend side
+    (gold pulling back towards the dip level). One message per approach: it re-arms when price moves more than 2 ATR
+    away from the EMA20, when the trend side changes, on a new day, or after a setup. The ENTER NOW still needs the
+    closed 15m candle (backtest research_2026-11-27/touch_entry.py: entering on the touch made +34.7R vs +35.0R with a
+    deeper drawdown, so the entry rule is unchanged). Returns a note for the log line."""
+    try:
+        today = now.strftime('%Y-%m-%d')
+        if sum(1 for r in rs if r['opened'].startswith(today)) >= MAX_DAY: return ''
+        c1 = [x['c'] for x in h1]; d1 = dmi(h1); e20h, e50h = ema(c1, 20)[-1], ema(c1, 50)[-1]
+        if not d1 or d1['adx'] < ADX_MIN: return ''
+        buy = e20h > e50h and d1['pdi'] > d1['mdi']; sell = e20h < e50h and d1['mdi'] > d1['pdi']
+        if not (buy or sell): return ''
+        d15 = dmi(m15)
+        if not d15 or (buy and d15['pdi'] <= d15['mdi']) or (sell and d15['mdi'] <= d15['pdi']): return ''
+        c15 = [x['c'] for x in m15]; e20, e50 = ema(c15, 20)[-1], ema(c15, 50)[-1]; A = atr(m15); x = m15[-1]
+        side = 'BUY' if buy else 'SELL'; sg = 1 if buy else -1; gap = sg * (px - e20)
+        w = st.get('watch')
+        if w and (w.get('day') != today or w.get('side') != side or gap > REARM_ATR * A): st['watch'] = w = None
+        if w: return f' (early warning already sent at {w["at"]})'
+        beyond = (x['c'] > e20 and x['c'] > e50) if buy else (x['c'] < e20 and x['c'] < e50)
+        if not (beyond and 0 < gap <= WATCH_ATR * A): return ''
+        zone = e20 + sg * 0.1 * A
+        h4 = candles('4h', 40); ph, pl = pivots(h4, 2)
+        h4ok = len(ph) > 1 and len(pl) > 1 and ((ph[-1][1] > ph[-2][1] and pl[-1][1] > pl[-2][1]) if buy else (ph[-1][1] < ph[-2][1] and pl[-1][1] < pl[-2][1]))
+        txt = (f'⏳ GET READY: a PB {side} may come (NOT a trade yet)\n'
+               f'{now:%H:%M} London. Gold {px:.1f} is {gap:.1f} {"above" if buy else "below"} the 15m EMA20 {e20:.1f} (15m ATR {A:.1f}).\n'
+               f'1H {"buyers" if buy else "sellers"} in control (ADX {d1["adx"]:.0f}), 15m DI agrees.\n'
+               f'If a 15m candle {"dips to " + format(zone, ".1f") + " or lower and closes back above" if buy else "rallies to " + format(zone, ".1f") + " or higher and closes back below"} '
+               f'the EMA20, an ENTER NOW {side} follows within a minute of that close.\n'
+               f'H4 structure: {"agrees (B-grade, half size)" if h4ok else "not confirmed (would be C-grade, 0.01 lot)"}.\n'
+               f'Do nothing until the ENTER NOW. Market orders only.')
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'brain')); import publisher
+        r = publisher.publish(txt, 'update')
+        st['watch'] = dict(day=today, side=side, at=now.strftime('%H:%M'))
+        return f'; early warning {side} near EMA20 {e20:.1f} sent {r}'
+    except Exception as e:  # the warning must never block the live engine
+        return f'; early warning skipped ({type(e).__name__})'
+
+
 def main():
     st = json.load(open(ST)) if os.path.exists(ST) else {}
     now = dt.datetime.now(L); tag = now.strftime('%H:%M'); wd = now.weekday(); px = mark()
@@ -59,7 +104,8 @@ def main():
         return out(f'{pos["side"]} open from {pos["entry"]:.1f}, stop {pos["stop"]:.1f}, target {pos["target"]:.1f} ({sg * (px - pos["entry"]):+.2f} per oz)')
     if not (wd < 5 and 7 <= now.hour < 20): return out('no new entries outside 07:00-20:00 London (weekdays)')
     m15, h1 = candles('15m', 5), candles('1h', 20)
-    if st.get('last_bar') == m15[-1]['t']: return out('waiting for the next closed 15m candle')
+    wnote = watch(st, now, px, rs, m15, h1)
+    if st.get('last_bar') == m15[-1]['t']: return out('waiting for the next closed 15m candle' + wnote)
     st['last_bar'] = m15[-1]['t']
     c1 = [x['c'] for x in h1]; d1 = dmi(h1); e20h, e50h = ema(c1, 20)[-1], ema(c1, 50)[-1]
     if not d1 or d1['adx'] < ADX_MIN: return out(f'1H ADX {d1["adx"] if d1 else "?"} under {ADX_MIN}: no clear control')
@@ -82,7 +128,7 @@ def main():
     if buy: ok = x['l'] <= e20 + 0.1 * A and x['c'] > e20 and x['c'] > x['o'] and x['c'] > e50
     else: ok = x['h'] >= e20 - 0.1 * A and x['c'] < e20 and x['c'] < x['o'] and x['c'] < e50
     side = 'BUY' if buy else 'SELL'
-    if not ok: return out(f'1H {"buyers" if buy else "sellers"} (ADX {d1["adx"]}), waiting for a 15m dip to the EMA20 {e20:.1f} that holds')
+    if not ok: return out(f'1H {"buyers" if buy else "sellers"} (ADX {d1["adx"]}), waiting for a 15m dip to the EMA20 {e20:.1f} that holds' + wnote)
     today = now.strftime('%Y-%m-%d')
     if sum(1 for r in rs if r['opened'].startswith(today)) >= MAX_DAY: return out(f'{MAX_DAY} entries already today')
     sg = 1 if buy else -1; e = x['c']
@@ -97,6 +143,7 @@ def main():
     opened = now.strftime('%Y-%m-%d %H:%M')
     rs.append(dict(opened=opened, side=side, entry=f'{e:.1f}', stop=f'{stop:.1f}', target=f'{target:.1f}', risk=f'{risk:.2f}', brain=dec.get('verdict'))); save(rs)
     st['open'] = dict(opened=opened, side=side, entry=e, stop=stop, target=target, risk=risk, brain_id=dec.get('id'), checked_ms=x['T'] + 1)
+    st['watch'] = None  # the setup came: re-arm the early warning
     return out(f'SETUP {side} {e:.1f} stop {stop:.1f} target {target:.1f}; {r}')
 
 
