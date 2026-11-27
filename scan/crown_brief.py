@@ -195,7 +195,7 @@ def main():
         if last and 'no setup (' in last and 'outside' not in last:
             spoken.append('Latest check: ' + last.split('no setup (', 1)[1].split(');')[0].removesuffix(')') + '.')
     else:
-        nxt = ('at 11 pm' if (1320 <= mins < 1380 or now.weekday() == 6) else 'on Sunday at 11 pm')
+        nxt = ('at 11 pm' if ((1320 <= mins < 1380 and now.weekday() < 4) or now.weekday() == 6) else 'on Sunday at 11 pm')  # Friday's 22:00-23:00 hour is the weekend close, not the daily break
         spoken.append(f'The market is closed, so no new trades; scanning resumes {nxt} London time.')
 
     # trades
