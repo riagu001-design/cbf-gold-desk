@@ -87,13 +87,15 @@ def submit(p, ctx=None):
     m, ev = S.load_model()
     if p['strategy'] == 'SWING':
         e = ev['swing'][p['side']]['R']; parts = [('swing 20-year evidence', p['side'], round(e, 3), ev['swing'][p['side']]['n'])]
-    elif p['strategy'] == 'PB':  # 23 Nov 2026 (Woody: "Yes switch it on"): trend pullback, B-grade half size until 20 live trades
-        e = 0.24; parts = [('pullback + H4 structure test to 25 Nov 2026: 144 trades, PF 1.43, unseen half +12.3R', p['side'], e, 144)]
+    elif p['strategy'] == 'PB':  # 28 Nov 2026 (Woody: "keep setup coming"): sent as UNPROVEN at the 0.01 lot minimum
+        e = -0.07; parts = [('pullback, 3-year OANDA broker test Nov 2023 - Nov 2026: 848 trades, -60.2R, PF 0.90', p['side'], e, 848)]
+    elif p['strategy'] == 'D20':  # 28 Nov 2026: daily 20-day breakout, the only candidate that passed the 3-year broker test
+        e = 0.46; parts = [('daily 20-day breakout, 3-year OANDA broker test: 25 trades, +11.5R, PF 1.88, final year +4.7R', p['side'], e, 25)]
     else:
         e, parts = S.expected(m, p['strategy'], f)
-    sc = PB_SCORE if p['strategy'] == 'PB' else S.score(m, e)
+    sc = PB_SCORE if p['strategy'] == 'PB' else 90 if p['strategy'] == 'D20' else S.score(m, e)
     gates = []  # (name, passed, detail)
-    if p['strategy'] == 'SWING': gates.append(('market open', True, 'daily setup: enter at the next open'))
+    if p['strategy'] in ('SWING', 'D20'): gates.append(('market open', True, 'daily setup: enter now, or at the next open if the market is shut'))
     else: gates.append(('market open', market_open(ldn(now)), t.strftime('%a %H:%M London')))
     try:
         from auto_scan import news_block
@@ -103,7 +105,7 @@ def submit(p, ctx=None):
     gates.append(('news', not blocked, note or 'no high-impact news within 15 min'))
     gates.append(('fresh', now - p['ts'] <= c['fresh_s'], f'{int(now - p["ts"])} s old'))
     a1 = raw.get('atr1h') or 0
-    ok_stop = risk > 0 and (not a1 or c['min_stop_atr'] * a1 <= risk <= c['max_stop_atr'] * a1)
+    ok_stop = risk > 0 and (p['strategy'] == 'D20' or not a1 or c['min_stop_atr'] * a1 <= risk <= c['max_stop_atr'] * a1)  # D20 stops are 2 daily ATR by design
     gates.append(('stop distance', ok_stop, f'${risk:.1f}/oz = {risk / a1:.1f} x 1H ATR' if a1 else f'${risk:.1f}/oz'))
     today = ldn(now).strftime('%Y-%m-%d')
     lost = sum(r.get('R', 0) for r in read_journal() if r.get('type') == 'outcome' and r.get('sent') and r.get('closed', '').startswith(today))
@@ -128,7 +130,7 @@ def submit(p, ctx=None):
                features=f, raw=raw, expected_R=round(e, 3), score=sc, evidence=parts, gates=[dict(name=g[0], ok=g[1], detail=g[2]) for g in gates],
                verdict=verdict, reasons=reasons, model=dict(version=c['version'], evidence_built=m['built']), note=p.get('note'))
     grade = 'A' if verdict == 'SENT' else 'B' if verdict == 'WATCHLIST' and c.get('send_b', True) else None
-    if grade and p.get('grade') == 'C': grade = 'C'  # 25 Nov 2026: pullback with the H4 not confirmed, 0.01 lot minimum
+    if grade and p.get('grade') in ('C', 'U', 'T'): grade = p['grade']  # U: unproven pullback, T: tested D20 (28 Nov 2026)  # 25 Nov 2026: pullback with the H4 not confirmed, 0.01 lot minimum
     if grade:
         rec['grade'] = grade
         rec['telegram'] = publisher.publish(signal_text(rec, c, p.get('note')), 'signal')
@@ -144,18 +146,20 @@ STYLE = {'H1': ('H1', 'EMA 9/21 Trend Cross', '1H EMA 9/21 cross · Market Entry
          '4H': ('H4', 'H4 Trend Cross', '4H EMA 9/21 cross · Market Entry'),
          'ASIA': ('M15', 'Asia Range Breakout', 'Pre-London breakout of the Asia high/low · No Chasing'),
          'SWING': ('D1', 'Daily Swing Pullback', 'Daily pullback to the 21 EMA · enter at the open'),
-         'PB': ('M15', 'Trend Pullback (H1 control)', '15m dip to the EMA20 in the 1H trend, H4 structure agrees · Market Entry · 2R')}
+         'PB': ('M15', 'Trend Pullback (H1 control)', '15m dip to the EMA20 in the 1H trend · Market Entry · 2R'),
+         'D20': ('D1', 'Daily 20-day Breakout', 'daily close beyond the 20-day high or low · Market Entry · 10-day exit')}
 
 
 SESS = {'asia': 'Asia', 'london': 'London', 'newyork': 'New York', 'late': 'late US'}
 
 
-GRADE_TXT = {'A': '🟢 A-grade, full size', 'B': '🟡 B-grade, half size', 'C': '⚪ C-grade, minimum 0.01 lot (H4 not confirmed)'}
+GRADE_TXT = {'A': '🟢 A-grade, full size', 'B': '🟡 B-grade, half size', 'C': '⚪ C-grade, minimum 0.01 lot (H4 not confirmed)',
+             'U': '🔴 UNPROVEN, minimum 0.01 lot only', 'T': '🟢 TESTED: passed the 3-year broker test'}
 
 
 def lots_for(risk_per_oz, c, grade='A'):
     """0.01 lot = 1 oz. Lots that risk at most the risk budget, never below the 0.01 minimum."""
-    budget = (c.get('risk_usd') or c['balance'] * c['risk']) * {'B': 0.5, 'C': 0.0}.get(grade, 1)
+    budget = (c.get('risk_usd') or c['balance'] * c['risk']) * {'B': 0.5, 'C': 0.0, 'U': 0.0}.get(grade, 1)
     lots = max(0.01, int(budget / (risk_per_oz * 100) * 100) / 100) if risk_per_oz else 0.01
     return lots, round(lots * 100 * risk_per_oz, 2), budget
 
@@ -186,15 +190,20 @@ def signal_text(r, c, note=None):
         f = r['features']
         why = f"{name}: H4 trend {f['h4']}, brain {r['score']}/100, {SESS.get(r['session'], r['session'])} session"
     lines = ['👑 CBFX | TRADE SETUP',
-             f"{'🟢 BUY' if buy else '🔴 SELL'} XAUUSD ({tf}) · MARKET · ENTER NOW (Pullback · No Chasing)",
+             f"{'🟢 BUY' if buy else '🔴 SELL'} XAUUSD ({tf}) · MARKET · ENTER NOW ({'Daily Breakout' if r['strategy'] == 'D20' else 'Pullback · No Chasing'})",
              f"Strategy: {name} · {GRADE_TXT.get(grade, GRADE_TXT['A'])}",
              control_line(r['side']), '',
              f"📍 Entry: {r['entry']:.2f} (market, enter now)", f"🛑 Stop Loss: {r['stop']:.2f}", f"🎯 Take Profit ({rr:.1f}R): {tp:.2f}"]
-    if not r.get('target'): lines.append(f"🏃 TP1: {r['tp1']:.2f} (1R) · or exit on {r['exit_rule']}")
-    lines += ['', f'📊 Lots: {lots:.2f} | R:R 1:{rr:.1f}', f'💰 Risk: ${risk_usd:,.0f} | Target: ${risk_usd * rr:,.0f}']
+    if r['strategy'] == 'D20':  # no fixed target: the 10-day exit lets winners run
+        lines[-1] = f"🎯 No fixed target: exit on {r['exit_rule']} (winners run)"
+        lines += ['', f'📊 Lots: {lots:.2f} | R:R open (3-year average +0.46R a trade)', f'💰 Risk: ${risk_usd:,.0f}']
+    else:
+        if not r.get('target'): lines.append(f"🏃 TP1: {r['tp1']:.2f} (1R) · or exit on {r['exit_rule']}")
+        lines += ['', f'📊 Lots: {lots:.2f} | R:R 1:{rr:.1f}', f'💰 Risk: ${risk_usd:,.0f} | Target: ${risk_usd * rr:,.0f}']
     news = next((g['detail'] for g in r.get('gates', []) if g.get('name') == 'news' and str(g.get('detail', '')).startswith('⚠️')), None)
     if news: lines.append(news)  # 25 Nov 2026: the news warning was checked but never printed
-    if grade == 'C': lines.append('⚠️ H4 structure NOT confirmed: minimum size only (in the test these lost slightly over a year).')
+    if grade == 'U': lines.append('⚠️ UNPROVEN: this strategy lost 60R over 848 trades in the 3-year broker test (PF 0.90). Minimum size only, your call.')
+    elif grade == 'C': lines.append('⚠️ H4 structure NOT confirmed: minimum size only (in the test these lost slightly over a year).')
     elif risk_usd > budget * 1.5:
         lines.append(f'❗ The 0.01 lot minimum risks ${risk_usd:,.0f}, more than the ${budget:,.0f} budget.')
     lines += ['', f'📝 Why: {why}', '',

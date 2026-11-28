@@ -13,9 +13,10 @@ Runs every 5 minutes from loop.sh; acts once per closed daily candle. Never plac
 import csv, json, os, sys, time, datetime as dt
 sys.path.insert(0, os.path.dirname(__file__))
 from auto_scan import candles, atr, ldn, L
+from brain_link import propose, finish
 G = '/home/user/gold-desk'; ST, LOG = f'{G}/d20_state.json', f'{G}/d20_log.csv'
 FIELDS = ['opened', 'side', 'entry', 'stop', 'risk', 'closed', 'exit', 'usd_001', 'R', 'how', 'nights']
-PAPER, COST, FIN = True, 0.40, 0.0002
+PAPER, COST, FIN = False, 0.40, 0.0002  # 28 Nov 2026 (Woody: "But keep setup coming"): sent to Telegram as the TESTED strategy
 
 
 def rows():
@@ -35,7 +36,8 @@ def close_trade(st, rs, ex, how, when):
         if r['opened'] == p['opened'] and not r['closed']:
             r.update(closed=when.strftime('%Y-%m-%d %H:%M'), exit=f'{ex:.1f}', usd_001=f'{pl:+.2f}', R=f'{R:+.2f}', how=how, nights=str(nights))
     save(rs); st['open'] = None
-    return f'{"PAPER " if PAPER else ""}{p["side"]} closed ({how}) at {ex:.1f}: {R:+.2f}R after {nights} nights'
+    sent = finish(p, ex, how, when) if p.get('brain_id') else 'paper, not sent'
+    return f'{"PAPER " if p.get("paper") else ""}{p["side"]} closed ({how}) at {ex:.1f}: {R:+.2f}R after {nights} nights; {sent}'
 
 
 def main():
@@ -69,9 +71,14 @@ def main():
     if not st.get('open') and sig:
         sg = 1 if sig == 'BUY' else -1; stop = round(c - sg * 2 * A, 1); opened = when.strftime('%Y-%m-%d %H:%M')
         rs.append(dict(opened=opened, side=sig, entry=f'{c:.1f}', stop=f'{stop:.1f}', risk=f'{2 * A:.2f}')); save(rs)
-        st['open'] = dict(opened=opened, side=sig, entry=c, stop=stop, risk=2 * A, nights=0, checked_ms=last['T'] + 1)
+        bid, sent = None, 'paper, not sent'
+        if not PAPER:
+            dec, sent = propose('D20', sig, c, stop, f'a daily close {"below the 10-day low" if sg > 0 else "above the 10-day high"} (now {lo10 if sg > 0 else hi10:.1f})',
+                                note=f'Daily 20-day breakout: the day closed at {c:.1f}, {"above the 20-day high " + format(hi20, ".1f") if sg > 0 else "below the 20-day low " + format(lo20, ".1f")}. Stop 2 x daily ATR. Passed the 3-year broker test (+11.5R, PF 1.88), about 8 trades a year; hold for days to weeks.', grade='T')
+            bid = dec.get('id')
+        st['open'] = dict(opened=opened, side=sig, entry=c, stop=stop, risk=2 * A, nights=0, checked_ms=last['T'] + 1, brain_id=bid, paper=PAPER)
         notes.append(f'{"PAPER " if PAPER else ""}SETUP {sig} {c:.1f} stop {stop:.1f} (2 ATR {2 * A:.1f}); exit on a daily close beyond the 10-day {"low" if sg > 0 else "high"}'
-                     + ('; paper, not sent' if PAPER else ''))
+                     + f'; {sent}')
     if not notes:
         p = st.get('open')
         notes.append(f'daily close {c:.1f}: ' + (f'{p["side"]} open from {p["entry"]:.1f}, stop {p["stop"]:.1f}, exit level {lo10 if p["side"] == "BUY" else hi10:.1f}' if p

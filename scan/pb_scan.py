@@ -27,7 +27,7 @@ ADX_MIN, RR, MAX_DAY = 20, 2.0, 3
 # 28 Nov 2026 (Woody: "Yes do both"): PAPER ONLY. The 3-year test on OANDA broker prices (backtest/research_2026-11-28)
 # lost 60.2R over 848 trades (PF 0.90), every year but 2025 negative, so nothing is sent to Telegram: setups and exits
 # are logged in pb_log.csv as paper trades, and the early warning is off.
-PAPER = True
+PAPER = False  # 28 Nov 2026 (Woody: "But keep setup coming"): sent again, every one marked UNPROVEN at the 0.01 lot minimum
 
 
 def rows():
@@ -147,7 +147,7 @@ def main():
     else:
       dec, r = propose('PB', side, e, stop, 'the 2R target or the stop', (f'Trend Pullback · 1H {"BULLISH" if buy else "BEARISH"} (ADX {d1["adx"]:.1f}) · H4 '
          f'{h4why} · M15 EMA 20/50 ({e20:.2f}/{e50:.2f}) · '
-         f'15m candle {"dipped to" if buy else "rallied to"} the EMA20 and closed back {"above" if buy else "below"} it'), target=target, grade=None if h4ok else 'C')
+         f'15m candle {"dipped to" if buy else "rallied to"} the EMA20 and closed back {"above" if buy else "below"} it'), target=target, grade='U')
     opened = now.strftime('%Y-%m-%d %H:%M')
     rs.append(dict(opened=opened, side=side, entry=f'{e:.1f}', stop=f'{stop:.1f}', target=f'{target:.1f}', risk=f'{risk:.2f}', brain=dec.get('verdict'))); save(rs)
     st['open'] = dict(opened=opened, side=side, entry=e, stop=stop, target=target, risk=risk, brain_id=dec.get('id'), checked_ms=x['T'] + 1, paper=PAPER)

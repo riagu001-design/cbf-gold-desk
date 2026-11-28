@@ -58,7 +58,7 @@ n = pbW + pbL
 week_usd = pbU + old_pl
 acct_start = START + old_before + pb_before
 msg = (f"📊 GOLD DESK · WEEKLY REPORT\nWeek {mon:%d %b}–{fri:%d %b %Y}\n{L}\n"
-       f"📝 PAPER since 28 Nov · Trend Pullback (live until 27 Nov; lost 60R on 3 years of broker prices)\n" + ("\n".join(pb_lines) or "No signals this week (the H4 filter waits for a clear trend).") +
+       f"🔴 UNPROVEN · Trend Pullback (0.01 lot; lost 60R on 3 years of broker prices)\n" + ("\n".join(pb_lines) or "No signals this week (the H4 filter waits for a clear trend).") +
        f"\nClosed: {n} · {pbW} wins, {pbL} losses ({round(100 * pbW / n) if n else 0}% wins) · {pbR:+.2f}R · {pbU:+.2f}$ at 0.01 lot\n{L}\n"
        f"📝 PAPER · London breakout and retest (not sent)\n" + ("\n".join(br_lines) or "No paper trades this week.") +
        f"\nPaper total: {brW + brL} closed · {brR:+.2f}R · {brU:+.2f}$ at 0.01 lot\n{L}\n" +
