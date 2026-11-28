@@ -43,6 +43,8 @@ def engine(rows, how_key):
 
 
 pb_lines, pbR, pbU, pbW, pbL, pb_before = engine(load(f'{G}/pb_log.csv'), 'how')
+t4_lines, t4R, t4U, t4W, t4L, t4_before = engine(load(f'{G}/brr4_log.csv'), 'how')  # 28 Nov 2026: tested engines
+d20_lines, d20R, d20U, d20W, d20L, d20_before = engine(load(f'{G}/d20_log.csv'), 'how')
 br_lines, brR, brU, brW, brL, _ = engine(load(f'{G}/br_log.csv'), 'exit_note')
 
 # old live log (rules v3.x), kept so nothing is lost
@@ -55,16 +57,19 @@ for r in old:
         old_pl += val(r); old_lines.append(f"• {r['given_at_london'][5:]} {r['side']} {r['entry']}: {val(r):+.2f}$")
 
 n = pbW + pbL
-week_usd = pbU + old_pl
-acct_start = START + old_before + pb_before
+week_usd = pbU + t4U + d20U + old_pl
+acct_start = START + old_before + pb_before + t4_before + d20_before
 msg = (f"📊 GOLD DESK · WEEKLY REPORT\nWeek {mon:%d %b}–{fri:%d %b %Y}\n{L}\n"
-       f"🔴 UNPROVEN · Trend Pullback (0.01 lot; lost 60R on 3 years of broker prices)\n" + ("\n".join(pb_lines) or "No signals this week (the H4 filter waits for a clear trend).") +
-       f"\nClosed: {n} · {pbW} wins, {pbL} losses ({round(100 * pbW / n) if n else 0}% wins) · {pbR:+.2f}R · {pbU:+.2f}$ at 0.01 lot\n{L}\n"
+       f"🟢 TESTED · Breakout & Retest (D1/H4/H1/M15, 0.01 lot)\n" + ("\n".join(t4_lines) or "No setups this week.") +
+       f"\nClosed: {t4W + t4L} · {t4W} wins, {t4L} losses · {t4R:+.2f}R · {t4U:+.2f}$ at 0.01 lot (test: +0.12R a trade)\n{L}\n"
+       f"🟢 TESTED · Daily 20-day Breakout (0.01 lot)\n" + ("\n".join(d20_lines) or "No setups this week (about 8 a year).") +
+       f"\nClosed: {d20W + d20L} · {d20R:+.2f}R · {d20U:+.2f}$ at 0.01 lot (test: +0.46R a trade)\n{L}\n" +
+       (f"Trend Pullback (dropped 28 Nov, lost 60R in the 3-year test)\n" + "\n".join(pb_lines) + f"\nClosed: {n} · {pbR:+.2f}R · {pbU:+.2f}$\n{L}\n" if pb_lines else "") +
        f"📝 PAPER · London breakout and retest (not sent)\n" + ("\n".join(br_lines) or "No paper trades this week.") +
        f"\nPaper total: {brW + brL} closed · {brR:+.2f}R · {brU:+.2f}$ at 0.01 lot\n{L}\n" +
        (("Old rules log:\n" + "\n".join(old_lines) + f"\n{L}\n") if old_lines else "") +
        f"💼 Account: about ${acct_start + week_usd:.2f} (from ${acct_start:.2f} at the start of the week, 0.01 lot basis)\n"
-       f"🎯 Review: after 20 live trades the result is compared with the test (+0.24R a trade).\n{L}\n"
-       "ℹ️ R after a 0.40/oz cost allowance; broker prices run about $3–4 below the desk feed.")
+       f"🎯 Review: after 20 live trades each tested engine is compared with its 3-year test.\n{L}\n"
+       "ℹ️ R after a 0.40/oz cost allowance; signals use OANDA broker prices since 28 Nov 2026.")
 open(f'{G}/weekly_msg.txt', 'w').write(msg)
 print(msg); print('Telegram:', publisher.publish(msg, 'report') if '--dry' not in sys.argv else 'dry run')

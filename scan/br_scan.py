@@ -32,8 +32,12 @@ def save(rs):
     with open(LOG, 'w', newline='') as f: w = csv.DictWriter(f, fieldnames=FIELDS); w.writeheader(); w.writerows(rs)
 
 
+SEND = False  # 28 Nov 2026 (Woody: "only send tested setups"): the paper test is logged only again
+
+
 def tell(text):
-    """28 Nov 2026 (Woody: "Signals should always go to telegram"): paper-test setups and results go to Telegram, labelled."""
+    """Paper-test setups and results go to Telegram only when SEND is on (off since 28 Nov 2026: only tested setups are sent)."""
+    if not SEND: return 'not sent (paper test, only tested setups go to Telegram)'
     try:
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'brain')); import publisher
         return publisher.publish(text, 'update')

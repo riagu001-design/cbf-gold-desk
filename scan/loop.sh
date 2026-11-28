@@ -13,9 +13,9 @@ while true; do
   # (backtest/research_2026-11-23/four_setups.py).
   # 23 Nov 2026 19:00 (Woody: "Do want is best for the system"): the best-tested engine runs live at half size,
   # the best of the four new setups is paper-tracked (not sent) until 20 paper trades.
-  python3 "$D/pb_scan.py" >> "$G/scan_loop.log" 2>&1    # PAPER since 28 Nov 2026: trend pullback (lost 60R on 3 years of broker prices)
-  python3 "$D/br_scan.py" >> "$G/scan_loop.log" 2>&1
+  # 28 Nov 2026 (Woody: "Drop the trend pullback, only send tested setups"): pb_scan.py is off (lost 60R on 3 years of broker prices).
+  python3 "$D/br_scan.py" >> "$G/scan_loop.log" 2>&1    # PAPER: London breakout and retest, logged only (not sent)
   python3 "$D/brr4_scan.py" >> "$G/scan_loop.log" 2>&1  # TESTED from 28 Nov 2026: D1/H4/H1/M15 breakout and retest (passed the 3-year test)
-  python3 "$D/d20_scan.py" >> "$G/scan_loop.log" 2>&1   # PAPER since 28 Nov 2026: daily 20-day breakout (the only candidate that passed the 3-year test)    # PAPER: London breakout and retest, thirds + breakeven
+  python3 "$D/d20_scan.py" >> "$G/scan_loop.log" 2>&1   # TESTED from 28 Nov 2026: daily 20-day breakout (passed the 3-year test)
   python3 "$D/updates.py" >> "$G/scan_loop.log" 2>&1   # 18 Nov (Woody): daily market updates (Asia range, London/NY plans, Market flips)
 done
