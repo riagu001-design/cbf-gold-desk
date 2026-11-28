@@ -28,7 +28,40 @@ FIELDS = ['given_at_london', 'side', 'entry', 'stop', 'target', 'reason', 'resul
 MAX_STOP, DAY_LOSS = 10.0, -40.0  # v3.6 (9 Nov, trader): daily stop -$40
 
 
+OANDA = 'https://api-fxpractice.oanda.com/v3/instruments/XAU_USD/candles'
+OANDA_IV = {'1m': ('M1', 60), '5m': ('M5', 300), '15m': ('M15', 900), '1h': ('H1', 3600), '4h': ('H4', 14400), '1d': ('D', 86400)}
+
+
 def candles(iv, days):
+    """Closed XAU_USD candles from OANDA, the broker market (28 Nov 2026, Woody: "Yes do both"). The 3-year test showed the
+    Hyperliquid xyz:GOLD feed (trades 24/7, 27% of its candles in the weekend) gave +35R where broker prices gave -28R over
+    the same 12 months, so signals now come from broker prices. Candles are aligned to UTC like the backtests. Read-only:
+    the candles endpoint only (the network proxy adds the practice key). No fallback to another feed: a mixed feed is
+    the bug this fixes, so a failed fetch skips the scan."""
+    gran, sec = OANDA_IV[iv]; start = time.time() - days * 86400; out = []
+    for _ in range(10):  # pages of up to 5000 candles
+        r = None
+        for attempt in range(3):
+            try:
+                r = requests.get(OANDA, params={'granularity': gran, 'price': 'M', 'count': 5000, 'alignmentTimezone': 'UTC', 'dailyAlignment': 0,
+                                                'from': dt.datetime.fromtimestamp(start, dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')},
+                                 headers={'Authorization': 'Bearer from-proxy'}, timeout=20).json()['candles']
+                break
+            except (requests.RequestException, ValueError, KeyError):
+                time.sleep(3)
+        if r is None: raise SystemExit(f'OANDA returned no {iv} candles; scan skipped')
+        for c in r:
+            if not c['complete']: continue
+            t = int(dt.datetime.fromisoformat(c['time'][:19]).replace(tzinfo=dt.timezone.utc).timestamp() * 1000); m = c['mid']
+            out.append(dict(t=t, T=t + sec * 1000 - 1, o=float(m['o']), h=float(m['h']), l=float(m['l']), c=float(m['c'])))
+        if len(r) < 5000: break
+        start = out[-1]['t'] / 1000 + sec
+    if not out: raise SystemExit(f'OANDA returned no {iv} candles; scan skipped')
+    return out
+
+
+def candles_hl(iv, days):
+    """Hyperliquid xyz:GOLD candles (the old signal feed; kept for reference only)."""
     for attempt in range(3):  # the API sometimes returns null; retry
         try:
             r = requests.post(API, json={'type': 'candleSnapshot', 'req': {'coin': 'xyz:GOLD', 'interval': iv,

@@ -1,0 +1,30 @@
+D20: 3 years n 25 win 44% total 11.5R PF 1.88 maxDD 5.1R, longest losing run 4; final year x2 cost 4.1R
+D20L: 3 years n 13 win 62% total 19.5R PF 5.93 maxDD 1.7R, longest losing run 2; final year x2 cost 4.3R
+H4PB3: 3 years n 100 win 33% total 26.0R PF 1.37 maxDD 9.3R, longest losing run 9; final year x2 cost -0.6R
+
+D20 trades (entry at the daily close, UTC):
+  2024-01-18  -1.01R
+  2024-02-14  -1.01R
+  2024-03-01  +6.00R
+  2024-05-01  -1.05R
+  2024-05-16  -1.04R
+  2024-06-07  -1.07R
+  2024-07-05  -0.65R
+  2024-08-16  +1.34R
+  2024-10-18  -0.66R
+  2024-11-12  -1.01R
+  2024-12-19  -1.01R
+  2025-01-10  +3.41R
+  2025-03-14  +0.04R
+  2025-04-11  +0.36R
+  2025-05-15  -1.02R
+  2025-06-03  -0.57R
+  2025-06-27  -1.11R
+  2025-07-22  -1.04R
+  2025-08-29  +7.85R
+  2025-12-12  +4.31R
+  2026-03-19  +0.16R
+  2026-04-29  -0.75R
+  2026-05-28  +0.67R
+  2026-08-06  +0.17R
+  2026-09-29  +0.13R

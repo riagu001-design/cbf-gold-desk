@@ -24,6 +24,10 @@ from four_setups import pivots
 G = '/home/user/gold-desk'; ST, LOG = f'{G}/pb_state.json', f'{G}/pb_log.csv'
 FIELDS = ['opened', 'side', 'entry', 'stop', 'target', 'risk', 'closed', 'exit', 'usd_001', 'R', 'how', 'brain']
 ADX_MIN, RR, MAX_DAY = 20, 2.0, 3
+# 28 Nov 2026 (Woody: "Yes do both"): PAPER ONLY. The 3-year test on OANDA broker prices (backtest/research_2026-11-28)
+# lost 60.2R over 848 trades (PF 0.90), every year but 2025 negative, so nothing is sent to Telegram: setups and exits
+# are logged in pb_log.csv as paper trades, and the early warning is off.
+PAPER = True
 
 
 def rows():
@@ -47,6 +51,7 @@ def watch(st, now, px, rs, m15, h1):
     away from the EMA20, when the trend side changes, on a new day, or after a setup. The ENTER NOW still needs the
     closed 15m candle (backtest research_2026-11-27/touch_entry.py: entering on the touch made +34.7R vs +35.0R with a
     deeper drawdown, so the entry rule is unchanged). Returns a note for the log line."""
+    if PAPER: return ''
     try:
         today = now.strftime('%Y-%m-%d')
         if sum(1 for r in rs if r['opened'].startswith(today)) >= MAX_DAY: return ''
@@ -99,7 +104,7 @@ def main():
                 if r['opened'] == pos['opened'] and not r['closed']:
                     r.update(closed=xt.strftime('%Y-%m-%d %H:%M'), exit=f'{ex:.1f}', usd_001=f'{pl:+.2f}', R=f'{R:+.2f}', how=how)
             save(rs); st['open'] = None
-            return out(f'{pos["side"]} closed ({how}) at {ex:.1f}: {R:+.2f}R; {finish(pos, ex, how, xt)}')
+            return out(f'{"PAPER " if pos.get("paper") else ""}{pos["side"]} closed ({how}) at {ex:.1f}: {R:+.2f}R; ' + ('paper, not sent' if pos.get('paper') else finish(pos, ex, how, xt)))
         st['open'] = pos
         return out(f'{pos["side"]} open from {pos["entry"]:.1f}, stop {pos["stop"]:.1f}, target {pos["target"]:.1f} ({sg * (px - pos["entry"]):+.2f} per oz)')
     if not (wd < 5 and 7 <= now.hour < 20): return out('no new entries outside 07:00-20:00 London (weekdays)')
@@ -137,14 +142,17 @@ def main():
     if sg * (e - stop) < A: stop = e - sg * A
     stop = round(stop, 1); risk = round(abs(e - stop), 2); target = round(e + sg * RR * risk, 1)
     h4why = ("higher highs and lows" if buy else "lower highs and lows") if h4ok else f'NOT CONFIRMED ({h4txt})'
-    dec, r = propose('PB', side, e, stop, 'the 2R target or the stop', (f'Trend Pullback · 1H {"BULLISH" if buy else "BEARISH"} (ADX {d1["adx"]:.1f}) · H4 '
+    if PAPER:
+        dec, r = {'verdict': 'PAPER', 'id': None}, 'paper trade, not sent (28 Nov 2026: no edge on broker prices)'
+    else:
+      dec, r = propose('PB', side, e, stop, 'the 2R target or the stop', (f'Trend Pullback · 1H {"BULLISH" if buy else "BEARISH"} (ADX {d1["adx"]:.1f}) · H4 '
          f'{h4why} · M15 EMA 20/50 ({e20:.2f}/{e50:.2f}) · '
          f'15m candle {"dipped to" if buy else "rallied to"} the EMA20 and closed back {"above" if buy else "below"} it'), target=target, grade=None if h4ok else 'C')
     opened = now.strftime('%Y-%m-%d %H:%M')
     rs.append(dict(opened=opened, side=side, entry=f'{e:.1f}', stop=f'{stop:.1f}', target=f'{target:.1f}', risk=f'{risk:.2f}', brain=dec.get('verdict'))); save(rs)
-    st['open'] = dict(opened=opened, side=side, entry=e, stop=stop, target=target, risk=risk, brain_id=dec.get('id'), checked_ms=x['T'] + 1)
+    st['open'] = dict(opened=opened, side=side, entry=e, stop=stop, target=target, risk=risk, brain_id=dec.get('id'), checked_ms=x['T'] + 1, paper=PAPER)
     st['watch'] = None  # the setup came: re-arm the early warning
-    return out(f'SETUP {side} {e:.1f} stop {stop:.1f} target {target:.1f}; {r}')
+    return out(f'{"PAPER " if PAPER else ""}SETUP {side} {e:.1f} stop {stop:.1f} target {target:.1f}; {r}')
 
 
 if __name__ == '__main__':
