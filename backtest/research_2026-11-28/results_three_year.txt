@@ -1,0 +1,28 @@
+OANDA XAU_USD 15m 2023-11-01 to 2026-11-27, 72745 candles; gold 1983 -> 3652
+
+== Live rules, all grades, 1R per trade, $0.40/oz cost ==
+live rules                         n  848  win  34%  avg  -0.07R  total   -60.2R  PF   0.9  maxDD  82.9R
+                                   longest losing streak 15 trades; trades a week 5.3
+  2023                             n   46  win  39%  avg  -0.03R  total    -1.4R  PF  0.95  maxDD  12.7R
+  2024                             n  260  win  32%  avg  -0.17R  total   -44.6R  PF  0.77  maxDD  49.9R
+  2025                             n  269  win  38%  avg   0.05R  total    13.1R  PF  1.07  maxDD  21.2R
+  2026                             n  273  win  32%  avg   -0.1R  total   -27.2R  PF  0.86  maxDD  42.2R
+
+== Splits ==
+  B-grade (H4 agrees)              n  389  win  33%  avg  -0.09R  total   -34.3R  PF  0.87  maxDD  60.1R
+  C-grade (H4 mixed/against)       n  459  win  35%  avg  -0.06R  total   -25.9R  PF  0.92  maxDD  32.9R
+  buys                             n  455  win  34%  avg  -0.07R  total   -30.8R  PF   0.9  maxDD  35.5R
+  sells                            n  393  win  34%  avg  -0.07R  total   -29.4R  PF  0.89  maxDD  51.1R
+  London 07-12                     n  402  win  34%  avg  -0.06R  total   -25.0R  PF  0.91  maxDD  48.3R
+  New York 12-17                   n  335  win  35%  avg  -0.06R  total   -19.3R  PF  0.91  maxDD  27.3R
+  late 17-20                       n  111  win  32%  avg  -0.14R  total   -15.9R  PF  0.79  maxDD  26.5R
+
+== Variants ==
+costs doubled ($0.80/oz)           n  848  win  34%  avg  -0.13R  total  -113.6R  PF  0.82  maxDD 134.3R
+stop after 2 losses a day          n  810  win  34%  avg  -0.07R  total   -57.6R  PF   0.9  maxDD  81.3R
+B-grade only: longest losing streak 16 trades
+first half                         n  414  win  35%  avg  -0.08R  total   -33.7R  PF  0.88  maxDD  60.6R
+second half                        n  434  win  34%  avg  -0.06R  total   -26.5R  PF  0.91  maxDD  42.4R
+
+== Monte Carlo: 2000 reshuffles of the trade order (live rules) ==
+max drawdown: median 78.9R, 95th percentile 100.8R, worst 128.3R

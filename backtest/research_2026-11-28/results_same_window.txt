@@ -1,0 +1,4 @@
+Hyperliquid feed (desk)                        n  329 win  39% total    35.0R PF  1.17 maxDD  13.8R
+OANDA, same window only                        n  305 win  32% total   -27.8R PF  0.87 maxDD  42.4R
+OANDA, warmed up on 2 earlier years            n  306 win  33% total   -25.9R PF  0.88 maxDD  42.4R
+Hyperliquid candles in the weekend (Fri 22:00 - Sun 22:00 UTC): 9463 of 35620
