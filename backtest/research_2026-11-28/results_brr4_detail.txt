@@ -1,0 +1,8 @@
+3 years: n 259 win 41% avg 0.12R total 31.7R PF 1.2 maxDD 16.8R longest losing run 9
+costs doubled: 3 years 16.7R PF 1.1; final year 1.4R
+buys {'n': 203, 'R': 33.4, 'win': 43, 'pf': 1.28, 'dd': 13.6, 'avg': 0.16} 
+sells {'n': 56, 'R': -1.8, 'win': 34, 'pf': 0.95, 'dd': 11.8, 'avg': -0.03}
+2023 {'n': 0, 'R': 0.0, 'win': 0, 'pf': 0, 'dd': 0.0, 'avg': 0.0}
+2024 {'n': 87, 'R': 3.0, 'win': 39, 'pf': 1.05, 'dd': 12.3, 'avg': 0.03}
+2025 {'n': 104, 'R': 28.7, 'win': 46, 'pf': 1.49, 'dd': 10.9, 'avg': 0.28}
+2026 {'n': 68, 'R': -0.0, 'win': 35, 'pf': 1.0, 'dd': 12.4, 'avg': -0.0}
