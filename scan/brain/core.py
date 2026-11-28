@@ -135,6 +135,13 @@ def submit(p, ctx=None):
         rec['grade'] = grade
         rec['telegram'] = publisher.publish(signal_text(rec, c, p.get('note')), 'signal')
         reg['active'][rec['id']] = rec
+    else:  # 28 Nov 2026 (Woody: "Signals should always go to telegram"): a blocked setup is still reported, with why
+        rec['telegram'] = publisher.publish('\n'.join([
+            '👑 CBFX | SETUP BLOCKED (no trade)',
+            f"{'🟢 BUY' if buy else '🔴 SELL'} XAUUSD · {STYLE.get(p['strategy'], ('', p['strategy'], ''))[1]}",
+            f"Entry {p['entry']:.2f} · Stop {p['stop']:.2f}", '',
+            '⛔ Blocked by the desk rules: ' + '; '.join(reasons), '',
+            f"🆔 {rec['id']} · {t.strftime('%H:%M')} London · do NOT enter this one"]), 'update')
     reg['open'][rec['id']] = dict({k: rec[k] for k in ('id', 'pid', 'ts', 'strategy', 'side', 'entry', 'stop', 'risk', 'verdict')}, grade=grade)
     save_reg(reg); journal(rec)
     return rec

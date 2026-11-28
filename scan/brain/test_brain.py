@@ -25,7 +25,7 @@ check('a second BUY from another engine is blocked while one BUY is active', r2[
 r3 = Bm.submit(dict(p('H1', 'SELL', 3999, 4030), ts=now + 120), ctx('with'))
 check('a conflicting SELL is resolved centrally (rejected while the BUY is active)', r3['verdict'] == 'REJECTED' and any('conflict' in x for x in r3['reasons']))
 r4 = Bm.submit(dict(p('M15', 'SELL', 3999, 4030), ts=now + 180), ctx('against'))
-check('a low-confidence setup never reaches Telegram', r4['verdict'] == 'REJECTED' and not r4.get('telegram'), f"score {r4['score']}")
+check('a low-confidence setup is never sent as a trade (28 Nov 2026: only a SETUP BLOCKED notice goes to Telegram)', r4['verdict'] == 'REJECTED' and not r4.get('grade') and r4['id'] not in Bm.load_reg()['active'], f"score {r4['score']}")
 r5 = Bm.submit(dict(p('H1', 'BUY', 4000, 3970), ts=now - 3600), ctx('with'))
 check('a stale setup (entry conditions an hour old) is rejected', r5['verdict'] == 'REJECTED' and any('fresh' in x for x in r5['reasons']))
 o = Bm.close(r1['id'], 4030, 'TEST EXIT', now + 600)
